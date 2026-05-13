@@ -79,8 +79,9 @@ class ProductController extends Controller
 
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
-            $originalName = basename((string) $file->getClientOriginalName());
-            $path = $file->storeAs('products', $originalName, 'public');
+            $extension = $file->getClientOriginalExtension();
+            $filename = uniqid('', true) . '.' . $extension;
+            $path = $file->storeAs('products', $filename, 'public');
             $product->photo_path = $path;
             $product->save();
         }
@@ -128,8 +129,9 @@ class ProductController extends Controller
 
         if ($request->hasFile('photo')) {
             $file = $request->file('photo');
-            $originalName = basename((string) $file->getClientOriginalName());
-            $path = $file->storeAs('products', $originalName, 'public');
+            $extension = $file->getClientOriginalExtension();
+            $filename = uniqid('', true) . '.' . $extension;
+            $path = $file->storeAs('products', $filename, 'public');
             $product->photo_path = $path;
         }
 
