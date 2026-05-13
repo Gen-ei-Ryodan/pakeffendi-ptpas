@@ -207,14 +207,8 @@
         
         performSearch(query, inputElement) {
             if (!query.trim()) {
-                PAS.Notification.show('Masukkan kata kunci pencarian', 'warning');
                 return;
             }
-            
-            if (this.isSearching) return;
-            
-            this.isSearching = true;
-            this.showSearchLoading(inputElement);
             
             // Hide suggestions
             const suggestionsContainer = inputElement.parentElement.querySelector('.search-suggestions');
@@ -222,24 +216,7 @@
                 suggestionsContainer.style.display = 'none';
             }
             
-            // Simulate API call
-            setTimeout(() => {
-                this.hideSearchLoading(inputElement);
-                this.isSearching = false;
-                
-                // Mock search results
-                const results = this.generateMockResults(query);
-                this.displaySearchResults(results, query);
-                
-                // Navigate to products page with search query
-                if (document.body?.dataset?.spa === 'true' && PAS.Router && typeof PAS.Router.navigate === 'function') {
-                    PAS.Router.navigate(`/products?search=${encodeURIComponent(query)}`);
-                } else {
-                    window.location.href = `/products?q=${encodeURIComponent(query)}`;
-                }
-                
-                PAS.Notification.show(`Menampilkan hasil pencarian untuk "${query}"`, 'success');
-            }, 1000);
+            window.location.href = `/products?q=${encodeURIComponent(query)}`;
         },
         
         generateMockResults(query) {
