@@ -13,9 +13,21 @@
         
         init() {
             this.setupSearchFunctionality();
+            this.prefillSearchInput();
             this.setupNavigationEnhancements();
             this.setupMobileMenu();
             console.log('✅ Search & Navigation Initialized');
+        },
+        
+        prefillSearchInput() {
+            const params = new URLSearchParams(window.location.search);
+            const q = params.get('q');
+            if (q) {
+                const searchInputs = document.querySelectorAll('#searchInput, #searchInputMobile');
+                searchInputs.forEach(input => {
+                    input.value = q;
+                });
+            }
         },
         
         setupSearchFunctionality() {
@@ -24,14 +36,6 @@
             const searchButtons = document.querySelectorAll('#searchBtn, #searchBtnMobile');
             
             searchInputs.forEach(input => {
-                // Handle input with debouncing
-                input.addEventListener('input', (e) => {
-                    clearTimeout(this.searchTimeout);
-                    this.searchTimeout = setTimeout(() => {
-                        this.performSearch(e.target.value, input);
-                    }, 300);
-                });
-                
                 // Handle Enter key
                 input.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
