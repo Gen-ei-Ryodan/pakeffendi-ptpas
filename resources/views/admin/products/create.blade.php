@@ -119,8 +119,8 @@
                         <label class="block text-sm font-medium mb-1">Status Product</label>
                         <select name="status_product" class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-sky-500">
                             <option value="">Pilih Status</option>
-                            @foreach(config('product-status.all') as $key => $label)
-                                <option value="{{ $key }}" @selected(old('status_product') === $key)>{{ $label }}</option>
+                            @foreach(\App\Models\ProductStatus::orderBy('sort_order')->get() as $s)
+                                <option value="{{ $s->code }}" @selected(old('status_product') === $s->code)>{{ $s->name }}</option>
                             @endforeach
                         </select>
                     </div>

@@ -11,6 +11,7 @@ use App\Http\Controllers\Admin\LogbookController;
 use App\Http\Controllers\Admin\ProductBrandController;
 use App\Http\Controllers\Admin\ProductCategoryController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductStatusController;
 use App\Http\Controllers\Admin\SalesOrderController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,6 +37,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('categories', ProductCategoryController::class)->except(['show']);
         Route::resource('brands', ProductBrandController::class)->except(['show']);
         Route::resource('products', ProductController::class)->except(['show']);
+        Route::resource('statuses', ProductStatusController::class)->except(['show']);
 
         Route::resource('sales-orders', SalesOrderController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);
         Route::resource('broadcasts', BroadcastController::class)->except(['show']);
