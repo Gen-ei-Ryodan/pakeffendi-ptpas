@@ -5,6 +5,7 @@
         ['label' => 'customer', 'route' => 'admin.customers.index', 'active' => 'admin.customers.*', 'icon' => 'bi-person-lines-fill'],
         ['label' => 'product category', 'route' => 'admin.categories.index', 'active' => 'admin.categories.*', 'icon' => 'bi-tags'],
         ['label' => 'product brand', 'route' => 'admin.brands.index', 'active' => 'admin.brands.*', 'icon' => 'bi-award'],
+        ['label' => 'product status', 'route' => 'admin.statuses.index', 'active' => 'admin.statuses.*', 'icon' => 'bi-flag'],
         ['label' => 'product', 'route' => 'admin.products.index', 'active' => 'admin.products.*', 'icon' => 'bi-box-seam'],
         ['label' => 'sales order', 'route' => 'admin.sales-orders.index', 'active' => 'admin.sales-orders.*', 'icon' => 'bi-receipt'],
         ['label' => 'broadcast', 'route' => 'admin.broadcasts.index', 'active' => 'admin.broadcasts.*', 'icon' => 'bi-megaphone'],
