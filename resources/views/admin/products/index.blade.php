@@ -19,11 +19,11 @@
             <table class="min-w-full text-sm">
                 <thead>
                     <tr class="text-left text-slate-500 border-b">
-                        <th class="py-3 pr-4">ID</th>
+                        <th class="py-3 pr-4">Kode</th>
                         <th class="py-3 pr-4">Stock Name</th>
+                        <th class="py-3 pr-4">Status</th>
                         <th class="py-3 pr-4">Brand</th>
                         <th class="py-3 pr-4">Kategori</th>
-                        <th class="py-3 pr-4">Berat</th>
                         <th class="py-3 pr-4">Action</th>
                     </tr>
                 </thead>
@@ -37,9 +37,14 @@
                                 <div class="text-xs text-slate-500">{{ $product->variant }}</div>
                             @endif
                         </td>
-                        <td class="py-3 pr-4">{{ $product->brand?->brand_name }}</td>
-                        <td class="py-3 pr-4">{{ $product->category?->name }}</td>
-                        <td class="py-3 pr-4">{{ number_format((float) $product->weight_kg, 2) }} Kg</td>
+                        <td class="py-3 pr-4">
+                            @if($product->status_product)
+                                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-sky-100 text-sky-800">{{ $product->status_product }}</span>
+                                <span class="text-xs text-slate-400">#{{ $product->no_urut_status }}</span>
+                            @else
+                                <span class="text-xs text-slate-400">-</span>
+                            @endif
+                        </td>
                         <td class="py-3 pr-4">
                             <div class="flex items-center gap-2">
                                 <a href="{{ route('admin.products.edit', $product) }}" class="px-3 py-1.5 rounded-lg bg-sky-50 border border-sky-200 text-sky-700 hover:bg-sky-100">Edit</a>

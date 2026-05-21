@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Str;
 
 class Product extends Model
 {
-    protected $appends = ['photo_url'];
+    protected $appends = ['photo_url', 'has_photo'];
 
     protected $fillable = [
         'sku',
@@ -30,6 +31,8 @@ class Product extends Model
         'disc_2',
         'qty_3',
         'disc_3',
+        'status_product',
+        'no_urut_status',
     ];
 
     protected $casts = [
@@ -51,6 +54,27 @@ class Product extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(ProductCategory::class, 'product_category_code', 'category_code');
+    }
+
+    public function relatedProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'related_products', 'product_id', 'related_product_id')
+            ->withPivot('relation_type');
+    }
+
+    public function scopeActive($query)
+    {
+        return $query->where('discontinued', false);
+    }
+
+    public function scopeHasPhoto($query)
+    {
+        return $query->whereNotNull('photo_path')->where('photo_path', '!=', '');
+    }
+
+    public function scopeByStatus($query, string $status)
+    {
+        return $query->where('status_product', $status)->orderBy('no_urut_status');
     }
 
     public function pricingForQuantity(int $quantity): array
@@ -77,6 +101,43 @@ class Product extends Model
             'discount_percent' => $discountPercent,
             'net_price' => $netPrice,
         ];
+    }
+
+    public function getPricingTiersAttribute(): array
+    {
+        $tiers = [];
+
+        $tiers[] = [
+            'qty_start' => 1,
+            'qty_end' => $this->qty_2 ? ($this->qty_2 - 1) : null,
+            'price' => (float) $this->price_1,
+            'discount' => (float) ($this->disc_1 ?? 0),
+        ];
+
+        if ($this->price_2 && $this->qty_2) {
+            $tiers[] = [
+                'qty_start' => (int) $this->qty_2,
+                'qty_end' => $this->qty_3 ? ($this->qty_3 - 1) : null,
+                'price' => (float) $this->price_2,
+                'discount' => (float) ($this->disc_2 ?? 0),
+            ];
+        }
+
+        if ($this->price_3 && $this->qty_3) {
+            $tiers[] = [
+                'qty_start' => (int) $this->qty_3,
+                'qty_end' => null,
+                'price' => (float) $this->price_3,
+                'discount' => (float) ($this->disc_3 ?? 0),
+            ];
+        }
+
+        return $tiers;
+    }
+
+    public function getHasPhotoAttribute(): bool
+    {
+        return ! empty($this->photo_path) && ! Str::startsWith($this->photo_path, 'https://placehold.co');
     }
 
     public function getPhotoUrlAttribute(): string

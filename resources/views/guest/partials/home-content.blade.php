@@ -45,7 +45,7 @@
                     </div>
                     <div class="prod-info">
                         <p class="prod-brand">{{ $product->brand?->brand_name }}</p>
-                        <p class="prod-name">{{ $product->name }}</p>
+                        <p class="prod-name text-truncate-2">{{ $product->name }}</p>
                         @if(($product->variant ?? '') !== '')
                             <p class="text-muted small mb-1">{{ $product->variant }}</p>
                         @endif
@@ -72,7 +72,7 @@
                     </div>
                     <div class="prod-info">
                         <p class="prod-brand">{{ $product->brand?->brand_name }}</p>
-                        <p class="prod-name">{{ $product->name }}</p>
+                        <p class="prod-name text-truncate-2">{{ $product->name }}</p>
                         @if(($product->variant ?? '') !== '')
                             <p class="text-muted small mb-1">{{ $product->variant }}</p>
                         @endif

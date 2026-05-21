@@ -58,6 +58,31 @@
                                 <span class="h2 fw-bold text-primary mb-0 product-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</span>
                             </div>
                         </div>
+
+                        <!-- Tiered Pricing -->
+                        @if(count($product->pricing_tiers) > 1)
+                        <div class="mb-4">
+                            <h6 class="fw-bold mb-2">Harga Grosir</h6>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered mb-0">
+                                    <tbody>
+                                        @foreach($product->pricing_tiers as $tier)
+                                        <tr class="{{ $loop->first ? 'table-primary' : '' }}">
+                                            <td class="fw-medium">
+                                                @if($tier['qty_end'])
+                                                    {{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs
+                                                @else
+                                                    {{ $tier['qty_start'] }}+ pcs
+                                                @endif
+                                            </td>
+                                            <td class="text-end fw-bold text-primary">Rp {{ number_format((float) $tier['price'], 0, ',', '.') }}</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        @endif
                         
                         <!-- Description -->
                         <div class="mb-4">
@@ -146,6 +171,7 @@
                     @php
                         $relatedImageUrl = $related->photo_url;
                     @endphp
+                    @if($related->has_photo)
                     <div class="col-6 col-md-3">
                         <div class="product-card" data-product-id="{{ $related->id }}">
                             <div class="position-relative">
@@ -167,6 +193,7 @@
                             </div>
                         </div>
                     </div>
+                    @endif
                     @endforeach
                 </div>
             </div>
