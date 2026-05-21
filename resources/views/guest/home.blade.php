@@ -48,7 +48,7 @@
                 <a href="{{ url('/products') }}" class="see-all">Lihat semua <i class="bi bi-chevron-right"></i></a>
             </div>
             <div class="products-scroll">
-                @foreach(($featuredProducts ?? collect()) as $product)
+                @foreach(($topSellingProducts ?? collect()) as $product)
                     @php
                         $imageUrl = $product->photo_url;
                     @endphp
@@ -71,26 +71,35 @@
     </div>
 </section>
 
-<!-- Promo Banner -->
+<!-- Promo -->
 <section class="py-5" id="promo">
     <div class="container">
         <div class="section-container">
-            <div class="promo-grid">
-                <div class="promo-card cyan">
-                    <div class="promo-text">
-                        <h4>Promo Spesial</h4>
-                        <small>Update promo dari backend</small>
-                    </div>
-                    <img src="{{ $heroImageUrl }}" class="promo-img" alt="Promo">
-                </div>
-                <div class="promo-card blue-light">
-                    <div class="promo-text">
-                        <h4>Gratis Ongkir</h4>
-                        <small>Min pembelian tertentu</small>
-                    </div>
-                    <img src="{{ asset('guest/img/placeholder-product.svg') }}" class="promo-img" alt="Promo">
-                </div>
+            @if(($promoProducts ?? collect())->isNotEmpty())
+            <div class="section-header">
+                <h3 class="section-title">Promo Spesial</h3>
             </div>
+            <div class="products-scroll">
+                @foreach($promoProducts as $product)
+                    @php
+                        $imageUrl = $product->photo_url;
+                    @endphp
+                    <div class="product-card" data-product-id="{{ $product->id }}">
+                        <div class="prod-img-box">
+                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}">
+                        </div>
+                        <div class="prod-info">
+                            <p class="prod-brand">{{ $product->brand?->brand_name }}</p>
+                            <p class="prod-name text-truncate-2">{{ $product->name }}</p>
+                            @if(($product->variant ?? '') !== '')
+                                <p class="text-muted small mb-1">{{ $product->variant }}</p>
+                            @endif
+                            <p class="prod-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            @endif
         </div>
     </div>
 </section>
@@ -104,7 +113,7 @@
                 <a href="{{ url('/products') }}" class="see-all">Lihat semua <i class="bi bi-chevron-right"></i></a>
             </div>
             <div class="products-scroll">
-                @foreach(($featuredProducts ?? collect())->take(10) as $product)
+                @foreach(($newProducts ?? collect()) as $product)
                     @php
                         $imageUrl = $product->photo_url;
                     @endphp

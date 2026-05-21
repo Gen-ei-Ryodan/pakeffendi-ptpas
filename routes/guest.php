@@ -28,6 +28,30 @@ Route::prefix('/')->group(function () {
             ->limit(8)
             ->get();
 
+        $topSellingProducts = Product::query()
+            ->with(['brand:brand_code,brand_name'])
+            ->active()
+            ->hasPhoto()
+            ->byStatus('TERLARIS')
+            ->limit(8)
+            ->get();
+
+        $newProducts = Product::query()
+            ->with(['brand:brand_code,brand_name'])
+            ->active()
+            ->hasPhoto()
+            ->byStatus('TERBARU')
+            ->limit(8)
+            ->get();
+
+        $promoProducts = Product::query()
+            ->with(['brand:brand_code,brand_name'])
+            ->active()
+            ->hasPhoto()
+            ->byStatus('PROMO')
+            ->limit(8)
+            ->get();
+
         $broadcasts = Broadcast::query()
             ->latest()
             ->limit(8)
@@ -36,6 +60,9 @@ Route::prefix('/')->group(function () {
         return view('guest.home', [
             'categories' => $categories,
             'featuredProducts' => $featuredProducts,
+            'topSellingProducts' => $topSellingProducts,
+            'newProducts' => $newProducts,
+            'promoProducts' => $promoProducts,
             'broadcasts' => $broadcasts,
         ]);
     });

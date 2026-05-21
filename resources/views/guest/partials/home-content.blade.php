@@ -35,7 +35,7 @@
             <a href="#productList" class="see-all" data-action="openProductList">Lihat semua <i class="fas fa-chevron-right"></i></a>
         </div>
         <div class="products-scroll">
-            @foreach($featuredProducts as $product)
+            @foreach(($topSellingProducts ?? $featuredProducts) as $product)
                 <div class="product-card" data-product-id="{{ $product->id }}">
                     <div class="prod-img-box">
                         @php
@@ -62,7 +62,7 @@
             <a href="#productList" class="see-all" data-action="openProductList">Lihat semua <i class="fas fa-chevron-right"></i></a>
         </div>
         <div class="products-scroll">
-            @foreach($featuredProducts->take(6) as $product)
+            @foreach(($newProducts ?? $featuredProducts) as $product)
                 <div class="product-card" data-product-id="{{ $product->id }}">
                     <div class="prod-img-box">
                         @php

@@ -38,6 +38,30 @@ class HomeController extends Controller
             ->limit(10)
             ->get();
 
+        $topSellingProducts = Product::query()
+            ->with(['brand', 'images'])
+            ->active()
+            ->hasPhoto()
+            ->byStatus('TERLARIS')
+            ->limit(8)
+            ->get();
+
+        $newProducts = Product::query()
+            ->with(['brand', 'images'])
+            ->active()
+            ->hasPhoto()
+            ->byStatus('TERBARU')
+            ->limit(8)
+            ->get();
+
+        $promoProducts = Product::query()
+            ->with(['brand', 'images'])
+            ->active()
+            ->hasPhoto()
+            ->byStatus('PROMO')
+            ->limit(8)
+            ->get();
+
         $about = AboutPage::query()->latest()->first();
 
         return view('guest.home', [
@@ -45,6 +69,9 @@ class HomeController extends Controller
             'brands' => $brands,
             'broadcasts' => $broadcasts,
             'featuredProducts' => $featuredProducts,
+            'topSellingProducts' => $topSellingProducts,
+            'newProducts' => $newProducts,
+            'promoProducts' => $promoProducts,
             'about' => $about,
         ]);
     }
@@ -71,8 +98,9 @@ class HomeController extends Controller
 
         $featuredProducts = Product::query()
             ->with(['brand', 'images'])
-            ->where('discontinued', false)
-            ->latest()
+            ->active()
+            ->hasPhoto()
+            ->orderBy('name')
             ->limit(10)
             ->get();
 
@@ -83,6 +111,9 @@ class HomeController extends Controller
             'brands' => $brands,
             'broadcasts' => $broadcasts,
             'featuredProducts' => $featuredProducts,
+            'topSellingProducts' => $topSellingProducts ?? collect(),
+            'newProducts' => $newProducts ?? collect(),
+            'promoProducts' => $promoProducts ?? collect(),
             'about' => $about,
             'initialScreen' => 'productDetail',
             'initialProductId' => $product->id,

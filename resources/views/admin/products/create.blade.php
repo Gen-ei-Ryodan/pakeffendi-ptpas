@@ -117,7 +117,12 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Status Product</label>
-                        <input name="status_product" value="{{ old('status_product') }}" class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-sky-500" placeholder="TERLARIS, PROMO, TERBARU, DLL">
+                        <select name="status_product" class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-sky-500">
+                            <option value="">Pilih Status</option>
+                            @foreach(config('product-status.all') as $key => $label)
+                                <option value="{{ $key }}" @selected(old('status_product') === $key)>{{ $label }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">No. Urut Status</label>
