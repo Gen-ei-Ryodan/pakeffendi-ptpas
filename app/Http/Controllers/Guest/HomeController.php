@@ -32,8 +32,9 @@ class HomeController extends Controller
 
         $featuredProducts = Product::query()
             ->with(['brand', 'images'])
-            ->where('discontinued', false)
-            ->latest()
+            ->active()
+            ->hasPhoto()
+            ->orderBy('name')
             ->limit(10)
             ->get();
 

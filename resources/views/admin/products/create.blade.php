@@ -115,6 +115,15 @@
                             Discontinued
                         </label>
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Status Product</label>
+                        <input name="status_product" value="{{ old('status_product') }}" class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-sky-500" placeholder="TERLARIS, PROMO, TERBARU, DLL">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">No. Urut Status</label>
+                        <input type="number" name="no_urut_status" value="{{ old('no_urut_status', 0) }}" min="0" class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-sky-500">
+                    </div>
+                    <div></div>
                 </div>
             </div>
 

@@ -868,13 +868,6 @@ footer a:hover {
 }
 
 /* Utility Classes */
-.text-truncate-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
 .text-truncate-3 {
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -1345,4 +1338,84 @@ html {
 .success-input {
     border-color: var(--success-color) !important;
     box-shadow: 0 0 0 0.2rem rgba(39, 174, 96, 0.25) !important;
+}
+
+/* Tiered Pricing - QOrder Screen */
+.qorder-tiers {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 6px 0;
+}
+
+.qorder-tiers .tier {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.75rem;
+    padding: 3px 6px;
+    border-radius: 4px;
+    background: #f8f9fa;
+}
+
+.qorder-tiers .tier.active {
+    background: #fff3e0;
+    font-weight: 600;
+}
+
+/* Tiered Pricing - Product List Screen */
+.prod-tiers {
+    margin: 4px 0;
+}
+
+.tier-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.72rem;
+    padding: 1px 0;
+    line-height: 1.4;
+}
+
+.tier-qty {
+    color: #6c757d;
+}
+
+.tier-price {
+    font-weight: 600;
+    color: #003366;
+}
+
+/* QOrder Card Padding Consistency */
+.qorder-card {
+    padding: 12px;
+}
+
+.qorder-card .qty-control .qty-btn {
+    min-width: 36px;
+    min-height: 36px;
+}
+
+.qorder-card .qty-input-box {
+    min-width: 50px;
+}
+
+.qorder-card .checkbox-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qorder-card .qorder-checkbox {
+    width: 22px;
+    height: 22px;
+    cursor: pointer;
+}
+
+/* Product Name max 2 lines */
+.text-truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
 }

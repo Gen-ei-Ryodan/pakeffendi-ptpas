@@ -22,8 +22,9 @@ Route::prefix('/')->group(function () {
 
         $featuredProducts = Product::query()
             ->with(['brand:brand_code,brand_name'])
-            ->where('discontinued', false)
-            ->latest()
+            ->active()
+            ->hasPhoto()
+            ->orderBy('name')
             ->limit(8)
             ->get();
 
@@ -60,8 +61,9 @@ Route::prefix('/')->group(function () {
 
         $query = Product::query()
             ->with(['brand:brand_code,brand_name', 'category:category_code,name'])
-            ->where('discontinued', false)
-            ->orderByDesc('created_at');
+            ->active()
+            ->hasPhoto()
+            ->orderBy('name');
 
         if (! empty($validated['q'])) {
             $q = trim((string) $validated['q']);
@@ -82,16 +84,16 @@ Route::prefix('/')->group(function () {
         if (! empty($validated['sort'])) {
             switch ($validated['sort']) {
                 case 'price-asc':
-                    $query->reorder()->orderBy('price_1')->orderByDesc('created_at');
+                    $query->reorder()->orderBy('price_1')->orderBy('name');
                     break;
                 case 'price-desc':
-                    $query->reorder()->orderByDesc('price_1')->orderByDesc('created_at');
+                    $query->reorder()->orderByDesc('price_1')->orderBy('name');
                     break;
                 case 'name-asc':
-                    $query->reorder()->orderBy('name')->orderByDesc('created_at');
+                    $query->reorder()->orderBy('name');
                     break;
                 case 'name-desc':
-                    $query->reorder()->orderByDesc('name')->orderByDesc('created_at');
+                    $query->reorder()->orderByDesc('name');
                     break;
                 case 'popular':
                 case 'newest':
@@ -134,18 +136,15 @@ Route::prefix('/')->group(function () {
             ->with([
                 'brand:brand_code,brand_name',
                 'category:category_code,name',
+                'relatedProducts' => function ($q) {
+                    $q->with(['brand:brand_code,brand_name'])->active()->hasPhoto()->orderBy('name');
+                },
             ])
-            ->where('discontinued', false)
+            ->active()
+            ->hasPhoto()
             ->findOrFail($id);
 
-        $relatedProducts = Product::query()
-            ->with(['brand:brand_code,brand_name'])
-            ->where('discontinued', false)
-            ->where('id', '!=', $product->id)
-            ->when($product->product_category_code, fn ($q) => $q->where('product_category_code', $product->product_category_code))
-            ->latest()
-            ->limit(4)
-            ->get();
+        $relatedProducts = $product->relatedProducts;
 
         return view('guest.products.show', [
             'product' => $product,

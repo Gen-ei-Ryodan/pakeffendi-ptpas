@@ -40,11 +40,24 @@
                     </div>
                     <div class="prod-info">
                         <p class="prod-brand">{{ $product->brand?->brand_name }}</p>
-                        <p class="prod-name">{{ $product->name }}</p>
+                        <p class="prod-name text-truncate-2">{{ $product->name }}</p>
                         @if(($product->variant ?? '') !== '')
                             <p class="text-muted small mb-1">{{ $product->variant }}</p>
                         @endif
-                        <p class="prod-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</p>
+                        <div class="prod-tiers">
+                            @foreach($product->pricing_tiers as $tier)
+                                <div class="tier-row">
+                                    <span class="tier-qty">
+                                        @if($tier['qty_end'])
+                                            {{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs
+                                        @else
+                                            {{ $tier['qty_start'] }}+ pcs
+                                        @endif
+                                    </span>
+                                    <span class="tier-price">Rp {{ number_format((float) $tier['price'], 0, ',', '.') }}</span>
+                                </div>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
             @endforeach

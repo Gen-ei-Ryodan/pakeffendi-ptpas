@@ -16,7 +16,7 @@
             @foreach($featuredProducts as $product)
                 <div class="qorder-card" data-product-id="{{ $product->id }}">
                     <div class="qorder-img">
-                        @if($product->photo_path)
+                        @if($product->has_photo)
                             <img src="{{ $product->photo_url }}" alt="{{ $product->name }}">
                         @else
                             <i class="far fa-image qorder-placeholder-icon"></i>
@@ -28,10 +28,18 @@
                             <div class="text-muted small mb-1">{{ $product->variant }}</div>
                         @endif
                         <div class="qorder-tiers">
-                            <div class="tier active">
-                                <span>1 pcs</span>
-                                <span>Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</span>
-                            </div>
+                            @foreach($product->pricing_tiers as $tier)
+                                <div class="tier {{ $loop->first ? 'active' : '' }}">
+                                    <span>
+                                        @if($tier['qty_end'])
+                                            {{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs
+                                        @else
+                                            {{ $tier['qty_start'] }}+ pcs
+                                        @endif
+                                    </span>
+                                    <span>Rp {{ number_format((float) $tier['price'], 0, ',', '.') }}</span>
+                                </div>
+                            @endforeach
                         </div>
                         <div class="qorder-actions">
                             <div class="qty-control">

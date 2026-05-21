@@ -69,12 +69,15 @@ class ProductController extends Controller
             'disc_2' => ['nullable', 'numeric', 'min:0'],
             'qty_3' => ['nullable', 'integer', 'min:1'],
             'disc_3' => ['nullable', 'numeric', 'min:0'],
+            'status_product' => ['nullable', 'string', 'max:50'],
+            'no_urut_status' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $product = Product::create([
             ...$validated,
             'discontinued' => (bool) ($validated['discontinued'] ?? false),
             'photo_path' => null,
+            'no_urut_status' => (int) ($validated['no_urut_status'] ?? 0),
         ]);
 
         if ($request->hasFile('photo')) {
@@ -125,6 +128,8 @@ class ProductController extends Controller
             'disc_2' => ['nullable', 'numeric', 'min:0'],
             'qty_3' => ['nullable', 'integer', 'min:1'],
             'disc_3' => ['nullable', 'numeric', 'min:0'],
+            'status_product' => ['nullable', 'string', 'max:50'],
+            'no_urut_status' => ['nullable', 'integer', 'min:0'],
         ]);
 
         if ($request->hasFile('photo')) {
