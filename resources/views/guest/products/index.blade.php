@@ -128,7 +128,7 @@
                     <div class="col-6 col-md-4 col-lg-3">
                         <div class="product-card" data-product-id="{{ $product->id }}">
                             <div class="position-relative">
-                                <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="product-image">
+                                <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="product-image" onerror="this.closest('.col-6,.col-md-4,.col-lg-3').remove()">
                             </div>
                             
                             <div class="product-info">

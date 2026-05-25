@@ -30,7 +30,8 @@
                         <!-- Main Image -->
                         <div class="position-relative">
                             <img src="{{ $mainImageUrl }}" 
-                                 alt="{{ $product->name }}" class="img-fluid w-100" id="mainProductImage" style="max-height: 500px; object-fit: cover;">
+                                 alt="{{ $product->name }}" class="img-fluid w-100" id="mainProductImage" style="max-height: 500px; object-fit: cover;"
+                                 onerror="this.style.display='none';var w=document.createElement('div');w.className='alert alert-warning text-center m-3';w.textContent='Gambar tidak tersedia';this.parentElement.appendChild(w)">
                         </div>
                     </div>
                 </div>
@@ -177,7 +178,8 @@
                             <div class="product-card" data-product-id="{{ $related->id }}">
                                 <div class="position-relative">
                                     <img src="{{ $relatedImageUrl }}"
-                                         alt="{{ $related->name }}" class="product-image">
+                                         alt="{{ $related->name }}" class="product-image"
+                                         onerror="this.closest('.col-6,.col-md-3').remove()">
                                 </div>
 
                                 <div class="product-info">

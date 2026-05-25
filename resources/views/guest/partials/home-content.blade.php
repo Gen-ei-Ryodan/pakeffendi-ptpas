@@ -41,7 +41,7 @@
                         @php
                             $imgUrl = $product->photo_url;
                         @endphp
-                        <img src="{{ $imgUrl }}" alt="Product">
+                        <img src="{{ $imgUrl }}" alt="Product" onerror="this.closest('.product-card').remove()">
                     </div>
                     <div class="prod-info">
                         <p class="prod-brand">{{ $product->brand?->brand_name }}</p>
@@ -68,7 +68,7 @@
                         @php
                             $imgUrl = $product->photo_url;
                         @endphp
-                        <img src="{{ $imgUrl }}" alt="Product">
+                        <img src="{{ $imgUrl }}" alt="Product" onerror="this.closest('.product-card').remove()">
                     </div>
                     <div class="prod-info">
                         <p class="prod-brand">{{ $product->brand?->brand_name }}</p>
