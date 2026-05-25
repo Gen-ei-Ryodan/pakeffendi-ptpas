@@ -165,37 +165,57 @@
                     <h3 class="fw-bold text-secondary">Produk Terkait</h3>
                     <a href="{{ url('/products') }}" class="btn btn-outline-primary btn-sm">Lihat Semua</a>
                 </div>
-                
+
+                @if(($relatedProducts ?? collect())->isNotEmpty())
                 <div class="row g-3 g-lg-4">
-                    @foreach(($relatedProducts ?? collect()) as $related)
+                    @foreach($relatedProducts as $related)
                     @php
                         $relatedImageUrl = $related->photo_url;
                     @endphp
-                    @if($related->has_photo)
                     <div class="col-6 col-md-3">
-                        <div class="product-card" data-product-id="{{ $related->id }}">
-                            <div class="position-relative">
-                                <img src="{{ $relatedImageUrl }}" 
-                                     alt="{{ $related->name }}" class="product-image">
-                            </div>
-                            
-                            <div class="product-info">
-                                <h6 class="product-title text-truncate-2">{{ $related->name }}</h6>
-                                @if(($related->variant ?? '') !== '')
-                                    <div class="text-muted small text-truncate">{{ $related->variant }}</div>
-                                @endif
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="product-price">Rp {{ number_format((float) $related->price_1, 0, ',', '.') }}</span>
-                                    <button class="btn btn-primary btn-sm btn-add-to-cart" data-product-id="{{ $related->id }}">
-                                        <i class="bi bi-cart-plus"></i>
-                                    </button>
+                        <a href="{{ url('/products/'.$related->id) }}" class="text-decoration-none">
+                            <div class="product-card" data-product-id="{{ $related->id }}">
+                                <div class="position-relative">
+                                    <img src="{{ $relatedImageUrl }}"
+                                         alt="{{ $related->name }}" class="product-image">
+                                </div>
+
+                                <div class="product-info">
+                                    <div class="mb-2">
+                                        <span class="text-muted small">{{ $related->brand?->brand_name }}</span>
+                                    </div>
+                                    <h6 class="product-title text-truncate-2">{{ $related->name }}</h6>
+                                    @if(($related->variant ?? '') !== '')
+                                        <div class="text-muted small text-truncate">{{ $related->variant }}</div>
+                                    @endif
+
+                                    @foreach($related->pricing_tiers as $tier)
+                                    <div class="d-flex justify-content-between align-items-center small py-0">
+                                        @if($tier['qty_end'])
+                                            <span class="text-muted">{{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs</span>
+                                        @else
+                                            <span class="text-muted">{{ $tier['qty_start'] }}+ pcs</span>
+                                        @endif
+                                        <span class="product-price">Rp {{ number_format((float) $tier['price'], 0, ',', '.') }}</span>
+                                    </div>
+                                    @endforeach
+
+                                    <div class="d-flex justify-content-end mt-2">
+                                        <button class="btn btn-primary btn-sm btn-add-to-cart product-cart-btn" data-product-id="{{ $related->id }}">
+                                            <i class="bi bi-cart-plus"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        </a>
                     </div>
-                    @endif
                     @endforeach
                 </div>
+                @else
+                <div class="text-center text-muted py-4">
+                    <p class="mb-0">Belum ada produk terkait.</p>
+                </div>
+                @endif
             </div>
         </div>
         

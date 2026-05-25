@@ -37,6 +37,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('categories', ProductCategoryController::class)->except(['show']);
         Route::resource('brands', ProductBrandController::class)->except(['show']);
         Route::resource('products', ProductController::class)->except(['show']);
+        Route::get('products/{product}/related', [ProductController::class, 'related'])->name('products.related');
+        Route::post('products/{product}/related', [ProductController::class, 'syncRelated'])->name('products.related.sync');
+        Route::delete('products/{product}/related/{relatedProduct}', [ProductController::class, 'destroyRelated'])->name('products.related.destroy');
         Route::resource('statuses', ProductStatusController::class)->except(['show']);
 
         Route::resource('sales-orders', SalesOrderController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);

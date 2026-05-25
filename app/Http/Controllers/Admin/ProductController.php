@@ -8,6 +8,7 @@ use App\Models\ProductBrand;
 use App\Models\ProductCategory;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
@@ -15,6 +16,18 @@ class ProductController extends Controller
     public function index(Request $request)
     {
         $q = (string) $request->query('q', '');
+        $brand = (string) $request->query('brand', '');
+        $category = (string) $request->query('category', '');
+        $sortBy = (string) $request->query('sort_by', 'name');
+        $sortDir = (string) $request->query('sort_dir', 'asc');
+
+        $validSorts = ['name', 'sku', 'id', 'status_product'];
+        if (!in_array($sortBy, $validSorts, true)) {
+            $sortBy = 'name';
+        }
+        if (!in_array($sortDir, ['asc', 'desc'], true)) {
+            $sortDir = 'asc';
+        }
 
         $products = Product::query()
             ->with(['brand', 'category'])
@@ -26,13 +39,25 @@ class ProductController extends Controller
                         ->orWhere('variant', 'like', "%{$q}%");
                 });
             })
-            ->orderByDesc('id')
+            ->when($brand !== '', function ($query) use ($brand) {
+                $query->where('product_brand_code', $brand);
+            })
+            ->when($category !== '', function ($query) use ($category) {
+                $query->where('product_category_code', $category);
+            })
+            ->orderBy($sortBy, $sortDir)
             ->paginate(10)
             ->withQueryString();
 
         return view('admin.products.index', [
             'products' => $products,
             'q' => $q,
+            'brand' => $brand,
+            'category' => $category,
+            'sortBy' => $sortBy,
+            'sortDir' => $sortDir,
+            'brands' => ProductBrand::query()->orderBy('brand_name')->get(),
+            'categories' => ProductCategory::query()->orderBy('name')->get(),
         ]);
     }
 
@@ -159,5 +184,67 @@ class ProductController extends Controller
         ActivityLogger::log('deleted', 'Product - '.$sku);
 
         return redirect()->route('admin.products.index')->with('status', 'Product berhasil dihapus.');
+    }
+
+    public function related(Product $product)
+    {
+        $product->load('relatedProducts');
+
+        $existingIds = $product->relatedProducts->pluck('id')->toArray();
+
+        $candidates = Product::query()
+            ->where('id', '!=', $product->id)
+            ->whereNotIn('id', $existingIds)
+            ->active()
+            ->orderBy('name')
+            ->get(['id', 'sku', 'name', 'variant']);
+
+        return view('admin.products.related', [
+            'product' => $product,
+            'candidates' => $candidates,
+        ]);
+    }
+
+    public function syncRelated(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'related_ids' => ['required', 'array', 'min:1'],
+            'related_ids.*' => ['required', 'integer', 'exists:products,id'],
+        ]);
+
+        $relatedIds = $validated['related_ids'];
+
+        $exists = DB::table('related_products')
+            ->where('product_id', $product->id)
+            ->whereIn('related_product_id', $relatedIds)
+            ->exists();
+
+        if ($exists) {
+            return back()->withErrors(['related_ids' => 'Beberapa produk sudah terdaftar sebagai related.']);
+        }
+
+        $rows = array_map(fn ($id) => [
+            'product_id' => $product->id,
+            'related_product_id' => $id,
+            'relation_type' => null,
+        ], $relatedIds);
+
+        DB::table('related_products')->insert($rows);
+
+        ActivityLogger::log('created', 'RelatedProduct - '.$product->sku);
+
+        return redirect()->route('admin.products.related', $product)->with('status', 'Related product berhasil ditambahkan.');
+    }
+
+    public function destroyRelated(Product $product, Product $relatedProduct)
+    {
+        DB::table('related_products')
+            ->where('product_id', $product->id)
+            ->where('related_product_id', $relatedProduct->id)
+            ->delete();
+
+        ActivityLogger::log('deleted', 'RelatedProduct - '.$product->sku);
+
+        return redirect()->route('admin.products.related', $product)->with('status', 'Related product berhasil dihapus.');
     }
 }
