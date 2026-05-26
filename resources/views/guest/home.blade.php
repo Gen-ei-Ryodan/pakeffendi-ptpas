@@ -62,7 +62,9 @@
                             @if(($product->variant ?? '') !== '')
                                 <p class="text-muted small mb-1">{{ $product->variant }}</p>
                             @endif
-                            <p class="prod-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</p>
+                            <div class="pricing-tiers">
+                                <p class="prod-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</p>
+                            </div>
                         </div>
                     </div>
                 @endforeach
@@ -94,7 +96,9 @@
                             @if(($product->variant ?? '') !== '')
                                 <p class="text-muted small mb-1">{{ $product->variant }}</p>
                             @endif
-                            <p class="prod-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</p>
+                            <div class="pricing-tiers">
+                                <p class="prod-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</p>
+                            </div>
                         </div>
                     </div>
                 @endforeach
@@ -127,7 +131,9 @@
                             @if(($product->variant ?? '') !== '')
                                 <p class="text-muted small mb-1">{{ $product->variant }}</p>
                             @endif
-                            <p class="prod-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</p>
+                            <div class="pricing-tiers">
+                                <p class="prod-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</p>
+                            </div>
                         </div>
                     </div>
                 @endforeach
