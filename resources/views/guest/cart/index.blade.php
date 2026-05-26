@@ -43,7 +43,7 @@
                             <div class="cart-item border-bottom pb-3 mb-3" data-product-id="{{ $product?->id }}">
                                 <div class="row align-items-center">
                                     <div class="col-md-2">
-                                        <img src="{{ $imageUrl }}" alt="{{ $product?->name }}" class="img-fluid rounded" onerror="this.style.display='none'">
+                                        <img src="{{ $imageUrl }}" alt="{{ $product?->name }}" class="img-fluid rounded" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
                                     </div>
                                     <div class="col-md-4">
                                         <h6 class="fw-bold mb-1">{{ $product?->name }}</h6>

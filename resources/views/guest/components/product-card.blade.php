@@ -5,7 +5,7 @@
     <div class="position-relative">
         <img src="{{ $product['image'] ?? 'https://via.placeholder.com/300x300/f8f9fa/333333?text=Product' }}" 
              alt="{{ $product['name'] ?? 'Product' }}" class="product-image"
-             onerror="this.style.display='none'">
+             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
         
         @if($showBadge)
             <div class="product-badge">

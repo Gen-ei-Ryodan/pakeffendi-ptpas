@@ -17,7 +17,7 @@
                 <div class="qorder-card" data-product-id="{{ $product->id }}">
                     <div class="qorder-img">
                         @if($product->has_photo)
-                            <img src="{{ $product->photo_url }}" alt="{{ $product->name }}" onerror="this.style.display='none'">
+                            <img src="{{ $product->photo_url }}" alt="{{ $product->name }}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
                         @else
                             <i class="far fa-image qorder-placeholder-icon"></i>
                         @endif

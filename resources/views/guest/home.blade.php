@@ -55,7 +55,7 @@
                     @endphp
                     <div class="product-card" data-product-id="{{ $product->id }}">
                         <div class="prod-img-box">
-                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}" onerror="this.style.display='none'">
+                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
                         </div>
                         <div class="prod-info">
                             <p class="prod-brand">{{ $product->brand?->brand_name }}</p>

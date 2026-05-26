@@ -31,7 +31,7 @@
                         <div class="position-relative">
                             <img src="{{ $mainImageUrl }}" 
                                  alt="{{ $product->name }}" class="img-fluid w-100" id="mainProductImage" style="max-height: 500px; object-fit: cover;"
-                                 onerror="this.style.display='none'">
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
                         </div>
                     </div>
                 </div>
@@ -179,7 +179,7 @@
                                 <div class="position-relative">
                                     <img src="{{ $relatedImageUrl }}"
                                          alt="{{ $related->name }}" class="product-image"
-                                         onerror="this.style.display='none'">
+                                         onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
                                 </div>
 
                                 <div class="product-info">

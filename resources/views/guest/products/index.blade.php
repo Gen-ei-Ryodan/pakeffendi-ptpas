@@ -128,7 +128,7 @@
                     <div class="col-6 col-md-4 col-lg-3">
                         <div class="product-card" data-product-id="{{ $product->id }}">
                             <div class="position-relative">
-                                <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="product-image" onerror="this.style.display='none'">
+                                <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="product-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
                             </div>
                             
                             <div class="product-info">
