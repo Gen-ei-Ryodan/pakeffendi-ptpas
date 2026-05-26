@@ -31,7 +31,7 @@
                         <div class="position-relative">
                             <img src="{{ $mainImageUrl }}" 
                                  alt="{{ $product->name }}" class="img-fluid w-100" id="mainProductImage" style="max-height: 500px; object-fit: cover;"
-                                 onerror="this.style.display='none';var w=document.createElement('div');w.className='alert alert-warning text-center m-3';w.textContent='Gambar tidak tersedia';this.parentElement.appendChild(w)">
+                                 onerror="this.style.display='none'">
                         </div>
                     </div>
                 </div>
@@ -179,7 +179,7 @@
                                 <div class="position-relative">
                                     <img src="{{ $relatedImageUrl }}"
                                          alt="{{ $related->name }}" class="product-image"
-                                         onerror="this.closest('.col-6,.col-md-3').remove()">
+                                         onerror="this.style.display='none'">
                                 </div>
 
                                 <div class="product-info">

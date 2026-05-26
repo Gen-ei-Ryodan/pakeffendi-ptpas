@@ -42,7 +42,7 @@
                         @php
                             $imgUrl = $product->photo_url;
                         @endphp
-                        <img src="{{ $imgUrl }}" alt="Product" onerror="this.closest('.product-card').remove()">
+                        <img src="{{ $imgUrl }}" alt="Product" onerror="this.style.display='none'">
                     </div>
                     <div class="prod-info">
                         <p class="prod-brand">{{ $product->brand?->brand_name }}</p>

@@ -43,7 +43,7 @@
                             <div class="cart-item border-bottom pb-3 mb-3" data-product-id="{{ $product?->id }}">
                                 <div class="row align-items-center">
                                     <div class="col-md-2">
-                                        <img src="{{ $imageUrl }}" alt="{{ $product?->name }}" class="img-fluid rounded" onerror="this.closest('.cart-item').remove(); updateCartSummary();">
+                                        <img src="{{ $imageUrl }}" alt="{{ $product?->name }}" class="img-fluid rounded" onerror="this.style.display='none'">
                                     </div>
                                     <div class="col-md-4">
                                         <h6 class="fw-bold mb-1">{{ $product?->name }}</h6>

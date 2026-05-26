@@ -55,7 +55,7 @@
                     @endphp
                     <div class="product-card" data-product-id="{{ $product->id }}">
                         <div class="prod-img-box">
-                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}" onerror="this.closest('.product-card').remove()">
+                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}" onerror="this.style.display='none'">
                         </div>
                         <div class="prod-info">
                             <p class="prod-brand">{{ $product->brand?->brand_name }}</p>
