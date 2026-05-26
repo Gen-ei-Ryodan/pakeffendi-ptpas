@@ -74,7 +74,7 @@ class Product extends Model
 
     public function scopeByStatus($query, string $status)
     {
-        return $query->where('status_product', $status)->orderBy('no_urut_status');
+        return $query->where('status_product', $status)->orderBy('no_urut_status')->orderBy('name');
     }
 
     public function pricingForQuantity(int $quantity): array
