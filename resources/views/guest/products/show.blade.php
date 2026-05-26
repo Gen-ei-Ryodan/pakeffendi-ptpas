@@ -56,7 +56,7 @@
                         <!-- Price -->
                         <div class="mb-4">
                             <div class="d-flex align-items-center gap-3">
-                                <span class="h2 fw-bold text-primary mb-0 product-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</span>
+                                <span class="h2 fw-bold text-primary mb-0 product-price">Rp {{ number_format((float) ($product->pricing_tiers[0]['net_price'] ?? $product->price_1), 0, ',', '.') }}</span>
                             </div>
                         </div>
 
@@ -76,7 +76,7 @@
                                                     {{ $tier['qty_start'] }}+ pcs
                                                 @endif
                                             </td>
-                                            <td class="text-end fw-bold text-primary">Rp {{ number_format((float) $tier['price'], 0, ',', '.') }}</td>
+                                            <td class="text-end fw-bold text-primary">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</td>
                                         </tr>
                                         @endforeach
                                     </tbody>
@@ -199,7 +199,7 @@
                                         @else
                                             <span class="text-muted">{{ $tier['qty_start'] }}+ pcs</span>
                                         @endif
-                                        <span class="product-price">Rp {{ number_format((float) $tier['price'], 0, ',', '.') }}</span>
+                                        <span class="product-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
                                     </div>
                                     @endforeach
                                     </div>

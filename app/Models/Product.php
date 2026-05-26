@@ -107,28 +107,37 @@ class Product extends Model
     {
         $tiers = [];
 
+        $price1 = (float) $this->price_1;
+        $disc1 = (float) ($this->disc_1 ?? 0);
         $tiers[] = [
             'qty_start' => 1,
             'qty_end' => $this->qty_2 ? ($this->qty_2 - 1) : null,
-            'price' => (float) $this->price_1,
-            'discount' => (float) ($this->disc_1 ?? 0),
+            'price' => $price1,
+            'discount' => $disc1,
+            'net_price' => $price1 * (1 - ($disc1 / 100)),
         ];
 
         if ($this->price_2 && $this->qty_2) {
+            $price2 = (float) $this->price_2;
+            $disc2 = (float) ($this->disc_2 ?? 0);
             $tiers[] = [
                 'qty_start' => (int) $this->qty_2,
                 'qty_end' => $this->qty_3 ? ($this->qty_3 - 1) : null,
-                'price' => (float) $this->price_2,
-                'discount' => (float) ($this->disc_2 ?? 0),
+                'price' => $price2,
+                'discount' => $disc2,
+                'net_price' => $price2 * (1 - ($disc2 / 100)),
             ];
         }
 
         if ($this->price_3 && $this->qty_3) {
+            $price3 = (float) $this->price_3;
+            $disc3 = (float) ($this->disc_3 ?? 0);
             $tiers[] = [
                 'qty_start' => (int) $this->qty_3,
                 'qty_end' => null,
-                'price' => (float) $this->price_3,
-                'discount' => (float) ($this->disc_3 ?? 0),
+                'price' => $price3,
+                'discount' => $disc3,
+                'net_price' => $price3 * (1 - ($disc3 / 100)),
             ];
         }
 

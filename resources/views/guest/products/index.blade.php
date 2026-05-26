@@ -148,7 +148,7 @@
                                     @else
                                         <span class="text-muted">{{ $tier['qty_start'] }}+ pcs</span>
                                     @endif
-                                    <span class="product-price">Rp {{ number_format((float) $tier['price'], 0, ',', '.') }}</span>
+                                    <span class="product-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
                                 </div>
                                 @endforeach
                                 </div>

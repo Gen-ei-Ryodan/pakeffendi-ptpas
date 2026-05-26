@@ -64,7 +64,7 @@
                                 <p class="text-muted small mb-1">{{ $product->variant }}</p>
                             @endif
                             <div class="pricing-tiers">
-                                <p class="prod-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</p>
+                                <p class="prod-price">Rp {{ number_format((float) ($product->pricing_tiers[0]['net_price'] ?? $product->price_1), 0, ',', '.') }}</p>
                             </div>
                         </div>
                     </div>

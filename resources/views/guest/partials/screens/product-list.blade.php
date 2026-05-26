@@ -54,7 +54,7 @@
                                             {{ $tier['qty_start'] }}+ pcs
                                         @endif
                                     </span>
-                                    <span class="tier-price">Rp {{ number_format((float) $tier['price'], 0, ',', '.') }}</span>
+                                    <span class="tier-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
                                 </div>
                             @endforeach
                         </div>
