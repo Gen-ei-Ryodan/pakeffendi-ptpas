@@ -1698,267 +1698,373 @@ body {
 
 @media (max-width: 575.98px) {
 
-    /* ----- GLOBAL ----- */
+    /* ----- CONTAINER & GRID OVERRIDES ----- */
     .container {
-        padding-left: 14px !important;
-        padding-right: 14px !important;
+        padding-left: 2px !important;
+        padding-right: 2px !important;
     }
 
     section.py-5 {
-        padding-top: 1.5rem !important;
-        padding-bottom: 1.5rem !important;
+        padding-top: 1.25rem !important;
+        padding-bottom: 1.25rem !important;
+    }
+
+    /* Bootstrap row gap override for all product grids */
+    .row.g-3,
+    .row.g-lg-4 {
+        --bs-gutter-x: 2px;
+        --bs-gutter-y: 2px;
     }
 
     /* ----- HERO BANNER ----- */
     .hero-banner {
-        padding: 0.75rem 0;
+        padding: 0.5rem 0;
         margin-bottom: 0;
     }
 
     .hero-banner-frame {
-        padding: 0.5rem;
-        border-radius: 12px;
+        padding: 4px;
+        border-radius: 8px;
     }
 
     .hero-banner-media {
         aspect-ratio: 16 / 9;
-        border-radius: 8px;
+        border-radius: 6px;
     }
 
     /* ----- CATEGORIES ----- */
     .categories-scroll {
-        gap: 0.6rem;
+        gap: 0.5rem;
         padding-bottom: 0.25rem;
     }
 
     .categories-scroll .category-card {
-        min-width: 140px;
-        padding: 0.7rem 0.85rem;
-        border-radius: 12px;
+        min-width: 120px;
+        padding: 0.6rem 0.75rem;
+        border-radius: 10px;
     }
 
     .categories-scroll .category-card .cat-name {
-        font-size: 0.78rem;
-        max-width: 100px;
+        font-size: 0.72rem;
+        max-width: 85px;
     }
 
     .categories-scroll .category-card .cat-icon {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
     }
 
     /* ----- SECTION HEADERS ----- */
     .section-header {
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.35rem;
     }
 
     .section-title {
-        font-size: 0.95rem;
-        margin-bottom: 0.5rem;
+        font-size: 0.88rem;
+        margin-bottom: 0.35rem;
     }
 
     .see-all {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
+    }
+
+    /* ----- PRODUCT GRID CARDS (products/index, show related) ----- */
+    .product-card {
+        border-radius: 8px;
+        border: 1px solid rgba(0,0,0,0.06);
+        box-shadow: none;
+    }
+
+    .product-card:hover {
+        transform: none;
+        box-shadow: none;
+    }
+
+    .product-card .product-image {
+        aspect-ratio: 1 / 1;
+        height: auto;
+        object-fit: cover;
+    }
+
+    .product-card .product-info {
+        padding: 0.45rem 0.5rem;
+    }
+
+    .product-card .product-title {
+        font-size: 0.75rem;
+        line-height: 1.2;
+        margin-bottom: 0.2rem;
+        font-weight: 600;
+    }
+
+    .product-card .product-price {
+        font-size: 0.75rem;
+        white-space: nowrap;
+        font-weight: 700;
+    }
+
+    .product-card .product-original-price {
+        font-size: 0.65rem;
+    }
+
+    .product-card .text-muted.small {
+        font-size: 0.62rem;
+    }
+
+    /* ----- PRICING TIERS IN GRID CARDS ----- */
+    .product-card .pricing-tiers {
+        min-height: 48px;
+        margin-top: 2px;
+    }
+
+    .product-card .pricing-tiers .tier-row {
+        font-size: 0.6rem;
+        padding: 1px 0;
+        line-height: 1.3;
+        gap: 4px;
+    }
+
+    .product-card .pricing-tiers .tier-row .text-muted {
+        flex-shrink: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 55%;
+    }
+
+    .product-card .pricing-tiers .tier-row .product-price {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    /* ----- ADD TO CART BUTTON COMPACT ----- */
+    .product-cart-btn {
+        width: 100%;
+        font-size: 0.65rem;
+        padding: 4px 6px !important;
+        min-height: 26px;
+        border-radius: 6px;
+    }
+
+    .product-cart-btn i {
+        font-size: 0.72rem;
     }
 
     /* ----- PRODUCT CARD SCROLL (Home) ----- */
     .products-scroll {
-        gap: 0.65rem;
+        gap: 0.5rem;
         padding-bottom: 0.25rem;
     }
 
     .products-scroll > .product-card {
-        width: 175px;
-        border-radius: 12px;
+        width: 155px;
+        border-radius: 8px;
+        border: 1px solid rgba(0,0,0,0.06);
+        box-shadow: none;
     }
 
     .prod-img-box {
-        height: 120px;
-        padding: 0.5rem;
+        aspect-ratio: 1 / 1;
+        height: auto;
+        padding: 0;
+        background: #f5f5f5;
+    }
+
+    .prod-img-box img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
     }
 
     .prod-info {
-        padding: 0.6rem 0.7rem;
+        padding: 0.45rem 0.5rem;
     }
 
     .prod-brand {
-        font-size: 0.62rem;
-        margin-bottom: 0.15rem;
+        font-size: 0.58rem;
+        margin-bottom: 0.1rem;
+        letter-spacing: 0.04em;
     }
 
     .prod-name {
-        font-size: 0.78rem;
-        margin-bottom: 0.3rem;
+        font-size: 0.72rem;
+        margin-bottom: 0.2rem;
+        line-height: 1.2;
     }
 
     .prod-price {
-        font-size: 0.85rem;
+        font-size: 0.78rem;
     }
 
-    .product-card .pricing-tiers {
-        min-height: 60px;
+    .products-scroll > .product-card .pricing-tiers {
+        min-height: 48px;
+        margin-top: 2px;
     }
 
-    .product-card .pricing-tiers .tier-row {
-        font-size: 0.62rem;
-        padding: 1px 0;
+    /* ----- PRODUCT LIST SCREEN ----- */
+    .product-grid .product-card {
+        border-radius: 8px;
+        border: 1px solid rgba(0,0,0,0.06);
+        box-shadow: none;
     }
 
-    /* ----- PRODUCT GRID ----- */
-    .product-card .product-image {
-        height: 120px;
-    }
-
-    .product-card .product-info {
-        padding: 0.7rem;
-    }
-
-    .product-card .product-title {
-        font-size: 0.85rem;
-        margin-bottom: 0.3rem;
-    }
-
-    .product-card .product-price {
-        font-size: 0.9rem;
-    }
-
-    .product-card .pricing-tiers {
-        min-height: 60px;
+    .product-grid .product-card .prod-info {
+        padding: 0.45rem 0.5rem;
     }
 
     .product-grid .product-card .prod-tiers {
-        min-height: 60px;
+        min-height: 48px;
     }
 
-    .tier-row {
-        font-size: 0.65rem;
+    .product-grid .tier-row {
+        font-size: 0.6rem;
         padding: 1px 0;
+        gap: 4px;
     }
 
-    .product-cart-btn {
-        width: 100%;
-        font-size: 0.75rem;
-        padding: 6px 10px !important;
-        min-height: 36px;
+    .product-grid .tier-qty {
+        flex-shrink: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 55%;
+    }
+
+    .product-grid .tier-price {
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    /* ----- QORDER SCREEN ----- */
+    .qorder-card {
+        padding: 8px;
+    }
+
+    .qorder-card .qorder-img img {
+        object-fit: cover;
+    }
+
+    .qorder-card .qorder-tiers .tier {
+        font-size: 0.68rem;
+        padding: 2px 5px;
     }
 
     /* ----- CATEGORY TILES ----- */
     .category-tile-title {
-        padding: 0.6rem 0.75rem;
-        font-size: 0.85rem;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.8rem;
     }
 
     /* ----- BREADCRUMB ----- */
     .breadcrumb {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
     }
 
     /* ----- PRODUCT PAGE HEADER ----- */
     .products-page-title {
-        font-size: 1.3rem;
-    }
-
-    /* ----- CART PAGE ----- */
-    .cart-item .row {
-        row-gap: 8px;
-    }
-
-    .cart-item .col-md-2 img {
-        max-width: 80px;
-    }
-
-    .cart-item h6 {
-        font-size: 0.85rem;
-    }
-
-    .cart-item .text-muted.small {
-        font-size: 0.75rem;
-    }
-
-    /* ----- LOGIN PAGE ----- */
-    .login-page .card-body {
-        padding: 1.5rem 1rem;
-    }
-
-    .login-page h2 {
-        font-size: 1.3rem;
-    }
-
-    .login-page .form-control {
-        font-size: 0.9rem;
-        padding: 10px 14px;
-    }
-
-    /* ----- BUTTONS ----- */
-    .btn {
-        font-size: 0.85rem;
-        padding: 10px 16px;
-        min-height: 42px;
-    }
-
-    .btn-sm {
-        font-size: 0.78rem;
-        padding: 6px 12px;
-        min-height: 34px;
-    }
-
-    .btn-lg {
-        font-size: 0.95rem;
-        padding: 12px 20px;
-        min-height: 48px;
-    }
-
-    /* ----- FORMS ----- */
-    .form-control {
-        font-size: 0.9rem;
-        padding: 10px 14px;
-    }
-
-    .form-select {
-        font-size: 0.9rem;
-        padding: 10px 14px;
-    }
-
-    /* ----- PAGINATION ----- */
-    .pagination .page-link {
-        font-size: 0.8rem;
-        padding: 6px 12px;
-        min-width: 36px;
-        text-align: center;
-    }
-
-    /* ----- PRODUCT SHOW PAGE (Detail) ----- */
-    #mainProductImage {
-        max-height: 280px !important;
-    }
-
-    .product-name {
         font-size: 1.15rem;
     }
 
+    /* ----- PRODUCT SHOW (Detail) ----- */
+    #mainProductImage {
+        max-height: 260px !important;
+    }
+
+    .product-name {
+        font-size: 1.05rem;
+    }
+
     .product-price.h2 {
-        font-size: 1.3rem;
+        font-size: 1.15rem;
     }
 
     /* ----- TABLES ----- */
     .table {
-        font-size: 0.8rem;
+        font-size: 0.72rem;
     }
 
     .table td, .table th {
-        padding: 8px 10px;
+        padding: 6px 8px;
+    }
+
+    /* ----- BUTTONS ----- */
+    .btn {
+        font-size: 0.82rem;
+        padding: 8px 14px;
+        min-height: 38px;
+    }
+
+    .btn-sm {
+        font-size: 0.72rem;
+        padding: 5px 10px;
+        min-height: 30px;
+    }
+
+    .btn-lg {
+        font-size: 0.9rem;
+        padding: 10px 18px;
+        min-height: 44px;
+    }
+
+    /* ----- FORMS ----- */
+    .form-control {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+
+    .form-select {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+
+    /* ----- PAGINATION ----- */
+    .pagination .page-link {
+        font-size: 0.75rem;
+        padding: 5px 10px;
+        min-width: 32px;
+        text-align: center;
+    }
+
+    /* ----- CART PAGE ----- */
+    .cart-item .row {
+        row-gap: 6px;
+    }
+
+    .cart-item .col-md-2 img {
+        max-width: 70px;
+    }
+
+    .cart-item h6 {
+        font-size: 0.8rem;
+    }
+
+    .cart-item .text-muted.small {
+        font-size: 0.7rem;
     }
 
     /* ----- CART SUMMARY ----- */
     .card-body h5 {
-        font-size: 0.95rem;
+        font-size: 0.88rem;
     }
 
-    /* Safe area for iPhone X+ */
+    /* ----- LOGIN/REGISTER ----- */
+    .login-page .card-body {
+        padding: 1.25rem 0.85rem;
+    }
+
+    .login-page h2 {
+        font-size: 1.15rem;
+    }
+
+    .login-page .form-control {
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+
+    /* ----- BOTTOM NAV ----- */
     .bottom-nav {
         padding-bottom: max(4px, env(safe-area-inset-bottom, 4px));
     }
 
-    /* Increase touch targets */
     .bottom-nav-item {
         min-height: 48px;
     }
@@ -1971,7 +2077,6 @@ body {
         font-size: 0.58rem;
     }
 
-    /* Bottom nav badge adjust for smaller icon */
     .bottom-nav-badge {
         top: -1px;
         right: 50%;
@@ -1989,32 +2094,46 @@ body {
 @media (min-width: 576px) and (max-width: 991.98px) {
 
     .container {
-        padding-left: 20px !important;
-        padding-right: 20px !important;
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+    }
+
+    .row.g-3,
+    .row.g-lg-4 {
+        --bs-gutter-x: 8px;
+        --bs-gutter-y: 8px;
     }
 
     .products-scroll > .product-card {
-        width: 200px;
+        width: 190px;
     }
 
     .prod-img-box {
-        height: 135px;
+        height: 140px;
     }
 
     .product-card .product-image {
-        height: 150px;
+        height: 160px;
     }
 
     .product-card .product-info {
-        padding: 0.85rem;
+        padding: 0.7rem;
+    }
+
+    .product-card .pricing-tiers {
+        min-height: 66px;
+    }
+
+    .product-cart-btn {
+        min-height: 32px;
     }
 
     .bottom-nav-item i {
-        font-size: 1.3rem;
+        font-size: 1.25rem;
     }
 
     .bottom-nav-item span {
-        font-size: 0.63rem;
+        font-size: 0.6rem;
     }
 }
 
