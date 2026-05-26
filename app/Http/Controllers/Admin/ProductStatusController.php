@@ -35,30 +35,30 @@ class ProductStatusController extends Controller
         return redirect()->route('admin.statuses.index')->with('status', 'Status berhasil dibuat.');
     }
 
-    public function edit(ProductStatus $productStatus)
+    public function edit(ProductStatus $status)
     {
-        return view('admin.statuses.edit', ['status' => $productStatus]);
+        return view('admin.statuses.edit', ['status' => $status]);
     }
 
-    public function update(Request $request, ProductStatus $productStatus)
+    public function update(Request $request, ProductStatus $status)
     {
         $validated = $request->validate([
-            'code' => ['required', 'string', 'max:50', 'unique:product_statuses,code,'.$productStatus->id],
+            'code' => ['required', 'string', 'max:50', 'unique:product_statuses,code,'.$status->id],
             'name' => ['required', 'string', 'max:100'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $productStatus->update($validated);
+        $status->update($validated);
 
         ActivityLogger::log('updated', 'ProductStatus - '.$validated['code']);
 
         return redirect()->route('admin.statuses.index')->with('status', 'Status berhasil diupdate.');
     }
 
-    public function destroy(ProductStatus $productStatus)
+    public function destroy(ProductStatus $status)
     {
-        $code = $productStatus->code;
-        $productStatus->delete();
+        $code = $status->code;
+        $status->delete();
 
         ActivityLogger::log('deleted', 'ProductStatus - '.$code);
 

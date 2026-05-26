@@ -11,4 +11,9 @@ class ProductStatus extends Model
         'name',
         'sort_order',
     ];
+
+    public function getRouteKeyName(): string
+    {
+        return 'id';
+    }
 }
