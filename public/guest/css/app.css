@@ -2343,6 +2343,36 @@ body {
         margin-bottom: 8px;
     }
 
+    /**** Infinite scroll load more ****/
+    .products-load-more {
+        padding: 20px 0;
+        text-align: center;
+    }
+
+    .load-more-spinner {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+    }
+
+    .load-more-spinner .spinner {
+        width: 22px;
+        height: 22px;
+        border: 3px solid rgba(0,0,0,0.1);
+        border-top: 3px solid var(--primary-color);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    .load-more-end {
+        color: var(--text-muted);
+        font-size: 0.82rem;
+        padding: 8px 0;
+    }
+
     /* Sort dropdown (appears from top) */
     .sort-sheet-overlay {
         display: none;

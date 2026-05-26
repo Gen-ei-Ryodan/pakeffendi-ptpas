@@ -97,58 +97,28 @@
                 </div>
                 
                 <!-- Products Grid -->
-                <div class="products-grid-manual">
+                <div class="products-grid-manual" id="productsGrid">
                     @foreach(($products ?? collect()) as $product)
-                    @php
-                        $imageUrl = $product->photo_url;
-                        $tierCount = count($product->pricing_tiers);
-                    @endphp
-                        <div class="product-card" data-product-id="{{ $product->id }}">
-                            <div class="position-relative">
-                                <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="product-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
-                            </div>
-
-                            <div class="product-info">
-                                <div>
-                                    <span class="text-muted small">{{ $product->brand?->brand_name }}</span>
-                                </div>
-                                <h6 class="product-title text-truncate-2">{{ $product->name }}</h6>
-                                @if(($product->variant ?? '') !== '')
-                                    <div class="text-muted small text-truncate">{{ $product->variant }}</div>
-                                @endif
-
-                                <div class="pricing-tiers">
-                                @foreach($product->pricing_tiers as $tier)
-                                <div class="tier-row">
-                                    @if($tier['qty_end'])
-                                        <span class="text-muted">{{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs</span>
-                                    @else
-                                        <span class="text-muted">{{ $tier['qty_start'] }}+ pcs</span>
-                                    @endif
-                                    <span class="product-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
-                                </div>
-                                @endforeach
-                                @for($i = $tierCount; $i < 3; $i++)
-                                <div class="tier-row tier-row-hidden">
-                                    <span class="text-muted">-</span>
-                                    <span class="product-price">-</span>
-                                </div>
-                                @endfor
-                                </div>
-
-                                <div class="d-flex justify-content-end">
-                                    <button class="btn btn-primary btn-sm btn-add-to-cart product-cart-btn" data-product-id="{{ $product->id }}">
-                                        <i class="bi bi-cart-plus"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                        @include('guest.partials.product-card-item')
                     @endforeach
                 </div>
+
+                <!-- Load More Trigger -->
+                @if(isset($products) && $products->hasMorePages())
+                    <div class="products-load-more d-lg-none" id="productsLoadMore">
+                        <div class="load-more-spinner" id="loadMoreSpinner" style="display:none;">
+                            <div class="spinner"></div>
+                            <span>Memuat produk...</span>
+                        </div>
+                        <div class="load-more-end" id="loadMoreEnd" style="display:none;">
+                            <span>Semua produk telah dimuat</span>
+                        </div>
+                    </div>
+                @endif
                 
-                <!-- Pagination -->
+                <!-- Pagination (Desktop) -->
                 @if(isset($products))
-                    <div class="mt-5 d-flex justify-content-center">
+                    <div class="mt-5 d-flex justify-content-center d-none d-lg-flex">
                         {{ $products->links('pagination::bootstrap-5') }}
                     </div>
                 @endif
@@ -313,6 +283,71 @@ document.addEventListener('DOMContentLoaded', function() {
         resetBtn.addEventListener('click', function() {
             window.location.href = '{{ url('/products') }}';
         });
+    }
+
+    // Mobile: infinite scroll
+    const grid = document.getElementById('productsGrid');
+    const loadMore = document.getElementById('productsLoadMore');
+    if (grid && loadMore) {
+        let loading = false;
+        let currentPage = 2;
+        let hasMore = true;
+        let scrollTimer;
+
+        const loadNextPage = function() {
+            if (loading || !hasMore) return;
+            loading = true;
+
+            const spinner = document.getElementById('loadMoreSpinner');
+            if (spinner) spinner.style.display = 'flex';
+
+            const params = new URLSearchParams(window.location.search);
+            params.set('page', currentPage);
+
+            fetch('{{ url('/products/load-more') }}?' + params.toString(), {
+                headers: { 'Accept': 'application/json' }
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.html) {
+                    const temp = document.createElement('div');
+                    temp.innerHTML = data.html;
+                    while (temp.firstChild) {
+                        grid.appendChild(temp.firstChild);
+                    }
+                }
+                hasMore = data.hasMore;
+                currentPage = data.nextPage;
+
+                if (spinner) spinner.style.display = 'none';
+
+                if (!hasMore) {
+                    const endMsg = document.getElementById('loadMoreEnd');
+                    if (endMsg) endMsg.style.display = 'block';
+                }
+
+                loading = false;
+            })
+            .catch(function() {
+                if (spinner) spinner.style.display = 'none';
+                loading = false;
+            });
+        };
+
+        const onScroll = function() {
+            if (!hasMore || loading) return;
+            clearTimeout(scrollTimer);
+            scrollTimer = setTimeout(function() {
+                var rect = loadMore.getBoundingClientRect();
+                if (rect.top < window.innerHeight + 200) {
+                    loadNextPage();
+                }
+            }, 150);
+        };
+
+        window.addEventListener('scroll', onScroll, { passive: true });
+        // Initial check
+        setTimeout(onScroll, 300);
     }
 });
 </script>
