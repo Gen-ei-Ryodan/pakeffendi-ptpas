@@ -98,7 +98,13 @@ main > section {
 
 /* Adjust top padding for first section to match navbar spacing */
 main > section:first-of-type {
-    padding-top: 2rem !important; /* Increase from py-4 (1.5rem) */
+    padding-top: 2rem !important;
+}
+
+@media (max-width: 767.98px) {
+    main > section:first-of-type {
+        padding-top: 0 !important;
+    }
 }
 
 .navbar-brand {
@@ -1729,10 +1735,7 @@ body {
 @media (max-width: 575.98px) {
 
     /* ----- CONTAINER & GRID OVERRIDES ----- */
-    .container {
-        padding-left: 1px !important;
-        padding-right: 1px !important;
-    }
+    /* container padding 10px is defined in 767.98px query */
 
     section.py-5 {
         padding-top: 1.25rem !important;
@@ -2310,7 +2313,7 @@ body {
     }
 
     .pagination .page-item {
-        flex: 1 1 auto;
+        flex: 1;
         min-width: 0;
     }
 
@@ -2319,7 +2322,7 @@ body {
         align-items: center;
         justify-content: center;
         width: 100%;
-        padding: 12px 6px;
+        padding: 12px 4px;
         font-size: 0.82rem;
         border-radius: 10px !important;
         min-height: 44px;
@@ -2330,12 +2333,14 @@ body {
         border-radius: 10px !important;
     }
 
-    .pagination .page-item.active .page-link {
-        font-weight: 700;
-    }
-
     .pagination .page-item.disabled .page-link {
         opacity: 0.4;
+    }
+
+    /**** Pricing tiers ****/
+    .products-grid-manual .product-info .pricing-tiers {
+        min-height: 72px;
+        margin-bottom: 8px;
     }
 
     /* Sort dropdown (appears from top) */
