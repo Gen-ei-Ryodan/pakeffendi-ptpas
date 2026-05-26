@@ -61,6 +61,7 @@
     <!-- Mobile Top Bar -->
     <div class="mobile-topbar d-lg-none">
         <div class="mobile-topbar-inner">
+            @section('mobile-topbar-inner')
             <a class="mobile-logo" href="{{ url('/') }}">
                 <span class="pas-brand-text">PAS</span><span class="pas-brand-sub">Market</span>
             </a>
@@ -73,6 +74,7 @@
                     <span class="cart-badge-mobile" id="cartCountMobile" style="display: none;">0</span>
                 </a>
             </div>
+            @show
         </div>
         <!-- Mobile Search (expandable) -->
         <div class="mobile-search-bar d-none" id="mobileSearchBar">

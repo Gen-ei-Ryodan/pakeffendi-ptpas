@@ -2,9 +2,8 @@
 
 @section('title', 'Semua Produk - PAS Market')
 
-@section('content')
-<!-- Mobile Top Bar (search + sort + filter) -->
-<div class="d-lg-none mobile-prod-topbar">
+@section('mobile-topbar-inner')
+<div class="mobile-prod-topbar-inner">
     <div class="search-wrap">
         <i class="bi bi-search search-ico"></i>
         <input type="text" placeholder="Cari produk..." id="mobileProdSearch">
@@ -12,7 +11,9 @@
     <button class="topbar-btn" type="button" id="mobileSortBtn"><i class="bi bi-arrow-up-short"></i></button>
     <button class="topbar-btn" type="button" id="mobileFilterBtn"><i class="bi bi-sliders"></i></button>
 </div>
+@endsection
 
+@section('content')
 <!-- Page Header -->
 <section class="bg-light py-4 mobile-hide">
     <div class="container">
