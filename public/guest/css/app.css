@@ -1810,12 +1810,22 @@ body {
     }
 
     .categories-grid {
-        display: grid;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        display: flex;
+        overflow-x: auto;
         gap: 8px;
+        padding-bottom: 4px;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
     }
 
-    .categories-grid .cat-item {
+    .categories-grid::-webkit-scrollbar {
+        display: none;
+    }
+
+    .categories-grid .cat-item,
+    .categories-grid .cat-see-all {
+        flex: 0 0 calc((100% - 32px) / 5);
+        scroll-snap-align: start;
         background: #fff;
         border: 1px solid #e5e7eb;
         border-radius: 12px;
@@ -1829,9 +1839,11 @@ body {
         cursor: pointer;
         -webkit-tap-highlight-color: transparent;
         transition: border-color 0.15s;
+        text-decoration: none;
     }
 
-    .categories-grid .cat-item:active {
+    .categories-grid .cat-item:active,
+    .categories-grid .cat-see-all:active {
         border-color: var(--primary-color);
     }
 
@@ -1842,8 +1854,8 @@ body {
     }
 
     .categories-grid .cat-name {
-        font-size: 10px;
-        line-height: 1.2;
+        font-size: 9px;
+        line-height: 1.15;
         text-align: center;
         color: var(--secondary-color);
         display: -webkit-box;
@@ -1854,32 +1866,13 @@ body {
         word-break: break-word;
     }
 
-    .categories-grid .cat-see-all {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 12px;
-        padding: 10px 4px;
-        min-height: 72px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        text-decoration: none;
-        -webkit-tap-highlight-color: transparent;
-    }
-
-    .categories-grid .cat-see-all:active {
-        border-color: var(--primary-color);
-    }
-
     .categories-grid .cat-see-all .cat-icon {
         font-size: 1.25rem;
         color: var(--text-muted);
     }
 
     .categories-grid .cat-see-all .cat-name {
-        font-size: 10px;
+        font-size: 9px;
         color: var(--text-muted);
     }
 
