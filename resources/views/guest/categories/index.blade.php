@@ -3,16 +3,16 @@
 @section('title', 'Semua Kategori - PAS Market')
 
 @section('content')
-<section class="bg-light py-4">
+<section class="bg-light py-4 mobile-hide">
     <div class="container">
-        <nav aria-label="breadcrumb">
+        <nav aria-label="breadcrumb" class="mobile-hide">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{{ url('/') }}">Beranda</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Kategori</li>
             </ol>
         </nav>
 
-        <div class="d-flex justify-content-between align-items-center mt-3">
+        <div class="d-flex justify-content-between align-items-center mt-3 mobile-hide">
             <h1 class="h3 fw-bold text-secondary mb-0">Semua Kategori</h1>
         </div>
     </div>
@@ -20,7 +20,7 @@
 
 <section class="py-4">
     <div class="container">
-        <div class="row g-3 g-lg-4">
+        <div class="row g-2 g-lg-4">
             @foreach(($categories ?? collect()) as $category)
                 @php
                     $imagePath = $category->image_path;
@@ -28,13 +28,13 @@
                         ? (\Illuminate\Support\Str::startsWith($imagePath, ['http://', 'https://']) ? $imagePath : asset('storage/' . $imagePath))
                         : asset('guest/img/placeholder-product.svg');
                 @endphp
-                <div class="col-6 col-md-4 col-lg-3">
+                <div class="col-6 col-md-4 col-lg-3 cat-mobile-col">
                     <a href="{{ url('/products') }}?category_id={{ $category->category_code }}" class="text-decoration-none">
-                        <div class="category-tile">
-                            <div class="category-tile-media">
-                                <img src="{{ $imageUrl }}" alt="{{ $category->name }}" class="category-tile-image">
+                        <div class="category-tile cat-mobile-card">
+                            <div class="category-tile-media cat-media-mobile">
+                                <img src="{{ $imageUrl }}" alt="{{ $category->name }}" class="category-tile-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect width=%22200%22 height=%22200%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
                             </div>
-                            <div class="category-tile-title">
+                            <div class="category-tile-title cat-title-mobile">
                                 {{ $category->name }}
                             </div>
                         </div>
