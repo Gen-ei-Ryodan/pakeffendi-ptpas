@@ -30,8 +30,8 @@
             <div class="categories-scroll">
                 @foreach(($categories ?? collect()) as $category)
                     <div class="category-card {{ $categoryColors[$loop->index % count($categoryColors)] }}" role="button" tabindex="0" data-category-id="{{ $category->category_code }}">
-                        <span class="cat-name">{{ $category->name }}</span>
                         <i class="bi bi-{{ $categoryIcons[$loop->index % count($categoryIcons)] ?? 'tags' }} cat-icon"></i>
+                        <span class="cat-name">{{ $category->name }}</span>
                     </div>
                 @endforeach
             </div>
