@@ -27,6 +27,7 @@
     <div class="container">
         <div class="section-container">
             <h3 class="section-title">Kategori</h3>
+            <!-- Desktop: horizontal scroll -->
             <div class="categories-scroll">
                 @foreach(($categories ?? collect()) as $category)
                     <div class="category-card {{ $categoryColors[$loop->index % count($categoryColors)] }}" role="button" tabindex="0" data-category-id="{{ $category->category_code }}">
@@ -34,6 +35,21 @@
                         <span class="cat-name">{{ $category->name }}</span>
                     </div>
                 @endforeach
+            </div>
+            <!-- Mobile: grid 5 cols -->
+            <div class="categories-grid">
+                @foreach(($categories ?? collect())->take(5) as $category)
+                    <a href="{{ url('/products') }}?category_id={{ $category->category_code }}" class="cat-item" data-category-id="{{ $category->category_code }}">
+                        <i class="bi bi-{{ $categoryIcons[$loop->index % count($categoryIcons)] ?? 'tags' }} cat-icon"></i>
+                        <span class="cat-name">{{ $category->name }}</span>
+                    </a>
+                @endforeach
+                @if(($categories ?? collect())->count() > 5)
+                    <a href="{{ url('/categories') }}" class="cat-see-all">
+                        <i class="bi bi-grid-3x3-gap-fill cat-icon"></i>
+                        <span class="cat-name">Lihat Semua</span>
+                    </a>
+                @endif
             </div>
         </div>
     </div>
