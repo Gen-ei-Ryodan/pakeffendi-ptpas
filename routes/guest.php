@@ -11,6 +11,7 @@ use App\Models\Product;
 use App\Models\ProductBrand;
 use App\Models\ProductCategory;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 
 // Guest Routes - Modern Views
 Route::prefix('/')->group(function () {
@@ -130,7 +131,14 @@ Route::prefix('/')->group(function () {
             }
         }
 
-        $products = $query->paginate(12)->withQueryString();
+        $allProducts = (clone $query)->get(['id', 'photo_path']);
+        $validIds = $allProducts->filter(function ($p) {
+            if (!$p->photo_path) return false;
+            if (Str::startsWith($p->photo_path, ['http://', 'https://'])) return true;
+            return file_exists(storage_path('app/public/'.$p->photo_path));
+        })->pluck('id');
+
+        $products = $query->whereIn('id', $validIds)->paginate(12)->withQueryString();
 
         $categories = ProductCategory::query()->orderBy('name')->get(['category_code', 'name']);
         $brands = ProductBrand::query()->orderBy('brand_name')->get(['brand_code', 'brand_name']);

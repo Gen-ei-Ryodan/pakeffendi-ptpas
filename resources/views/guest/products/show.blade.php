@@ -256,9 +256,9 @@ document.addEventListener('DOMContentLoaded', function() {
         addToCartBtn.addEventListener('click', function() {
             const quantity = parseInt(quantityInput.value) || 1;
             const productData = {
-                id: 'product-123',
-                name: 'Samsung Galaxy Smartphone',
-                price: 3750000,
+                id: '{{ $product->id }}',
+                name: '{{ $product->name }}',
+                price: {{ $product->price_1 }},
                 image: document.getElementById('mainProductImage').src,
                 quantity: quantity
             };
