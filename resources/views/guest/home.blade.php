@@ -39,16 +39,17 @@
     </div>
 </section>
 
-<!-- Featured Products -->
-<section class="py-5 bg-light">
+<!-- Product Sections by Status -->
+@foreach($statusProducts as $item)
+<section class="py-5 {{ $loop->even ? 'bg-light' : '' }}">
     <div class="container">
         <div class="section-container">
             <div class="section-header">
-                <h3 class="section-title">Produk Terlaris</h3>
+                <h3 class="section-title">{{ $item['status']->name }}</h3>
                 <a href="{{ url('/products') }}" class="see-all">Lihat semua <i class="bi bi-chevron-right"></i></a>
             </div>
             <div class="products-scroll">
-                @foreach(($topSellingProducts ?? collect()) as $product)
+                @foreach($item['products'] as $product)
                     @php
                         $imageUrl = $product->photo_url;
                     @endphp
@@ -72,75 +73,7 @@
         </div>
     </div>
 </section>
-
-<!-- Promo -->
-<section class="py-5" id="promo">
-    <div class="container">
-        <div class="section-container">
-            @if(($promoProducts ?? collect())->isNotEmpty())
-            <div class="section-header">
-                <h3 class="section-title">Promo Spesial</h3>
-            </div>
-            <div class="products-scroll">
-                @foreach($promoProducts as $product)
-                    @php
-                        $imageUrl = $product->photo_url;
-                    @endphp
-                    <div class="product-card" data-product-id="{{ $product->id }}">
-                        <div class="prod-img-box">
-                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}" onerror="this.closest('.product-card').remove()">
-                        </div>
-                        <div class="prod-info">
-                            <p class="prod-brand">{{ $product->brand?->brand_name }}</p>
-                            <p class="prod-name text-truncate-2">{{ $product->name }}</p>
-                            @if(($product->variant ?? '') !== '')
-                                <p class="text-muted small mb-1">{{ $product->variant }}</p>
-                            @endif
-                            <div class="pricing-tiers">
-                                <p class="prod-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</p>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-            @endif
-        </div>
-    </div>
-</section>
-
-<!-- Latest Products -->
-<section class="py-5">
-    <div class="container">
-        <div class="section-container">
-            <div class="section-header">
-                <h3 class="section-title">Produk Terbaru</h3>
-                <a href="{{ url('/products') }}" class="see-all">Lihat semua <i class="bi bi-chevron-right"></i></a>
-            </div>
-            <div class="products-scroll">
-                @foreach(($newProducts ?? collect()) as $product)
-                    @php
-                        $imageUrl = $product->photo_url;
-                    @endphp
-                    <div class="product-card" data-product-id="{{ $product->id }}">
-                        <div class="prod-img-box">
-                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}" onerror="this.closest('.product-card').remove()">
-                        </div>
-                        <div class="prod-info">
-                            <p class="prod-brand">{{ $product->brand?->brand_name }}</p>
-                            <p class="prod-name text-truncate-2">{{ $product->name }}</p>
-                            @if(($product->variant ?? '') !== '')
-                                <p class="text-muted small mb-1">{{ $product->variant }}</p>
-                            @endif
-                            <div class="pricing-tiers">
-                                <p class="prod-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</p>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
-</section>
+@endforeach
 
 <!-- Features Section -->
 <section class="py-5 bg-light">

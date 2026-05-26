@@ -10,6 +10,7 @@ use App\Models\Broadcast;
 use App\Models\Product;
 use App\Models\ProductBrand;
 use App\Models\ProductCategory;
+use App\Models\ProductStatus;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Str;
 
@@ -29,29 +30,23 @@ Route::prefix('/')->group(function () {
             ->limit(8)
             ->get();
 
-        $topSellingProducts = Product::query()
-            ->with(['brand:brand_code,brand_name'])
-            ->active()
-            ->hasPhoto()
-            ->byStatus('TERLARIS')
-            ->limit(8)
-            ->get();
-
-        $newProducts = Product::query()
-            ->with(['brand:brand_code,brand_name'])
-            ->active()
-            ->hasPhoto()
-            ->byStatus('TERBARU')
-            ->limit(8)
-            ->get();
-
-        $promoProducts = Product::query()
-            ->with(['brand:brand_code,brand_name'])
-            ->active()
-            ->hasPhoto()
-            ->byStatus('PROMO')
-            ->limit(8)
-            ->get();
+        $statuses = ProductStatus::query()->orderBy('sort_order')->get();
+        $statusProducts = collect();
+        foreach ($statuses as $status) {
+            $products = Product::query()
+                ->with(['brand:brand_code,brand_name'])
+                ->active()
+                ->hasPhoto()
+                ->byStatus($status->code)
+                ->limit(8)
+                ->get();
+            if ($products->isNotEmpty()) {
+                $statusProducts->push([
+                    'status' => $status,
+                    'products' => $products,
+                ]);
+            }
+        }
 
         $broadcasts = Broadcast::query()
             ->latest()
@@ -61,9 +56,7 @@ Route::prefix('/')->group(function () {
         return view('guest.home', [
             'categories' => $categories,
             'featuredProducts' => $featuredProducts,
-            'topSellingProducts' => $topSellingProducts,
-            'newProducts' => $newProducts,
-            'promoProducts' => $promoProducts,
+            'statusProducts' => $statusProducts,
             'broadcasts' => $broadcasts,
         ]);
     });

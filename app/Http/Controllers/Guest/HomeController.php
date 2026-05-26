@@ -9,6 +9,7 @@ use App\Models\FavoriteBrand;
 use App\Models\Product;
 use App\Models\ProductBrand;
 use App\Models\ProductCategory;
+use App\Models\ProductStatus;
 
 class HomeController extends Controller
 {
@@ -38,29 +39,23 @@ class HomeController extends Controller
             ->limit(10)
             ->get();
 
-        $topSellingProducts = Product::query()
-            ->with(['brand', 'images'])
-            ->active()
-            ->hasPhoto()
-            ->byStatus('TERLARIS')
-            ->limit(8)
-            ->get();
-
-        $newProducts = Product::query()
-            ->with(['brand', 'images'])
-            ->active()
-            ->hasPhoto()
-            ->byStatus('TERBARU')
-            ->limit(8)
-            ->get();
-
-        $promoProducts = Product::query()
-            ->with(['brand', 'images'])
-            ->active()
-            ->hasPhoto()
-            ->byStatus('PROMO')
-            ->limit(8)
-            ->get();
+        $statuses = ProductStatus::query()->orderBy('sort_order')->get();
+        $statusProducts = collect();
+        foreach ($statuses as $status) {
+            $products = Product::query()
+                ->with(['brand', 'images'])
+                ->active()
+                ->hasPhoto()
+                ->byStatus($status->code)
+                ->limit(8)
+                ->get();
+            if ($products->isNotEmpty()) {
+                $statusProducts->push([
+                    'status' => $status,
+                    'products' => $products,
+                ]);
+            }
+        }
 
         $about = AboutPage::query()->latest()->first();
 
@@ -69,9 +64,7 @@ class HomeController extends Controller
             'brands' => $brands,
             'broadcasts' => $broadcasts,
             'featuredProducts' => $featuredProducts,
-            'topSellingProducts' => $topSellingProducts,
-            'newProducts' => $newProducts,
-            'promoProducts' => $promoProducts,
+            'statusProducts' => $statusProducts,
             'about' => $about,
         ]);
     }
@@ -104,6 +97,24 @@ class HomeController extends Controller
             ->limit(10)
             ->get();
 
+        $statuses = ProductStatus::query()->orderBy('sort_order')->get();
+        $statusProducts = collect();
+        foreach ($statuses as $status) {
+            $products = Product::query()
+                ->with(['brand', 'images'])
+                ->active()
+                ->hasPhoto()
+                ->byStatus($status->code)
+                ->limit(8)
+                ->get();
+            if ($products->isNotEmpty()) {
+                $statusProducts->push([
+                    'status' => $status,
+                    'products' => $products,
+                ]);
+            }
+        }
+
         $about = AboutPage::query()->latest()->first();
 
         return view('guest.home', [
@@ -111,9 +122,7 @@ class HomeController extends Controller
             'brands' => $brands,
             'broadcasts' => $broadcasts,
             'featuredProducts' => $featuredProducts,
-            'topSellingProducts' => $topSellingProducts ?? collect(),
-            'newProducts' => $newProducts ?? collect(),
-            'promoProducts' => $promoProducts ?? collect(),
+            'statusProducts' => $statusProducts,
             'about' => $about,
             'initialScreen' => 'productDetail',
             'initialProductId' => $product->id,

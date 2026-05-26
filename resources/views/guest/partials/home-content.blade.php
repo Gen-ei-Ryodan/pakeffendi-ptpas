@@ -29,13 +29,14 @@
         </div>
     </div>
 
+    @foreach($statusProducts as $item)
     <div class="section-container">
         <div class="section-header">
-            <h3 class="section-title">Produk Terlaris</h3>
+            <h3 class="section-title">{{ $item['status']->name }}</h3>
             <a href="#productList" class="see-all" data-action="openProductList">Lihat semua <i class="fas fa-chevron-right"></i></a>
         </div>
         <div class="products-scroll">
-            @foreach(($topSellingProducts ?? $featuredProducts) as $product)
+            @foreach($item['products'] as $product)
                 <div class="product-card" data-product-id="{{ $product->id }}">
                     <div class="prod-img-box">
                         @php
@@ -57,35 +58,7 @@
             @endforeach
         </div>
     </div>
-
-    <div class="section-container">
-        <div class="section-header">
-            <h3 class="section-title">Produk Terbaru</h3>
-            <a href="#productList" class="see-all" data-action="openProductList">Lihat semua <i class="fas fa-chevron-right"></i></a>
-        </div>
-        <div class="products-scroll">
-            @foreach(($newProducts ?? $featuredProducts) as $product)
-                <div class="product-card" data-product-id="{{ $product->id }}">
-                    <div class="prod-img-box">
-                        @php
-                            $imgUrl = $product->photo_url;
-                        @endphp
-                        <img src="{{ $imgUrl }}" alt="Product" onerror="this.closest('.product-card').remove()">
-                    </div>
-                    <div class="prod-info">
-                        <p class="prod-brand">{{ $product->brand?->brand_name }}</p>
-                        <p class="prod-name text-truncate-2">{{ $product->name }}</p>
-                        @if(($product->variant ?? '') !== '')
-                            <p class="text-muted small mb-1">{{ $product->variant }}</p>
-                        @endif
-                        <div class="pricing-tiers">
-                            <p class="prod-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</p>
-                        </div>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
+    @endforeach
 
     @include('guest.partials.footer')
 </div>
