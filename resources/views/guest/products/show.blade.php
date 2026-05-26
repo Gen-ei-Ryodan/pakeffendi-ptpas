@@ -191,8 +191,9 @@
                                         <div class="text-muted small text-truncate">{{ $related->variant }}</div>
                                     @endif
 
+                                    <div class="pricing-tiers">
                                     @foreach($related->pricing_tiers as $tier)
-                                    <div class="d-flex justify-content-between align-items-center small py-0">
+                                    <div class="tier-row">
                                         @if($tier['qty_end'])
                                             <span class="text-muted">{{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs</span>
                                         @else
@@ -201,6 +202,7 @@
                                         <span class="product-price">Rp {{ number_format((float) $tier['price'], 0, ',', '.') }}</span>
                                     </div>
                                     @endforeach
+                                    </div>
 
                                     <div class="d-flex justify-content-end mt-2">
                                         <button class="btn btn-primary btn-sm btn-add-to-cart product-cart-btn" data-product-id="{{ $related->id }}">

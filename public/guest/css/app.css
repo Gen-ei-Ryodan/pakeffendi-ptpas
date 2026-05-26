@@ -264,6 +264,32 @@ main > section:first-of-type {
     transition: var(--transition);
     overflow: hidden;
     cursor: pointer;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-card .product-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+}
+
+.product-card .pricing-tiers {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 78px;
+}
+
+.product-card .pricing-tiers .tier-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.72rem;
+    padding: 2px 0;
+    line-height: 1.4;
 }
 
 .product-card:hover {
@@ -280,10 +306,6 @@ main > section:first-of-type {
 
 .product-card:hover .product-image {
     transform: scale(1.1);
-}
-
-.product-card .product-info {
-    padding: 1rem;
 }
 
 .product-card .product-title {
@@ -392,6 +414,14 @@ main > section:first-of-type {
     box-shadow: var(--box-shadow);
     overflow: hidden;
     scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+}
+
+.products-scroll > .product-card .prod-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .prod-img-box {
@@ -817,7 +847,19 @@ footer a:hover {
     }
 
     .product-card .product-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
         padding: 0.85rem;
+    }
+
+    .product-card .pricing-tiers {
+        min-height: 69px;
+    }
+
+    .product-card .pricing-tiers .tier-row {
+        font-size: 0.68rem;
+        padding: 1.5px 0;
     }
 
     .product-card .product-title {
@@ -1364,6 +1406,25 @@ html {
 }
 
 /* Tiered Pricing - Product List Screen */
+.product-grid .product-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.product-grid .product-card .prod-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.product-grid .product-card .prod-tiers {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 78px;
+}
+
 .prod-tiers {
     margin: 4px 0;
 }
