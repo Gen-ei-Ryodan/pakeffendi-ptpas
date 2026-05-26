@@ -22,7 +22,7 @@
 </section>
 
 <!-- Login Section -->
-<section class="py-5">
+<section class="py-5 login-page">
     <div class="container">
         <div class="row justify-content-center">
             <div class="col-md-6 col-lg-5">
