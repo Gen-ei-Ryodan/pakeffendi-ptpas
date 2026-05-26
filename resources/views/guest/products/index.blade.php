@@ -3,19 +3,29 @@
 @section('title', 'Semua Produk - PAS Market')
 
 @section('content')
+<!-- Mobile Top Bar (search + sort + filter) -->
+<div class="d-lg-none mobile-prod-topbar">
+    <div class="search-wrap">
+        <i class="bi bi-search search-ico"></i>
+        <input type="text" placeholder="Cari produk..." id="mobileProdSearch">
+    </div>
+    <button class="topbar-btn" type="button" id="mobileSortBtn"><i class="bi bi-arrow-up-short"></i></button>
+    <button class="topbar-btn" type="button" id="mobileFilterBtn"><i class="bi bi-sliders"></i></button>
+</div>
+
 <!-- Page Header -->
-<section class="bg-light py-4">
+<section class="bg-light py-4 mobile-hide">
     <div class="container">
-        <nav aria-label="breadcrumb">
+        <nav aria-label="breadcrumb" class="mobile-hide">
             <ol class="breadcrumb mb-0">
                 <li class="breadcrumb-item"><a href="{{ url('/') }}">Beranda</a></li>
                 <li class="breadcrumb-item active" aria-current="page">Produk</li>
             </ol>
         </nav>
         
-        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mt-3 gap-2">
+        <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mt-3 gap-2 mobile-hide">
             <h1 class="h3 fw-bold text-secondary mb-0 products-page-title">Semua Produk</h1>
-            <div class="d-flex gap-2 products-header-actions">
+            <div class="d-flex gap-2 products-header-actions d-none d-lg-flex">
                 <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterSidebar">
                     <i class="bi bi-funnel"></i> Filter
                 </button>
@@ -32,40 +42,6 @@
         </div>
     </div>
 </section>
-
-<!-- Filter Sidebar -->
-<div class="collapse d-lg-none" id="filterSidebar">
-    <div class="container py-3 border-bottom">
-        <form method="GET" action="{{ url('/products') }}" class="row g-3">
-            <input type="hidden" name="sort" value="{{ $filters['sort'] ?? request('sort') }}">
-            <div class="col-12">
-                <label class="form-label fw-semibold">Cari</label>
-                <input class="form-control form-control-sm" name="q" value="{{ $filters['q'] ?? request('q') }}" placeholder="Nama produk / SKU">
-            </div>
-            <div class="col-6">
-                <label class="form-label fw-semibold">Kategori</label>
-                <select class="form-select form-select-sm" name="category_id">
-                    <option value="">Semua Kategori</option>
-                    @foreach(($categories ?? collect()) as $cat)
-                        <option value="{{ $cat->category_code }}" @selected((string) ($filters['category_id'] ?? request('category_id')) === (string) $cat->category_code)>{{ $cat->name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-6">
-                <label class="form-label fw-semibold">Brand</label>
-                <select class="form-select form-select-sm" name="brand_id">
-                    <option value="">Semua Brand</option>
-                    @foreach(($brands ?? collect()) as $brand)
-                        <option value="{{ $brand->brand_code }}" @selected((string) ($filters['brand_id'] ?? request('brand_id')) === (string) $brand->brand_code)>{{ $brand->brand_name }}</option>
-                    @endforeach
-                </select>
-            </div>
-            <div class="col-12">
-                <button class="btn btn-primary btn-sm w-100" type="submit">Terapkan</button>
-            </div>
-        </form>
-    </div>
-</div>
 
 <!-- Main Content -->
 <section class="py-4">
@@ -109,7 +85,7 @@
             <!-- Product Grid -->
             <div class="col-lg-9">
                 <!-- Results Info -->
-                <div class="d-flex justify-content-between align-items-center mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4 mobile-hide">
                     <p class="text-muted mb-0">
                         @if(isset($products) && $products->total() > 0)
                             Menampilkan {{ $products->firstItem() }}-{{ $products->lastItem() }} dari {{ $products->total() }} produk
@@ -179,6 +155,68 @@
         </div>
     </div>
 </section>
+
+<!-- Mobile Sort Sheet -->
+<div class="sort-sheet-overlay d-lg-none" id="sortSheetOverlay"></div>
+<div class="sort-sheet d-lg-none" id="sortSheet">
+    <div class="sort-handle"></div>
+    <div class="sort-title">Urutkan</div>
+    <div class="sort-option {{ (!request('sort') || request('sort') === '') ? 'active' : '' }}" data-sort="">
+        <div class="check"></div>Paling Sesuai
+    </div>
+    <div class="sort-option {{ request('sort') === 'price-asc' ? 'active' : '' }}" data-sort="price-asc">
+        <div class="check"></div>Harga: Rendah ke Tinggi
+    </div>
+    <div class="sort-option {{ request('sort') === 'price-desc' ? 'active' : '' }}" data-sort="price-desc">
+        <div class="check"></div>Harga: Tinggi ke Rendah
+    </div>
+    <div class="sort-option {{ request('sort') === 'name-asc' ? 'active' : '' }}" data-sort="name-asc">
+        <div class="check"></div>Nama: A-Z
+    </div>
+    <div class="sort-option {{ request('sort') === 'name-desc' ? 'active' : '' }}" data-sort="name-desc">
+        <div class="check"></div>Nama: Z-A
+    </div>
+    <div class="sort-option {{ request('sort') === 'newest' ? 'active' : '' }}" data-sort="newest">
+        <div class="check"></div>Terbaru
+    </div>
+    <div class="sort-option {{ request('sort') === 'popular' ? 'active' : '' }}" data-sort="popular">
+        <div class="check"></div>Terlaris
+    </div>
+</div>
+
+<!-- Mobile Filter Sheet -->
+<div class="filter-sheet-overlay d-lg-none" id="filterSheetOverlay"></div>
+<div class="filter-sheet d-lg-none" id="filterSheet">
+    <div class="filter-handle"></div>
+    <div class="filter-title">Filter Produk</div>
+    <form method="GET" action="{{ url('/products') }}">
+        <input type="hidden" name="sort" value="{{ request('sort') }}">
+        <div class="mb-3">
+            <div class="filter-label">Cari</div>
+            <input class="form-control" name="q" value="{{ request('q') }}" placeholder="Nama produk / SKU">
+        </div>
+        <div class="mb-3">
+            <div class="filter-label">Kategori</div>
+            <select class="form-select" name="category_id">
+                <option value="">Semua Kategori</option>
+                @foreach(($categories ?? collect()) as $cat)
+                    <option value="{{ $cat->category_code }}" @selected((string) request('category_id') === (string) $cat->category_code)>{{ $cat->name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div class="mb-3">
+            <div class="filter-label">Brand</div>
+            <select class="form-select" name="brand_id">
+                <option value="">Semua Brand</option>
+                @foreach(($brands ?? collect()) as $brand)
+                    <option value="{{ $brand->brand_code }}" @selected((string) request('brand_id') === (string) $brand->brand_code)>{{ $brand->brand_name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <button class="filter-apply-btn" type="submit">Terapkan</button>
+        <button class="filter-reset-btn" type="button" id="mobileFilterReset">Reset</button>
+    </form>
+</div>
 @endsection
 
 @push('scripts')
@@ -205,6 +243,74 @@ document.addEventListener('DOMContentLoaded', function() {
                 params.delete('sort');
             }
             window.location.search = params.toString();
+        });
+    }
+
+    // Mobile: search input enter/submit
+    const mobileSearch = document.getElementById('mobileProdSearch');
+    if (mobileSearch) {
+        let searchTimer;
+        mobileSearch.addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                const params = new URLSearchParams(window.location.search);
+                if (this.value.trim()) {
+                    params.set('q', this.value.trim());
+                } else {
+                    params.delete('q');
+                }
+                window.location.search = params.toString();
+            }, 500);
+        });
+    }
+
+    // Mobile: sort sheet
+    const sortBtn = document.getElementById('mobileSortBtn');
+    const sortSheet = document.getElementById('sortSheet');
+    const sortOverlay = document.getElementById('sortSheetOverlay');
+    if (sortBtn && sortSheet) {
+        sortBtn.addEventListener('click', function() {
+            sortSheet.classList.add('show');
+            sortOverlay.classList.add('show');
+        });
+        sortOverlay.addEventListener('click', function() {
+            sortSheet.classList.remove('show');
+            sortOverlay.classList.remove('show');
+        });
+        sortSheet.querySelectorAll('.sort-option').forEach(function(opt) {
+            opt.addEventListener('click', function() {
+                const sortVal = this.dataset.sort;
+                const params = new URLSearchParams(window.location.search);
+                if (sortVal) {
+                    params.set('sort', sortVal);
+                } else {
+                    params.delete('sort');
+                }
+                window.location.search = params.toString();
+            });
+        });
+    }
+
+    // Mobile: filter sheet
+    const filterBtn = document.getElementById('mobileFilterBtn');
+    const filterSheet = document.getElementById('filterSheet');
+    const filterOverlay = document.getElementById('filterSheetOverlay');
+    if (filterBtn && filterSheet) {
+        filterBtn.addEventListener('click', function() {
+            filterSheet.classList.add('show');
+            filterOverlay.classList.add('show');
+        });
+        filterOverlay.addEventListener('click', function() {
+            filterSheet.classList.remove('show');
+            filterOverlay.classList.remove('show');
+        });
+    }
+
+    // Mobile: filter reset
+    const resetBtn = document.getElementById('mobileFilterReset');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+            window.location.href = '{{ url('/products') }}';
         });
     }
 });
