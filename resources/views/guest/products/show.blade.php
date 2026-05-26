@@ -168,13 +168,13 @@
                 </div>
 
                 @if(($relatedProducts ?? collect())->isNotEmpty())
-                <div class="row g-3 g-lg-4">
+                <div class="products-grid-manual">
                     @foreach($relatedProducts as $related)
                     @php
                         $relatedImageUrl = $related->photo_url;
+                        $relatedTierCount = count($related->pricing_tiers);
                     @endphp
-                    <div class="col-6 col-md-3">
-                        <a href="{{ url('/products/'.$related->id) }}" class="text-decoration-none">
+                        <a href="{{ url('/products/'.$related->id) }}" class="text-decoration-none d-block">
                             <div class="product-card" data-product-id="{{ $related->id }}">
                                 <div class="position-relative">
                                     <img src="{{ $relatedImageUrl }}"
@@ -183,7 +183,7 @@
                                 </div>
 
                                 <div class="product-info">
-                                    <div class="mb-2">
+                                    <div>
                                         <span class="text-muted small">{{ $related->brand?->brand_name }}</span>
                                     </div>
                                     <h6 class="product-title text-truncate-2">{{ $related->name }}</h6>
@@ -202,9 +202,15 @@
                                         <span class="product-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
                                     </div>
                                     @endforeach
+                                    @for($i = $relatedTierCount; $i < 3; $i++)
+                                    <div class="tier-row tier-row-hidden">
+                                        <span class="text-muted">-</span>
+                                        <span class="product-price">-</span>
+                                    </div>
+                                    @endfor
                                     </div>
 
-                                    <div class="d-flex justify-content-end mt-2">
+                                    <div class="d-flex justify-content-end">
                                         <button class="btn btn-primary btn-sm btn-add-to-cart product-cart-btn" data-product-id="{{ $related->id }}">
                                             <i class="bi bi-cart-plus"></i>
                                         </button>
@@ -212,7 +218,6 @@
                                 </div>
                             </div>
                         </a>
-                    </div>
                     @endforeach
                 </div>
                 @else

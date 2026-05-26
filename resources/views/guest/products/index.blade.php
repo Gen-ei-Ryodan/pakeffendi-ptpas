@@ -120,19 +120,19 @@
                 </div>
                 
                 <!-- Products Grid -->
-                <div class="row g-3 g-lg-4">
+                <div class="products-grid-manual">
                     @foreach(($products ?? collect()) as $product)
                     @php
                         $imageUrl = $product->photo_url;
+                        $tierCount = count($product->pricing_tiers);
                     @endphp
-                    <div class="col-6 col-md-4 col-lg-3">
                         <div class="product-card" data-product-id="{{ $product->id }}">
                             <div class="position-relative">
                                 <img src="{{ $imageUrl }}" alt="{{ $product->name }}" class="product-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
                             </div>
-                            
+
                             <div class="product-info">
-                                <div class="mb-2">
+                                <div>
                                     <span class="text-muted small">{{ $product->brand?->brand_name }}</span>
                                 </div>
                                 <h6 class="product-title text-truncate-2">{{ $product->name }}</h6>
@@ -151,16 +151,21 @@
                                     <span class="product-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
                                 </div>
                                 @endforeach
+                                @for($i = $tierCount; $i < 3; $i++)
+                                <div class="tier-row tier-row-hidden">
+                                    <span class="text-muted">-</span>
+                                    <span class="product-price">-</span>
                                 </div>
-                                
-                                <div class="d-flex justify-content-end mt-2">
+                                @endfor
+                                </div>
+
+                                <div class="d-flex justify-content-end">
                                     <button class="btn btn-primary btn-sm btn-add-to-cart product-cart-btn" data-product-id="{{ $product->id }}">
                                         <i class="bi bi-cart-plus"></i>
                                     </button>
                                 </div>
                             </div>
                         </div>
-                    </div>
                     @endforeach
                 </div>
                 
