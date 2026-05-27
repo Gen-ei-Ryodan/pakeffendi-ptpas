@@ -3,7 +3,7 @@
 @endphp
 <div class="product-card" data-product-id="{{ $product->id }}">
     <div class="position-relative">
-        <img src="{{ $product->photo_url }}" alt="{{ $product->name }}" class="product-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
+        <img src="{{ $product->photo_url }}" alt="{{ $product->name }}" class="product-image" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
     </div>
     <div class="product-info">
         <div>
@@ -31,9 +31,10 @@
         </div>
         @endfor
         </div>
-        <div class="d-flex justify-content-end">
+        <div class="product-card-actions d-flex justify-content-end">
             <button class="btn btn-primary btn-sm btn-add-to-cart product-cart-btn" data-product-id="{{ $product->id }}">
                 <i class="bi bi-cart-plus"></i>
+                <span class="d-none d-lg-inline ms-1">Tambah</span>
             </button>
         </div>
     </div>

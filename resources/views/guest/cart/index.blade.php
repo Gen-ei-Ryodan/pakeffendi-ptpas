@@ -2,9 +2,19 @@
 
 @section('title', 'Keranjang Belanja - PAS Market')
 
+@section('mobile-topbar-inner')
+<div class="cart-mob-header">
+    <span class="cart-mob-title">Keranjang</span>
+    <div class="cart-mob-actions">
+        <a href="{{ url('/products') }}" class="cart-mob-icon"><i class="bi bi-search"></i></a>
+        <a href="{{ url('/cart') }}" class="cart-mob-icon"><i class="bi bi-cart3"></i></a>
+    </div>
+</div>
+@endsection
+
 @section('content')
-<!-- Page Header -->
-<section class="bg-light py-4">
+<!-- Desktop: Page Header (hidden on mobile) -->
+<section class="bg-light py-4 mobile-hide">
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
@@ -12,13 +22,12 @@
                 <li class="breadcrumb-item active" aria-current="page">Keranjang</li>
             </ol>
         </nav>
-        
         <h1 class="h3 fw-bold text-secondary mt-3 mb-0">Keranjang Belanja</h1>
     </div>
 </section>
 
-<!-- Cart Content -->
-<section class="py-5">
+<!-- ====================== DESKTOP CART LAYOUT ====================== -->
+<section class="py-5 mobile-hide">
     <div class="container">
         <div class="row">
             <!-- Cart Items -->
@@ -27,7 +36,6 @@
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-4" id="cartItemsHeader">Daftar Belanja ({{ (int) ($summary['total_items'] ?? 0) }} item)</h5>
                         
-                        <!-- Cart Items -->
                         <div class="cart-items">
                             @foreach(($cart?->items ?? collect()) as $item)
                             @php
@@ -43,7 +51,7 @@
                             <div class="cart-item border-bottom pb-3 mb-3" data-product-id="{{ $product?->id }}">
                                 <div class="row align-items-center">
                                     <div class="col-md-2">
-                                        <img src="{{ $imageUrl }}" alt="{{ $product?->name }}" class="img-fluid rounded" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
+                                        <img src="{{ $imageUrl }}" alt="{{ $product?->name }}" class="img-fluid rounded" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
                                     </div>
                                     <div class="col-md-4">
                                         <h6 class="fw-bold mb-1">{{ $product?->name }}</h6>
@@ -84,7 +92,6 @@
                             @endforeach
                         </div>
                         
-                        <!-- Cart Actions -->
                         <div class="d-flex justify-content-between align-items-center pt-3">
                             <button class="btn btn-outline-secondary" onclick="clearCart()">
                                 <i class="bi bi-trash me-2"></i>Kosongkan Keranjang
@@ -188,7 +195,6 @@
                     </div>
                 </div>
                 
-                <!-- Security Info -->
                 <div class="card border-0 shadow-sm mt-3">
                     <div class="card-body text-center">
                         <h6 class="fw-bold mb-3">Keamanan Transaksi</h6>
@@ -211,7 +217,7 @@
             </div>
         </div>
         
-        <!-- Empty Cart State (Hidden by default) -->
+        <!-- Empty Cart State -->
         <div class="row d-none" id="emptyCart">
             <div class="col-12 text-center py-5">
                 <i class="bi bi-cart-x display-1 text-muted mb-4"></i>
@@ -225,30 +231,120 @@
     </div>
 </section>
 
-<!-- Checkout Confirmation Modal -->
-<div class="modal fade" id="confirmCheckoutModal" tabindex="-1" aria-labelledby="confirmCheckoutModalLabel" aria-hidden="true">
+<!-- ====================== MOBILE CART LAYOUT ====================== -->
+<section class="d-lg-none" id="mobCartSection">
+    <div class="mob-cart-list" id="mobCartList">
+        @forelse(($cart?->items ?? collect()) as $item)
+        @php
+            $product = $item->product;
+            $imageUrl = $product?->photo_url ?? asset('guest/img/placeholder-product.svg');
+            $qty = (int) $item->quantity;
+            $pricing = $product ? $product->pricingForQuantity($qty) : null;
+            $netPrice = (float) ($pricing['net_price'] ?? 0);
+            $lineTotal = $netPrice * $qty;
+        @endphp
+        <div class="mob-cart-item" data-product-id="{{ $product?->id }}" data-item-id="{{ $item->id }}">
+            <div class="mob-cart-left">
+                <button class="mob-cart-check" data-check-item>
+                    <i class="bi bi-check-lg"></i>
+                </button>
+            </div>
+            <div class="mob-cart-img">
+                <img src="{{ $imageUrl }}" alt="{{ $product?->name }}"
+                     onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
+            </div>
+            <div class="mob-cart-body">
+                <div class="mob-cart-brand">{{ $product?->brand?->brand_name ?? 'Produk' }}</div>
+                <div class="mob-cart-name">{{ $product?->name }}</div>
+                @if(($product?->variant ?? '') !== '')
+                    <div class="mob-cart-variant">{{ $product?->variant }}</div>
+                @endif
+                <div class="mob-cart-price" data-line-total>Rp {{ number_format($lineTotal, 0, ',', '.') }}</div>
+                <div class="mob-cart-actions">
+                    <div class="mob-qty-wrap">
+                        <button class="mob-qty-btn" onclick="mobUpdateQty({{ $product?->id }}, -1)"><i class="bi bi-dash"></i></button>
+                        <input type="number" class="mob-qty-input" value="{{ $qty }}" min="1" readonly>
+                        <button class="mob-qty-btn" onclick="mobUpdateQty({{ $product?->id }}, 1)"><i class="bi bi-plus"></i></button>
+                    </div>
+                    <button class="mob-cart-del" onclick="mobRemoveItem({{ $product?->id }})"><i class="bi bi-trash3"></i></button>
+                </div>
+            </div>
+        </div>
+        @empty
+        <div class="mob-cart-empty">
+            <i class="bi bi-cart-x"></i>
+            <p>Keranjang masih kosong</p>
+            <a href="{{ url('/products') }}" class="mob-cart-shop-btn">Mulai Belanja</a>
+        </div>
+        @endforelse
+    </div>
+</section>
+
+<!-- ====================== MOBILE STICKY BOTTOM BAR ====================== -->
+@if(($cart?->items ?? collect())->count() > 0)
+<div class="mob-checkout-bar d-lg-none" id="mobCheckoutBar"
+     data-has-address="{{ (int) (($addresses ?? collect())->count() > 0) }}"
+     data-is-logged-in="{{ (int) ($customer ? true : false) }}">
+    <div class="mob-checkout-left">
+        <button class="mob-check-all" id="mobCheckAll">
+            <i class="bi bi-check-lg"></i>
+        </button>
+        <span class="mob-check-all-label">Semua</span>
+    </div>
+    <div class="mob-checkout-mid">
+        <span class="mob-total-label">Total</span>
+        <span class="mob-total-price" id="mobTotalPrice">Rp {{ number_format((float) ($summary['grand_total'] ?? 0), 0, ',', '.') }}</span>
+    </div>
+    <button class="mob-checkout-btn" id="mobCheckoutBtn">Checkout</button>
+</div>
+@endif
+
+<!-- Mobile: Alamat Prompt -->
+<div class="modal fade d-lg-none" id="mobAddressPrompt" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold" id="confirmCheckoutModalLabel">Konfirmasi Pembayaran</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body py-4 text-center">
-                <p class="mb-0">Apakah Anda yakin ingin melanjutkan ke pembayaran?</p>
-            </div>
-            <div class="modal-footer border-0 pt-0 justify-content-center pb-4">
-                <button type="button" class="btn btn-outline-secondary px-4 me-2" data-bs-dismiss="modal">Tidak</button>
-                <button type="button" class="btn btn-primary px-4" onclick="submitCheckout()">Ya</button>
+        <div class="modal-content" style="border-radius: 14px;">
+            <div class="modal-body text-center py-4">
+                <i class="bi bi-geo-alt-fill" style="font-size: 2.5rem; color: var(--primary-color);"></i>
+                <h6 class="fw-bold mt-2 mb-1">Alamat Belum Diisi</h6>
+                <p class="text-muted small mb-3">Silakan tambah alamat pengiriman dulu sebelum checkout.</p>
+                <a href="{{ url('/profile/addresses') }}" class="btn btn-primary w-100 mb-2">Tambah Alamat</a>
+                <button type="button" class="btn btn-light w-100" data-bs-dismiss="modal" style="border:1px solid #e5e7eb;">Nanti Saja</button>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Mobile: Error Messages -->
+@if($errors->any())
+<div class="d-lg-none mob-cart-errors">
+    @foreach($errors->all() as $error)
+        <div>{{ $error }}</div>
+    @endforeach
+</div>
+@endif
+
+<!-- Mobile: Hidden Checkout Form -->
+@php
+    $mobAddrId = $active_address_id ?? (($addresses ?? collect())->first()?->id ?? '');
+@endphp
+<form method="POST" action="{{ route('guest.cart.checkout') }}" id="mobCheckoutForm" style="display:none;">
+    @csrf
+    @if(isset($is_sales) && $is_sales)
+        <input type="hidden" name="customer_id" id="mobCustomerId" value="">
+        <input type="hidden" name="address_id" id="mobSalesAddressId" value="">
+    @else
+        @if($customer && $mobAddrId)
+            <input type="hidden" name="address_id" value="{{ $mobAddrId }}">
+        @endif
+    @endif
+</form>
+
 @endsection
 
 @push('scripts')
 <script>
 function confirmCheckout() {
-    const customerSelect = document.getElementById('customer_id');
+    var customerSelect = document.getElementById('customer_id');
     if (customerSelect) {
         if (!customerSelect.value) {
             alert('Silakan pilih customer terlebih dahulu.');
@@ -256,27 +352,59 @@ function confirmCheckout() {
         }
     }
 
-    const addressSelect = document.querySelector('#checkoutForm select[name="address_id"]');
+    var addressSelect = document.querySelector('#checkoutForm select[name="address_id"]');
     if (addressSelect) {
         if (!addressSelect.value) {
             alert('Silakan pilih alamat terlebih dahulu.');
             return;
         }
     }
-    
-    const modal = new bootstrap.Modal(document.getElementById('confirmCheckoutModal'));
-    modal.show();
+
+    var form = document.getElementById('checkoutForm') || document.getElementById('mobCheckoutForm');
+    if (!form) return;
+
+    // For sales on mobile: sync customer_id and address_id
+    var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
+    if (isSales) {
+        var deskCust = document.getElementById('customer_id');
+        var mobCust = document.getElementById('mobCustomerId');
+        if (deskCust && mobCust) mobCust.value = deskCust.value;
+
+        var deskAddr = document.querySelector('#checkoutForm select[name="address_id"]');
+        var mobAddr = document.getElementById('mobSalesAddressId');
+        if (deskAddr && mobAddr) mobAddr.value = deskAddr.value;
+    }
+
+    var modalEl = document.getElementById('confirmCheckoutModal');
+    if (modalEl) {
+        var modal = new bootstrap.Modal(modalEl);
+        modal.show();
+    }
 }
 
 function submitCheckout() {
-    const form = document.getElementById('checkoutForm');
+    var form = document.getElementById('checkoutForm');
+    if (!form) {
+        form = document.getElementById('mobCheckoutForm');
+    }
     if (!form) return;
+
+    // For sales on mobile: sync customer_id and address_id
+    var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
+    if (isSales) {
+        var deskCust = document.getElementById('customer_id');
+        var mobCust = document.getElementById('mobCustomerId');
+        if (deskCust && mobCust) mobCust.value = deskCust.value;
+
+        var deskAddr = document.querySelector('#checkoutForm select[name="address_id"]');
+        var mobAddr = document.getElementById('mobSalesAddressId');
+        if (deskAddr && mobAddr) mobAddr.value = deskAddr.value;
+    }
 
     if (typeof form.requestSubmit === 'function') {
         form.requestSubmit();
         return;
     }
-
     form.submit();
 }
 
@@ -538,6 +666,179 @@ async function updateCartSummary() {
             unitPriceEl.textContent = `Rp ${net}/pcs${discText}`;
         }
     });
+}
+
+// ==================== MOBILE CART FUNCTIONS ====================
+
+function mobUpdateQty(productId, change) {
+    const item = document.querySelector(`.mob-cart-item[data-product-id="${productId}"]`);
+    if (!item) return;
+    const input = item.querySelector('.mob-qty-input');
+    let val = (parseInt(input.value) || 1) + change;
+    if (val < 1) val = 1;
+
+    input.value = val;
+
+    fetch('/cart/items/' + productId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken()
+        },
+        body: JSON.stringify({ quantity: val })
+    })
+    .then(function(res) {
+        if (!res.ok) throw new Error();
+        updateCartSummary();
+        PAS.Cart.showNotification('Keranjang diperbarui', 'success');
+    })
+    .catch(function() {
+        PAS.Cart.showNotification('Gagal memperbarui keranjang', 'danger');
+    });
+}
+
+function mobRemoveItem(productId) {
+    if (!confirm('Yakin ingin menghapus item ini dari keranjang?')) return;
+
+    const item = document.querySelector(`.mob-cart-item[data-product-id="${productId}"]`);
+
+    fetch('/cart/items/' + productId, {
+        method: 'DELETE',
+        headers: {
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken()
+        }
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (item) item.remove();
+        updateCartSummary();
+        PAS.Cart.showNotification('Item dihapus dari keranjang', 'info');
+        mobCheckEmpty();
+    })
+    .catch(function() {
+        PAS.Cart.showNotification('Gagal menghapus item', 'danger');
+    });
+}
+
+function updateMobCartSummary(summary) {
+    const totalEl = document.getElementById('mobTotalPrice');
+    if (totalEl && summary.grand_total) {
+        totalEl.textContent = 'Rp ' + Math.round(Number(summary.grand_total)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+}
+
+function mobCheckEmpty() {
+    const items = document.querySelectorAll('.mob-cart-item');
+    const bar = document.getElementById('mobCheckoutBar');
+    const list = document.getElementById('mobCartList');
+    const emptyMsg = document.querySelector('.mob-cart-empty');
+
+    if (items.length === 0 && list) {
+        if (!emptyMsg) {
+            var msg = document.createElement('div');
+            msg.className = 'mob-cart-empty';
+            msg.innerHTML = '<i class="bi bi-cart-x"></i><p>Keranjang masih kosong</p><a href="{{ url('/products') }}" class="mob-cart-shop-btn">Mulai Belanja</a>';
+            list.appendChild(msg);
+        }
+        if (bar) bar.style.display = 'none';
+    } else {
+        if (bar) bar.style.display = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-check all items on mobile
+    document.querySelectorAll('.mob-cart-check').forEach(function(btn) {
+        btn.classList.add('checked');
+    });
+    mobUpdateCheckoutState();
+
+    // Mobile checkbox toggle
+    document.querySelectorAll('.mob-cart-check').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            this.classList.toggle('checked');
+            mobUpdateCheckoutState();
+        });
+    });
+
+    // Select all
+    var checkAllBtn = document.getElementById('mobCheckAll');
+    if (checkAllBtn) {
+        checkAllBtn.addEventListener('click', function() {
+            var isAll = this.classList.toggle('checked');
+            document.querySelectorAll('.mob-cart-check').forEach(function(btn) {
+                btn.classList.toggle('checked', isAll);
+            });
+            mobUpdateCheckoutState();
+        });
+    }
+
+    // Checkout button
+    var checkoutBtn = document.getElementById('mobCheckoutBtn');
+    var checkoutBar = document.getElementById('mobCheckoutBar');
+    if (checkoutBtn) {
+        checkoutBtn.addEventListener('click', function() {
+            // Check login
+            var isLoggedIn = checkoutBar ? parseInt(checkoutBar.dataset.isLoggedIn) : 0;
+            if (!isLoggedIn) {
+                window.location.href = '{{ url('/login') }}?redirect={{ url('/cart') }}';
+                return;
+            }
+
+            // Check address
+            var hasAddress = checkoutBar ? parseInt(checkoutBar.dataset.hasAddress) : 0;
+            if (!hasAddress) {
+                var addrModalEl = document.getElementById('mobAddressPrompt');
+                if (addrModalEl) {
+                    var addrModal = new bootstrap.Modal(addrModalEl);
+                    addrModal.show();
+                }
+                return;
+            }
+
+            // Direct submit (skip confirmation modal on mobile)
+            var form = document.getElementById('mobCheckoutForm');
+            if (form) {
+                form.submit();
+            }
+        });
+    }
+});
+
+function mobUpdateCheckoutState() {
+    var checked = document.querySelectorAll('.mob-cart-check.checked');
+    var all = document.querySelectorAll('.mob-cart-check');
+    var checkAllBtn = document.getElementById('mobCheckAll');
+    var totalPrice = 0;
+
+    // Determine if all checked
+    if (checkAllBtn) {
+        checkAllBtn.classList.toggle('checked', checked.length === all.length && all.length > 0);
+    }
+
+    // Calculate total price from checked items
+    checked.forEach(function(btn) {
+        var item = btn.closest('.mob-cart-item');
+        if (item) {
+            var priceEl = item.querySelector('.mob-cart-price');
+            if (priceEl) {
+                var raw = priceEl.textContent.replace(/[^0-9]/g, '');
+                totalPrice += parseInt(raw) || 0;
+            }
+        }
+    });
+
+    var totalEl = document.getElementById('mobTotalPrice');
+    if (totalEl) {
+        totalEl.textContent = 'Rp ' + totalPrice.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    }
+
+    var checkoutBtn = document.getElementById('mobCheckoutBtn');
+    if (checkoutBtn) {
+        checkoutBtn.style.opacity = checked.length > 0 ? '1' : '0.4';
+    }
 }
 </script>
 @endpush

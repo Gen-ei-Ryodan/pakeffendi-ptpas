@@ -36,7 +36,7 @@
                         @php
                             $imgUrl = $product->photo_url;
                         @endphp
-                        <img src="{{ $imgUrl }}" alt="Product" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
+                        <img src="{{ $imgUrl }}" alt="Product" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
                     </div>
                     <div class="prod-info">
                         <p class="prod-brand">{{ $product->brand?->brand_name }}</p>

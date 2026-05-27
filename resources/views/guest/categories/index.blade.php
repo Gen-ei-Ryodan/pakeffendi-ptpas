@@ -32,7 +32,7 @@
                     <a href="{{ url('/products') }}?category_id={{ $category->category_code }}" class="text-decoration-none">
                         <div class="category-tile cat-mobile-card">
                             <div class="category-tile-media cat-media-mobile">
-                                <img src="{{ $imageUrl }}" alt="{{ $category->name }}" class="category-tile-image" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22200%22 height=%22200%22%3E%3Crect width=%22200%22 height=%22200%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
+                                <img src="{{ $imageUrl }}" alt="{{ $category->name }}" class="category-tile-image" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
                             </div>
                             <div class="category-tile-title cat-title-mobile">
                                 {{ $category->name }}

@@ -7,7 +7,8 @@
                     <p>Update dari admin langsung tampil di sini</p>
                     <button class="btn-banner" type="button" data-action="openProductList">Lihat Produk</button>
                 </div>
-                <img src="{{ $broadcasts->first()?->image_path ?: 'https://placehold.co/600x300/1a1a1a/white?text=PAS+Banner' }}" alt="Banner Promo" class="banner-img">
+                <img src="{{ $broadcasts->first()?->image_path ?: 'https://placehold.co/600x300/1a1a1a/white?text=PAS+Banner' }}" alt="Banner Promo" class="banner-img"
+                     onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-banner.svg') }}'">
             </div>
         </div>
         <div class="carousel-dots">
@@ -42,7 +43,7 @@
                         @php
                             $imgUrl = $product->photo_url;
                         @endphp
-                        <img src="{{ $imgUrl }}" alt="Product" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
+                        <img src="{{ $imgUrl }}" alt="Product" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
                     </div>
                     <div class="prod-info">
                         <p class="prod-brand">{{ $product->brand?->brand_name }}</p>

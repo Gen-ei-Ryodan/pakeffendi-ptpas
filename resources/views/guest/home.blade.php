@@ -16,7 +16,7 @@
     <div class="container">
         <div class="hero-banner-frame">
             <div class="hero-banner-media">
-                <img src="{{ $heroImageUrl }}" alt="PAS Market" class="hero-banner-image">
+                <img src="{{ $heroImageUrl }}" alt="PAS Market" class="hero-banner-image" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-banner.svg') }}'">
             </div>
         </div>
     </div>
@@ -66,24 +66,7 @@
             </div>
             <div class="products-scroll">
                 @foreach($item['products'] as $product)
-                    @php
-                        $imageUrl = $product->photo_url;
-                    @endphp
-                    <div class="product-card" data-product-id="{{ $product->id }}">
-                        <div class="prod-img-box">
-                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
-                        </div>
-                        <div class="prod-info">
-                            <p class="prod-brand">{{ $product->brand?->brand_name }}</p>
-                            <p class="prod-name text-truncate-2">{{ $product->name }}</p>
-                            @if(($product->variant ?? '') !== '')
-                                <p class="text-muted small mb-1">{{ $product->variant }}</p>
-                            @endif
-                            <div class="pricing-tiers">
-                                <p class="prod-price">Rp {{ number_format((float) ($product->pricing_tiers[0]['net_price'] ?? $product->price_1), 0, ',', '.') }}</p>
-                            </div>
-                        </div>
-                    </div>
+                    @include('guest.partials.product-card-item')
                 @endforeach
             </div>
         </div>

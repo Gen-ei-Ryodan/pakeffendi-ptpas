@@ -3,9 +3,9 @@
 
 <div class="product-card" data-product-id="{{ $product['id'] ?? 1 }}">
     <div class="position-relative">
-        <img src="{{ $product['image'] ?? 'https://via.placeholder.com/300x300/f8f9fa/333333?text=Product' }}" 
+        <img src="{{ $product['image'] ?? asset('guest/img/placeholder-product.svg') }}" 
              alt="{{ $product['name'] ?? 'Product' }}" class="product-image"
-             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22400%22%3E%3Crect width=%22400%22 height=%22400%22 fill=%22%23f8f9fa%22/%3E%3C/svg%3E'">
+             onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
         
         @if($showBadge)
             <div class="product-badge">

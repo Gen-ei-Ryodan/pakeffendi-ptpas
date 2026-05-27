@@ -3,8 +3,8 @@
 @section('title', 'Detail Pesanan - PAS Market')
 
 @section('content')
-<!-- Page Header -->
-<section class="bg-light py-4">
+<!-- Page Header (Desktop) -->
+<section class="bg-light py-4 mobile-hide">
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
@@ -20,8 +20,8 @@
     </div>
 </section>
 
-<!-- Order Detail Content -->
-<section class="py-5">
+<!-- Order Detail Content (Desktop) -->
+<section class="py-5 mobile-hide">
     <div class="container">
         <div class="row">
             @include('guest.partials.profile-sidebar')
@@ -137,5 +137,123 @@
             </div>
         </div>
     </div>
+</section>
+
+<!-- ====================== MOBILE ORDER DETAIL ====================== -->
+<section class="d-lg-none" id="mobOrderDetailSection">
+    @php
+        $statusLabels = [
+            'new' => ['Belum Bayar', 'orange'],
+            'waiting_payment' => ['Belum Bayar', 'orange'],
+            'on_progress' => ['Diproses', 'blue'],
+            'processing' => ['Diproses', 'blue'],
+            'on_delivery' => ['Dikirim', 'green'],
+            'shipping' => ['Dikirim', 'green'],
+            'finished' => ['Selesai', 'purple'],
+            'completed' => ['Selesai', 'purple'],
+            'cancelled' => ['Dibatalkan', 'red'],
+            'return' => ['Pengembalian', 'red'],
+        ];
+        $statusInfo = $statusLabels[strtolower($order->status)] ?? [$order->status, 'grey'];
+    @endphp
+
+    <!-- Header with back -->
+    <div class="mob-order-detail-header">
+        <a href="{{ url('/orders') }}" class="mob-order-detail-back"><i class="bi bi-chevron-left"></i></a>
+        <h1 class="mob-order-detail-title">Detail Pesanan</h1>
+    </div>
+
+    <!-- Status banner -->
+    <div class="mob-order-status-banner" style="background: var(--{{ $statusInfo[1] }}-100, #f5f5f5);">
+        <div class="mob-order-status-icon-lg" style="color: var(--{{ $statusInfo[1] }}-color, #999);">
+            @if(in_array(strtolower($order->status), ['finished', 'completed']))
+                <i class="bi bi-check-circle-fill"></i>
+            @elseif(in_array(strtolower($order->status), ['on_delivery', 'shipping']))
+                <i class="bi bi-truck"></i>
+            @elseif(in_array(strtolower($order->status), ['on_progress', 'processing']))
+                <i class="bi bi-box-seam"></i>
+            @else
+                <i class="bi bi-clock"></i>
+            @endif
+        </div>
+        <div>
+            <div class="mob-order-status-label-lg" style="color: var(--{{ $statusInfo[1] }}-color, var(--secondary-color));">
+                {{ $statusInfo[0] }}
+            </div>
+            <div class="mob-order-status-no">{{ $order->order_no }}</div>
+        </div>
+    </div>
+
+    <!-- Order info card -->
+    <div class="mob-order-info-card">
+        <div class="mob-order-info-row">
+            <span class="mob-order-info-label">Tanggal</span>
+            <span class="mob-order-info-value">{{ $order->order_date?->format('d M Y, H:i') }}</span>
+        </div>
+        <div class="mob-order-info-row">
+            <span class="mob-order-info-label">Penerima</span>
+            <span class="mob-order-info-value">{{ $order->delivery_to ?? '-' }}</span>
+        </div>
+        <div class="mob-order-info-row">
+            <span class="mob-order-info-label">Telepon</span>
+            <span class="mob-order-info-value">{{ $order->delivery_phone ?? '-' }}</span>
+        </div>
+        <div class="mob-order-info-row mob-order-info-address">
+            <span class="mob-order-info-label">Alamat</span>
+            <span class="mob-order-info-value">{{ $order->delivery_address ?? '-' }}</span>
+        </div>
+        @if(!empty($order->notes))
+        <div class="mob-order-info-row">
+            <span class="mob-order-info-label">Catatan</span>
+            <span class="mob-order-info-value">{{ $order->notes }}</span>
+        </div>
+        @endif
+    </div>
+
+    <!-- Products section -->
+    <div class="mob-order-products">
+        <div class="mob-order-section-title">Produk yang Dibeli</div>
+
+        @foreach(($order->items ?? collect()) as $item)
+        <div class="mob-order-product-item">
+            <div class="mob-order-product-top">
+                <span class="mob-order-product-name">{{ $item->product_name }}</span>
+                <span class="mob-order-product-qty">x{{ (int) $item->quantity }}</span>
+            </div>
+            @if($item->product?->brand?->brand_name)
+            <div class="mob-order-product-brand">{{ $item->product->brand->brand_name }}</div>
+            @endif
+            <div class="mob-order-product-prices">
+                <span class="mob-order-product-unit">Rp {{ number_format((float) $item->net_price, 0, ',', '.') }}/pcs</span>
+                <span class="mob-order-product-subtotal">Rp {{ number_format((float) $item->final_total, 0, ',', '.') }}</span>
+            </div>
+            @if(((float) $item->discount_percent) > 0)
+            <div class="mob-order-product-disc">Disc {{ rtrim(rtrim(number_format((float) $item->discount_percent, 2, '.', ''), '0'), '.') }}%</div>
+            @endif
+        </div>
+        @endforeach
+    </div>
+
+    <!-- Summary -->
+    <div class="mob-order-summary">
+        <div class="mob-order-summary-row">
+            <span>Total</span>
+            <span>Rp {{ number_format((float) $order->grand_total, 0, ',', '.') }}</span>
+        </div>
+        <div class="mob-order-summary-row">
+            <span>Ongkir</span>
+            <span>Rp {{ number_format((float) $order->shipping_fee, 0, ',', '.') }}</span>
+        </div>
+        <div class="mob-order-summary-divider"></div>
+        <div class="mob-order-summary-total">
+            <span>Grand Total</span>
+            <span>Rp {{ number_format((float) ($order->grand_total + $order->shipping_fee), 0, ',', '.') }}</span>
+        </div>
+    </div>
+
+    <!-- Back button -->
+    <a href="{{ url('/orders') }}" class="mob-order-back-btn">
+        <i class="bi bi-arrow-left"></i> Kembali ke Daftar Pesanan
+    </a>
 </section>
 @endsection
