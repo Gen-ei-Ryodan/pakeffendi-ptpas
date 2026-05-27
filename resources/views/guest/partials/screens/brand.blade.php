@@ -12,7 +12,8 @@
                 <div class="brand-card" role="button" tabindex="0" data-brand-id="{{ $brand->brand_code }}">
                     <img src="{{ $brand->brand_image_path ?: 'https://placehold.co/100x50/white/red?text='.urlencode($brand->brand_name) }}"
                          alt="{{ $brand->brand_name }}"
-                         class="brand-logo-img">
+                         class="brand-logo-img"
+                         onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
                     <span class="brand-name">{{ $brand->brand_name }}</span>
                 </div>
             @endforeach

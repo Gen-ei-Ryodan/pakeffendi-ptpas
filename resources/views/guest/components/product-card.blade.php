@@ -3,9 +3,9 @@
 
 <div class="product-card" data-product-id="{{ $product['id'] ?? 1 }}">
     <div class="position-relative">
-        <img src="{{ $product['image'] ?? 'https://via.placeholder.com/300x300/f8f9fa/333333?text=Product' }}" 
+        <img src="{{ $product['image'] ?? asset('guest/img/placeholder-product.svg') }}" 
              alt="{{ $product['name'] ?? 'Product' }}" class="product-image"
-             onerror="this.closest('.product-card').remove()">
+             onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
         
         @if($showBadge)
             <div class="product-badge">

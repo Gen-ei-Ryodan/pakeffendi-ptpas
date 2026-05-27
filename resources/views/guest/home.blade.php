@@ -16,7 +16,7 @@
     <div class="container">
         <div class="hero-banner-frame">
             <div class="hero-banner-media">
-                <img src="{{ $heroImageUrl }}" alt="PAS Market" class="hero-banner-image">
+                <img src="{{ $heroImageUrl }}" alt="PAS Market" class="hero-banner-image" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-banner.svg') }}'">
             </div>
         </div>
     </div>
@@ -27,13 +27,29 @@
     <div class="container">
         <div class="section-container">
             <h3 class="section-title">Kategori</h3>
+            <!-- Desktop: horizontal scroll -->
             <div class="categories-scroll">
                 @foreach(($categories ?? collect()) as $category)
                     <div class="category-card {{ $categoryColors[$loop->index % count($categoryColors)] }}" role="button" tabindex="0" data-category-id="{{ $category->category_code }}">
-                        <span class="cat-name">{{ $category->name }}</span>
                         <i class="bi bi-{{ $categoryIcons[$loop->index % count($categoryIcons)] ?? 'tags' }} cat-icon"></i>
+                        <span class="cat-name">{{ $category->name }}</span>
                     </div>
                 @endforeach
+            </div>
+            <!-- Mobile: grid 5 cols -->
+            <div class="categories-grid">
+                @foreach(($categories ?? collect())->take(5) as $category)
+                    <a href="{{ url('/products') }}?category_id={{ $category->category_code }}" class="cat-item" data-category-id="{{ $category->category_code }}">
+                        <i class="bi bi-{{ $categoryIcons[$loop->index % count($categoryIcons)] ?? 'tags' }} cat-icon"></i>
+                        <span class="cat-name">{{ $category->name }}</span>
+                    </a>
+                @endforeach
+                @if(($categories ?? collect())->count() > 5)
+                    <a href="{{ url('/categories') }}" class="cat-see-all">
+                        <i class="bi bi-grid-3x3-gap-fill cat-icon"></i>
+                        <span class="cat-name">Lihat Semua</span>
+                    </a>
+                @endif
             </div>
         </div>
     </div>
@@ -50,24 +66,7 @@
             </div>
             <div class="products-scroll">
                 @foreach($item['products'] as $product)
-                    @php
-                        $imageUrl = $product->photo_url;
-                    @endphp
-                    <div class="product-card" data-product-id="{{ $product->id }}">
-                        <div class="prod-img-box">
-                            <img src="{{ $imageUrl }}" alt="{{ $product->name }}" onerror="this.closest('.product-card').remove()">
-                        </div>
-                        <div class="prod-info">
-                            <p class="prod-brand">{{ $product->brand?->brand_name }}</p>
-                            <p class="prod-name text-truncate-2">{{ $product->name }}</p>
-                            @if(($product->variant ?? '') !== '')
-                                <p class="text-muted small mb-1">{{ $product->variant }}</p>
-                            @endif
-                            <div class="pricing-tiers">
-                                <p class="prod-price">Rp {{ number_format((float) ($product->pricing_tiers[0]['net_price'] ?? $product->price_1), 0, ',', '.') }}</p>
-                            </div>
-                        </div>
-                    </div>
+                    @include('guest.partials.product-card-item')
                 @endforeach
             </div>
         </div>

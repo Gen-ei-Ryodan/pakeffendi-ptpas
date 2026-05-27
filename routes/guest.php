@@ -12,7 +12,6 @@ use App\Models\ProductBrand;
 use App\Models\ProductCategory;
 use App\Models\ProductStatus;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Str;
 
 // Guest Routes - Modern Views
 Route::prefix('/')->group(function () {
@@ -124,14 +123,7 @@ Route::prefix('/')->group(function () {
             }
         }
 
-        $allProducts = (clone $query)->get(['id', 'photo_path']);
-        $validIds = $allProducts->filter(function ($p) {
-            if (!$p->photo_path) return false;
-            if (Str::startsWith($p->photo_path, ['http://', 'https://'])) return true;
-            return file_exists(storage_path('app/public/'.$p->photo_path));
-        })->pluck('id');
-
-        $products = $query->whereIn('id', $validIds)->paginate(12)->withQueryString();
+        $products = $query->paginate(12)->withQueryString();
 
         $categories = ProductCategory::query()->orderBy('name')->get(['category_code', 'name']);
         $brands = ProductBrand::query()->orderBy('brand_name')->get(['brand_code', 'brand_name']);
@@ -146,6 +138,76 @@ Route::prefix('/')->group(function () {
                 'brand_id' => $validated['brand_id'] ?? null,
                 'sort' => $validated['sort'] ?? null,
             ],
+        ]);
+    });
+
+    // Products Load More (JSON for infinite scroll)
+    Route::get('/products/load-more', function () {
+        $validated = request()->validate([
+            'page' => ['nullable', 'integer', 'min:1'],
+            'q' => ['nullable', 'string', 'max:120'],
+            'category_id' => ['nullable', 'string', 'max:50'],
+            'brand_id' => ['nullable', 'string', 'max:50'],
+            'sort' => ['nullable', 'string', 'in:price-asc,price-desc,name-asc,name-desc,newest,popular'],
+        ]);
+
+        $page = (int) ($validated['page'] ?? 1);
+
+        $query = Product::query()
+            ->with(['brand:brand_code,brand_name'])
+            ->active()
+            ->hasPhoto()
+            ->orderBy('name');
+
+        if (! empty($validated['q'])) {
+            $q = trim((string) $validated['q']);
+            $query->where(function ($qBuilder) use ($q) {
+                $qBuilder->where('name', 'like', "%{$q}%")
+                    ->orWhere('sku', 'like', "%{$q}%");
+            });
+        }
+
+        if (! empty($validated['category_id'])) {
+            $query->where('product_category_code', $validated['category_id']);
+        }
+
+        if (! empty($validated['brand_id'])) {
+            $query->where('product_brand_code', $validated['brand_id']);
+        }
+
+        if (! empty($validated['sort'])) {
+            switch ($validated['sort']) {
+                case 'price-asc':
+                    $query->reorder()->orderBy('price_1')->orderBy('name');
+                    break;
+                case 'price-desc':
+                    $query->reorder()->orderByDesc('price_1')->orderBy('name');
+                    break;
+                case 'name-asc':
+                    $query->reorder()->orderBy('name');
+                    break;
+                case 'name-desc':
+                    $query->reorder()->orderByDesc('name');
+                    break;
+                case 'popular':
+                case 'newest':
+                default:
+                    $query->reorder()->orderByDesc('created_at');
+                    break;
+            }
+        }
+
+        $products = $query->paginate(12, ['*'], 'page', $page)->withQueryString();
+
+        $html = '';
+        foreach ($products as $product) {
+            $html .= view('guest.partials.product-card-item', compact('product'))->render();
+        }
+
+        return response()->json([
+            'html' => $html,
+            'hasMore' => $products->hasMorePages(),
+            'nextPage' => $page + 1,
         ]);
     });
 

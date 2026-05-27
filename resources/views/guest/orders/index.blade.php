@@ -3,8 +3,8 @@
 @section('title', 'Pesanan Saya - PAS Market')
 
 @section('content')
-<!-- Page Header -->
-<section class="bg-light py-4">
+<!-- Page Header (Desktop) -->
+<section class="bg-light py-4 mobile-hide">
     <div class="container">
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb mb-0">
@@ -19,8 +19,8 @@
     </div>
 </section>
 
-<!-- Orders Content -->
-<section class="py-5">
+<!-- Orders Content (Desktop) -->
+<section class="py-5 mobile-hide">
     <div class="container">
         <div class="row">
             @include('guest.partials.profile-sidebar')
@@ -149,4 +149,99 @@
         </div>
     </div>
 </section>
+
+<!-- ====================== MOBILE ORDERS ====================== -->
+<section class="d-lg-none" id="mobOrdersSection">
+    @php
+        $statusList = [
+            '' => 'Semua',
+            \App\Models\SalesOrder::STATUS_NEW => 'Belum Bayar',
+            \App\Models\SalesOrder::STATUS_ON_PROGRESS => 'Dikemas',
+            \App\Models\SalesOrder::STATUS_ON_DELIVERY => 'Dikirim',
+            \App\Models\SalesOrder::STATUS_FINISHED => 'Selesai',
+        ];
+        $activeStatus = $f['status'] ?? '';
+    @endphp
+
+    <!-- Header -->
+    <div class="mob-orders-header">
+        <h1 class="mob-orders-title">Pesanan Saya</h1>
+        <button class="mob-orders-search-btn" id="mobOrdersSearchBtn" aria-label="Cari">
+            <i class="bi bi-search"></i>
+        </button>
+    </div>
+
+    <!-- Status Tabs (scrollable) -->
+    <div class="mob-orders-tabs-wrap">
+        <div class="mob-orders-tabs" id="mobOrdersTabs">
+            @foreach($statusList as $val => $label)
+            <a href="{{ $val ? url('/orders?status='.$val) : url('/orders') }}"
+               class="mob-orders-tab {{ $activeStatus === $val ? 'active' : '' }}"
+               data-status="{{ $val }}">
+                {{ $label }}
+            </a>
+            @endforeach
+        </div>
+    </div>
+
+    <!-- Search bar (collapsible) -->
+    <div class="mob-orders-search-bar" id="mobOrdersSearchBar" style="display:none;">
+        <form method="get" action="{{ route('guest.orders.index') }}" data-ajax="false">
+            <input type="hidden" name="status" value="{{ $activeStatus }}">
+            <div class="mob-orders-search-inner">
+                <i class="bi bi-search"></i>
+                <input type="text" name="q" value="{{ $f['q'] ?? '' }}" placeholder="Cari no. pesanan...">
+                <button type="submit" class="mob-orders-search-go">Cari</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Orders List -->
+    <div class="mob-orders-list">
+        @forelse(($orders ?? collect()) as $order)
+        <a href="{{ route('guest.orders.show', $order) }}" class="mob-order-card">
+            <div class="mob-order-card-top">
+                <span class="mob-order-card-no">{{ $order->order_no }}</span>
+                <span class="mob-order-card-status status-badge-{{ strtolower($order->status) }}">{{ $order->status }}</span>
+            </div>
+            @if(isset($is_sales) && $is_sales && $order->customer)
+            <div class="mob-order-card-customer">{{ $order->customer->full_name ?? '-' }}</div>
+            @endif
+            <div class="mob-order-card-mid">
+                <span class="mob-order-card-date">{{ $order->order_date?->format('d M Y') }}</span>
+                <span class="mob-order-card-total">Rp {{ number_format((float) $order->grand_total, 0, ',', '.') }}</span>
+            </div>
+            <div class="mob-order-card-bot">
+                <span class="mob-order-card-detail">Lihat Detail <i class="bi bi-chevron-right"></i></span>
+            </div>
+        </a>
+        @empty
+        <div class="mob-orders-empty">
+            <i class="bi bi-inbox"></i>
+            <p>Tidak ada pesanan</p>
+        </div>
+        @endforelse
+    </div>
+
+    @if(isset($orders) && method_exists($orders, 'links') && $orders->hasPages())
+    <div class="mob-orders-pagination">
+        {{ $orders->links('pagination::bootstrap-5') }}
+    </div>
+    @endif
+</section>
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var searchBtn = document.getElementById('mobOrdersSearchBtn');
+    var searchBar = document.getElementById('mobOrdersSearchBar');
+    if (searchBtn && searchBar) {
+        searchBtn.addEventListener('click', function() {
+            var isVisible = searchBar.style.display !== 'none';
+            searchBar.style.display = isVisible ? 'none' : 'block';
+        });
+    }
+});
+</script>
+@endpush

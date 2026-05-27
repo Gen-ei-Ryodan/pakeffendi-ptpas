@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Product extends Model
@@ -151,14 +152,22 @@ class Product extends Model
 
     public function getPhotoUrlAttribute(): string
     {
+        $placeholder = asset('guest/img/placeholder-product.svg');
+
         if (! $this->photo_path) {
-            return asset('guest/img/placeholder-product.svg');
+            return $placeholder;
         }
 
         if (Str::startsWith($this->photo_path, ['http://', 'https://'])) {
             return $this->photo_path;
         }
 
-        return asset('storage/'.str_replace(' ', '%20', $this->photo_path));
+        $path = str_replace(' ', '%20', $this->photo_path);
+
+        if (! Storage::disk('public')->exists($this->photo_path)) {
+            return $placeholder;
+        }
+
+        return asset('storage/'.$path);
     }
 }
