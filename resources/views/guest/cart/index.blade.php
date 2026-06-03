@@ -36,27 +36,32 @@
                 @if(isset($is_sales) && $is_sales)
                 <div class="card border-0 shadow-sm mb-3">
                     <div class="card-body py-3">
-                        <div class="d-flex align-items-center gap-3">
+                        @if($my_customers->isEmpty())
+                            <div class="d-flex align-items-center gap-3">
+                                <span class="fw-bold text-nowrap"><i class="bi bi-person-badge me-1"></i>Keranjang Untuk:</span>
+                                <span class="text-muted small">Belum ada customer. Silakan tambahkan melalui menu Profile.</span>
+                            </div>
+                        @else
+                        <div class="d-flex align-items-center gap-3" id="custBar">
                             <span class="fw-bold text-nowrap"><i class="bi bi-person-badge me-1"></i>Keranjang Untuk:</span>
-                            @if($selected_customer)
-                                <span class="badge bg-primary fs-6 px-3 py-2">{{ $selected_customer->full_name }}</span>
-                                <a href="{{ route('guest.cart.clear-customer') }}" class="btn btn-outline-secondary btn-sm ms-auto">Ganti Customer</a>
-                            @else
-                                @if($my_customers->isEmpty())
-                                    <div class="text-muted small">Belum ada customer. Silakan tambahkan customer melalui menu Profile.</div>
-                                @else
-                                <div class="d-flex align-items-center gap-2 w-100">
-                                    <select id="customerSelect" class="form-select form-select-sm" style="max-width: 300px;" onchange="goToCustomer()">
-                                        <option value="" selected disabled>-- Pilih Customer --</option>
-                                        @foreach($my_customers as $c)
-                                            <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }} {{ $c->company_name ? '('.$c->company_name.')' : '' }}</option>
-                                        @endforeach
-                                    </select>
-                                    <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToCustomer()">Pilih</button>
-                                </div>
-                                @endif
-                            @endif
+                            {{-- Badge + Ganti Button --}}
+                            <div id="custBadgeRow" class="d-flex align-items-center gap-3 w-100 @if(!$selected_customer) d-none @endif">
+                                <span class="badge bg-primary fs-6 px-3 py-2">{{ $selected_customer?->full_name }}</span>
+                                <button type="button" class="btn btn-outline-secondary btn-sm ms-auto" onclick="showCustomerSelect()">Ganti Customer</button>
+                            </div>
+                            {{-- Dropdown + Pilih + Batal --}}
+                            <div id="custSelectRow" class="d-flex align-items-center gap-2 w-100 @if($selected_customer) d-none @endif">
+                                <select id="customerSelect" class="form-select form-select-sm" style="max-width: 300px;">
+                                    <option value="" selected disabled>-- Pilih Customer --</option>
+                                    @foreach($my_customers as $c)
+                                        <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }} {{ $c->company_name ? '('.$c->company_name.')' : '' }}</option>
+                                    @endforeach
+                                </select>
+                                <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToCustomer()">Pilih</button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" onclick="cancelCustomerSelect()">Batal</button>
+                            </div>
                         </div>
+                        @endif
                     </div>
                 </div>
                 @endif
@@ -309,23 +314,25 @@
     <div class="mob-sales-customer-bar">
         <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#fff; border-bottom:1px solid #e5e7eb;">
             <span class="fw-bold small text-nowrap"><i class="bi bi-person-badge me-1"></i>Keranjang:</span>
-            @if($selected_customer)
-                <span class="badge bg-primary">{{ $selected_customer->full_name }}</span>
-                <a href="{{ route('guest.cart.clear-customer') }}" class="btn btn-outline-secondary btn-sm py-0 px-2 ms-auto" style="font-size:0.75rem;">Ganti</a>
+            @if($my_customers->isEmpty())
+                <span class="text-muted small">Belum ada customer.</span>
             @else
-                @if($my_customers->isEmpty())
-                    <div class="text-muted small px-3">Belum ada customer.</div>
-                @else
-                <div class="d-flex align-items-center gap-2 w-100">
-                    <select id="mobCustomerSelect" class="form-select form-select-sm" onchange="goToMobCustomer()">
-                        <option value="" selected disabled>-- Pilih Customer --</option>
-                        @foreach($my_customers as $c)
-                            <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }}</option>
-                        @endforeach
-                    </select>
-                    <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToMobCustomer()">Pilih</button>
-                </div>
-                @endif
+            {{-- Badge + Ganti (mobile) --}}
+            <div id="mobCustBadgeRow" class="d-flex align-items-center gap-2 w-100 @if(!$selected_customer) d-none @endif">
+                <span class="badge bg-primary">{{ $selected_customer?->full_name }}</span>
+                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 ms-auto" style="font-size:0.75rem;" onclick="showMobCustomerSelect()">Ganti</button>
+            </div>
+            {{-- Dropdown + Pilih + Batal (mobile) --}}
+            <div id="mobCustSelectRow" class="d-flex align-items-center gap-2 w-100 @if($selected_customer) d-none @endif">
+                <select id="mobCustomerSelect" class="form-select form-select-sm">
+                    <option value="" selected disabled>-- Pilih Customer --</option>
+                    @foreach($my_customers as $c)
+                        <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }}</option>
+                    @endforeach
+                </select>
+                <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToMobCustomer()">Pilih</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 text-nowrap" style="font-size:0.75rem;" onclick="cancelMobCustomerSelect()">Batal</button>
+            </div>
             @endif
         </div>
     </div>
@@ -440,6 +447,34 @@
 
 @push('scripts')
 <script>
+function showCustomerSelect() {
+    var badge = document.getElementById('custBadgeRow');
+    var select = document.getElementById('custSelectRow');
+    if (badge) badge.classList.add('d-none');
+    if (select) select.classList.remove('d-none');
+}
+
+function cancelCustomerSelect() {
+    var badge = document.getElementById('custBadgeRow');
+    var select = document.getElementById('custSelectRow');
+    if (badge) badge.classList.remove('d-none');
+    if (select) select.classList.add('d-none');
+}
+
+function showMobCustomerSelect() {
+    var badge = document.getElementById('mobCustBadgeRow');
+    var select = document.getElementById('mobCustSelectRow');
+    if (badge) badge.classList.add('d-none');
+    if (select) select.classList.remove('d-none');
+}
+
+function cancelMobCustomerSelect() {
+    var badge = document.getElementById('mobCustBadgeRow');
+    var select = document.getElementById('mobCustSelectRow');
+    if (badge) badge.classList.remove('d-none');
+    if (select) select.classList.add('d-none');
+}
+
 function goToCustomer() {
     var sel = document.getElementById('customerSelect');
     if (sel && sel.value) {
