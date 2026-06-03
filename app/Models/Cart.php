@@ -10,6 +10,7 @@ class Cart extends Model
 {
     protected $fillable = [
         'customer_id',
+        'sales_id',
         'session_id',
         'status',
     ];
@@ -17,6 +18,11 @@ class Cart extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function sales(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sales_id');
     }
 
     public function items(): HasMany

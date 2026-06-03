@@ -251,6 +251,9 @@ Route::prefix('/')->group(function () {
     Route::delete('/cart', [CartController::class, 'clear'])->middleware('guest.auth')->name('guest.cart.clear');
     Route::post('/cart/checkout', [CartController::class, 'checkout'])->middleware('guest.auth')->name('guest.cart.checkout');
     Route::get('/cart/customers/{customer}/addresses', [CartController::class, 'customerAddresses'])->middleware(['auth:web', 'sales'])->name('guest.cart.customer-addresses');
+    Route::get('/cart/select-customer/{customerId}', [CartController::class, 'setActiveCustomer'])->middleware(['auth:web', 'sales'])->name('guest.cart.select-customer');
+    Route::get('/cart/clear-customer', [CartController::class, 'clearActiveCustomer'])->middleware(['auth:web', 'sales'])->name('guest.cart.clear-customer');
+    Route::get('/cart/my-customers', [CartController::class, 'myCustomers'])->middleware(['auth:web', 'sales'])->name('guest.cart.my-customers');
 
     // Auth
     Route::middleware('guest:customer')->group(function () {

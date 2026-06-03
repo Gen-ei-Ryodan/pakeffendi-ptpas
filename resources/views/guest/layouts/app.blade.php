@@ -17,11 +17,40 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="{{ asset('guest/css/app.css') }}" rel="stylesheet">
+    <link href="{{ asset('guest/css/app.css') }}?v={{ filemtime(public_path('guest/css/app.css')) }}" rel="stylesheet">
 
     @stack('styles')
 </head>
 <body class="d-flex flex-column min-vh-100 has-bottom-nav" @if(Request::is('login', 'register')) data-spa="false" @endif>
+
+    {{-- Sales Customer Select Modal (for add-to-cart) --}}
+    @if(Auth::guard('web')->check() && Auth::guard('web')->user()->isSales())
+    <div class="modal fade" id="salesCustomerModal" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:14px;">
+                <div class="modal-header border-0 pb-0">
+                    <h6 class="modal-title fw-bold"><i class="bi bi-person-badge me-2"></i>Pilih Customer</h6>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted small mb-3">Produk akan ditambahkan ke keranjang customer yang dipilih.</p>
+                    <div class="mb-2">
+                        <input type="text" id="salesCustSearch" class="form-control form-control-sm" placeholder="Cari customer...">
+                    </div>
+                    <div class="list-group" id="salesCustList" style="max-height:260px;overflow-y:auto;">
+                        <div class="text-center text-muted py-3 small">Memuat...</div>
+                    </div>
+                    <div class="mt-2 d-none" id="salesCustEmpty">
+                        <p class="text-muted small mb-0 text-center">Tidak ada customer ditemukan.</p>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Batal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Desktop Header (hidden on mobile) -->
     <header class="desktop-header navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top d-none d-lg-flex">
@@ -245,6 +274,7 @@
         window.PAS = window.PAS || {};
         window.PAS.auth = {
             loggedIn: {{ (Auth::guard('customer')->check() || (Auth::guard('web')->check() && Auth::guard('web')->user()->isSales())) ? 'true' : 'false' }},
+            isSales: {{ (Auth::guard('web')->check() && Auth::guard('web')->user()->isSales()) ? 'true' : 'false' }},
             user: @json(Auth::guard('customer')->user() ?? (Auth::guard('web')->check() && Auth::guard('web')->user()->isSales() ? Auth::guard('web')->user() : null)),
             loginUrl: '{{ route('guest.login') }}'
         };
@@ -254,7 +284,8 @@
             orders: '{{ url('/api/guest/orders') }}',
             products: '{{ url('/api/guest/products') }}',
             productShow: '{{ url('/api/guest/products') }}',
-            cart: '{{ route('guest.cart.index') }}'
+            cart: '{{ route('guest.cart.index') }}',
+            myCustomers: '{{ route('guest.cart.my-customers') }}'
         };
         window.PAS.initialScreen = '{{ $initialScreen ?? 'home' }}';
         window.PAS.initialProductId = '{{ $initialProductId ?? '' }}';

@@ -32,12 +32,37 @@
         <div class="row">
             <!-- Cart Items -->
             <div class="col-lg-8">
+                {{-- Sales Customer Selector --}}
+                @if(isset($is_sales) && $is_sales)
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fw-bold text-nowrap"><i class="bi bi-person-badge me-1"></i>Keranjang Untuk:</span>
+                            @if($selected_customer)
+                                <span class="badge bg-primary fs-6 px-3 py-2">{{ $selected_customer->full_name }}</span>
+                                <a href="{{ route('guest.cart.clear-customer') }}" class="btn btn-outline-secondary btn-sm ms-auto">Ganti Customer</a>
+                            @else
+                                <div class="d-flex align-items-center gap-2 w-100">
+                                    <select id="customerSelect" class="form-select form-select-sm" style="max-width: 300px;">
+                                        <option value="" selected disabled>-- Pilih Customer --</option>
+                                        @foreach($my_customers as $c)
+                                            <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }} {{ $c->company_name ? '('.$c->company_name.')' : '' }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToCustomer()">Pilih</button>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+                @endif
+
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
                         <h5 class="fw-bold mb-4" id="cartItemsHeader">Daftar Belanja ({{ (int) ($summary['total_items'] ?? 0) }} item)</h5>
                         
                         <div class="cart-items">
-                            @foreach(($cart?->items ?? collect()) as $item)
+                            @forelse(($cart?->items ?? collect()) as $item)
                             @php
                                 $product = $item->product;
                                 $imageUrl = $product?->photo_url ?? asset('guest/img/placeholder-product.svg');
@@ -89,7 +114,18 @@
                                     </div>
                                 </div>
                             </div>
-                            @endforeach
+                            @empty
+                            <div class="text-center py-5">
+                                <i class="bi bi-cart-x display-1 text-muted mb-3"></i>
+                                @if(isset($is_sales) && $is_sales && !$selected_customer)
+                                    <h5 class="text-muted mb-2">Pilih Customer Terlebih Dahulu</h5>
+                                    <p class="text-muted small mb-0">Silakan pilih customer di atas untuk melihat keranjang belanja.</p>
+                                @else
+                                    <h5 class="text-muted mb-2">Keranjang Kosong</h5>
+                                    <p class="text-muted small mb-0">Belum ada produk di keranjang. Yuk, mulai belanja!</p>
+                                @endif
+                            </div>
+                            @endforelse
                         </div>
                         
                         <div class="d-flex justify-content-between align-items-center pt-3">
@@ -124,22 +160,47 @@
                                 @csrf
 
                                 @if(isset($is_sales) && $is_sales)
-                                    <div class="mb-3">
-                                        <label for="customer_id" class="form-label fw-bold">Pilih Buyer (Pembayar)</label>
-                                        <select name="customer_id" id="customer_id" class="form-select" required>
-                                            <option value="" selected disabled>-- Pilih Customer --</option>
-                                            @foreach($my_customers as $c)
-                                                <option value="{{ $c->id }}">{{ $c->full_name }} {{ $c->company_name ? '('.$c->company_name.')' : '' }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                                    @if(!$selected_customer)
+                                        <div class="alert alert-warning mb-3">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>Silakan pilih customer di atas sebelum checkout.
+                                        </div>
+                                    @else
+                                        <div class="mb-3">
+                                            <label class="form-label fw-bold">Buyer</label>
+                                            <div class="border rounded p-2 bg-light">
+                                                <span class="fw-semibold">{{ $selected_customer->full_name }}</span>
+                                                @if($selected_customer->company_name)
+                                                    <span class="text-muted">({{ $selected_customer->company_name }})</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endif
 
                                     <div class="mb-3">
                                         <label for="address_id" class="form-label fw-bold">Pilih Alamat</label>
-                                        <select name="address_id" id="address_id" class="form-select" required disabled>
-                                            <option value="" selected disabled>-- Pilih customer dulu --</option>
-                                        </select>
-                                        <div class="form-text" id="salesAddressHelp">Alamat akan muncul setelah buyer dipilih.</div>
+                                        @php
+                                            $salesAddrList = $addresses ?? collect();
+                                            $salesActiveAddrId = $active_address_id ?? null;
+                                        @endphp
+                                        @if($salesAddrList->isEmpty())
+                                            <div class="alert alert-warning mb-2">Customer belum memiliki alamat.</div>
+                                        @elseif($salesAddrList->count() === 1)
+                                            <input type="hidden" name="address_id" value="{{ $salesAddrList->first()->id }}">
+                                            <div class="border rounded p-2 bg-light">
+                                                <div class="fw-semibold">{{ $salesAddrList->first()->label ?: 'Alamat' }} <span class="badge bg-success ms-2">Aktif</span></div>
+                                                <div class="small text-muted">{{ $salesAddrList->first()->recipient_name ?: $selected_customer->full_name }}{{ $salesAddrList->first()->phone ? ' · '.$salesAddrList->first()->phone : '' }}</div>
+                                                <div class="mt-1">{{ $salesAddrList->first()->full_address }}</div>
+                                            </div>
+                                        @else
+                                            <select name="address_id" id="address_id" class="form-select" required>
+                                                <option value="" disabled {{ !$salesActiveAddrId ? 'selected' : '' }}>-- Pilih Alamat --</option>
+                                                @foreach($salesAddrList as $addr)
+                                                    <option value="{{ $addr->id }}" {{ (int) $addr->id === (int) $salesActiveAddrId ? 'selected' : '' }}>
+                                                        {{ $addr->label ?: 'Alamat' }}{{ $addr->is_active ? ' (Aktif)' : '' }} - {{ $addr->full_address }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @endif
                                     </div>
                                 @else
                                     @php
@@ -177,7 +238,13 @@
                                     </div>
                                 @endif
 
-                                <button type="button" class="btn btn-primary btn-lg w-100 mb-3" @disabled(($summary['total_items'] ?? 0) <= 0 || (!isset($is_sales) || !$is_sales) && ($disableCheckout ?? false)) onclick="confirmCheckout()">
+                                @php
+                                    $noItems = ($summary['total_items'] ?? 0) <= 0;
+                                    $salesNoCustomer = isset($is_sales) && $is_sales && !$selected_customer;
+                                    $customerNoAddress = (!isset($is_sales) || !$is_sales) && ($disableCheckout ?? false);
+                                    $disableBtn = $noItems || $salesNoCustomer || $customerNoAddress;
+                                @endphp
+                                <button type="button" class="btn btn-primary btn-lg w-100 mb-3" @disabled($disableBtn) onclick="confirmCheckout()">
                                     <i class="bi bi-credit-card me-2"></i>Lanjut ke Pembayaran
                                 </button>
                             </form>
@@ -233,6 +300,29 @@
 
 <!-- ====================== MOBILE CART LAYOUT ====================== -->
 <section class="d-lg-none" id="mobCartSection">
+    {{-- Sales Customer Selector (Mobile) --}}
+    @if(isset($is_sales) && $is_sales)
+    <div class="mob-sales-customer-bar">
+        <div class="d-flex align-items-center gap-2 px-3 py-2" style="background:#fff; border-bottom:1px solid #e5e7eb;">
+            <span class="fw-bold small text-nowrap"><i class="bi bi-person-badge me-1"></i>Keranjang:</span>
+            @if($selected_customer)
+                <span class="badge bg-primary">{{ $selected_customer->full_name }}</span>
+                <a href="{{ route('guest.cart.clear-customer') }}" class="btn btn-outline-secondary btn-sm py-0 px-2 ms-auto" style="font-size:0.75rem;">Ganti</a>
+            @else
+                <div class="d-flex align-items-center gap-2 w-100">
+                    <select id="mobCustomerSelect" class="form-select form-select-sm">
+                        <option value="" selected disabled>-- Pilih Customer --</option>
+                        @foreach($my_customers as $c)
+                            <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }}</option>
+                        @endforeach
+                    </select>
+                    <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToMobCustomer()">Pilih</button>
+                </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
     <div class="mob-cart-list" id="mobCartList">
         @forelse(($cart?->items ?? collect()) as $item)
         @php
@@ -330,7 +420,6 @@
 <form method="POST" action="{{ route('guest.cart.checkout') }}" id="mobCheckoutForm" style="display:none;">
     @csrf
     @if(isset($is_sales) && $is_sales)
-        <input type="hidden" name="customer_id" id="mobCustomerId" value="">
         <input type="hidden" name="address_id" id="mobSalesAddressId" value="">
     @else
         @if($customer && $mobAddrId)
@@ -343,10 +432,25 @@
 
 @push('scripts')
 <script>
+function goToCustomer() {
+    var sel = document.getElementById('customerSelect');
+    if (sel && sel.value) {
+        window.location.href = sel.value;
+    }
+}
+
+function goToMobCustomer() {
+    var sel = document.getElementById('mobCustomerSelect');
+    if (sel && sel.value) {
+        window.location.href = sel.value;
+    }
+}
+
 function confirmCheckout() {
-    var customerSelect = document.getElementById('customer_id');
-    if (customerSelect) {
-        if (!customerSelect.value) {
+    var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
+    if (isSales) {
+        var selectedCustomer = {{ $selected_customer ? 'true' : 'false' }};
+        if (!selectedCustomer) {
             alert('Silakan pilih customer terlebih dahulu.');
             return;
         }
@@ -363,13 +467,8 @@ function confirmCheckout() {
     var form = document.getElementById('checkoutForm') || document.getElementById('mobCheckoutForm');
     if (!form) return;
 
-    // For sales on mobile: sync customer_id and address_id
-    var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
+    // For sales on mobile: sync address_id
     if (isSales) {
-        var deskCust = document.getElementById('customer_id');
-        var mobCust = document.getElementById('mobCustomerId');
-        if (deskCust && mobCust) mobCust.value = deskCust.value;
-
         var deskAddr = document.querySelector('#checkoutForm select[name="address_id"]');
         var mobAddr = document.getElementById('mobSalesAddressId');
         if (deskAddr && mobAddr) mobAddr.value = deskAddr.value;
@@ -389,13 +488,9 @@ function submitCheckout() {
     }
     if (!form) return;
 
-    // For sales on mobile: sync customer_id and address_id
+    // For sales on mobile: sync address_id
     var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
     if (isSales) {
-        var deskCust = document.getElementById('customer_id');
-        var mobCust = document.getElementById('mobCustomerId');
-        if (deskCust && mobCust) mobCust.value = deskCust.value;
-
         var deskAddr = document.querySelector('#checkoutForm select[name="address_id"]');
         var mobAddr = document.getElementById('mobSalesAddressId');
         if (deskAddr && mobAddr) mobAddr.value = deskAddr.value;
@@ -412,87 +507,11 @@ function submitCheckout() {
 document.addEventListener('DOMContentLoaded', function() {
     updateCartSummary();
 
-    const customerSelect = document.getElementById('customer_id');
     const addressSelect = document.getElementById('address_id');
-    const addressHelp = document.getElementById('salesAddressHelp');
-
-    if (customerSelect && addressSelect) {
-        const resetAddressSelect = (label) => {
-            addressSelect.innerHTML = '';
-            const opt = document.createElement('option');
-            opt.value = '';
-            opt.disabled = true;
-            opt.selected = true;
-            opt.textContent = label;
-            addressSelect.appendChild(opt);
-            addressSelect.disabled = true;
-        };
-
-        const setAddresses = (addresses, activeAddressId) => {
-            addressSelect.innerHTML = '';
-            const placeholder = document.createElement('option');
-            placeholder.value = '';
-            placeholder.disabled = true;
-            placeholder.selected = true;
-            placeholder.textContent = '-- Pilih Alamat --';
-            addressSelect.appendChild(placeholder);
-
-            addresses.forEach((addr) => {
-                const opt = document.createElement('option');
-                opt.value = String(addr.id);
-                const label = (addr.label || 'Alamat') + (addr.is_active ? ' (Aktif)' : '');
-                opt.textContent = `${label} - ${addr.full_address}`;
-                if (activeAddressId && Number(addr.id) === Number(activeAddressId)) {
-                    opt.selected = true;
-                    placeholder.selected = false;
-                }
-                addressSelect.appendChild(opt);
-            });
-
-            addressSelect.disabled = addresses.length === 0;
-        };
-
-        resetAddressSelect('-- Pilih customer dulu --');
-
-        customerSelect.addEventListener('change', async () => {
-            const customerId = customerSelect.value;
-            if (!customerId) {
-                resetAddressSelect('-- Pilih customer dulu --');
-                if (addressHelp) addressHelp.textContent = 'Alamat akan muncul setelah buyer dipilih.';
-                return;
-            }
-
-            if (addressHelp) addressHelp.textContent = 'Memuat alamat...';
-            resetAddressSelect('Memuat alamat...');
-
-            try {
-                const res = await fetch(`/cart/customers/${customerId}/addresses`, {
-                    headers: { 'Accept': 'application/json' }
-                });
-
-                if (!res.ok) {
-                    resetAddressSelect('Gagal memuat alamat');
-                    if (addressHelp) addressHelp.textContent = 'Gagal memuat alamat. Coba refresh halaman.';
-                    return;
-                }
-
-                const data = await res.json();
-                const addresses = Array.isArray(data.addresses) ? data.addresses : [];
-                const activeAddressId = data.active_address_id || null;
-
-                if (addresses.length === 0) {
-                    resetAddressSelect('Customer belum punya alamat');
-                    if (addressHelp) addressHelp.textContent = 'Customer belum punya alamat. Tambahkan alamat dulu sebelum checkout.';
-                    return;
-                }
-
-                setAddresses(addresses, activeAddressId);
-                if (addressHelp) addressHelp.textContent = 'Pilih alamat pengiriman untuk order ini.';
-            } catch (e) {
-                resetAddressSelect('Gagal memuat alamat');
-                if (addressHelp) addressHelp.textContent = 'Gagal memuat alamat. Coba refresh halaman.';
-            }
-        });
+    if (addressSelect && !addressSelect.value) {
+        // Auto-select first option if available
+        var firstOpt = addressSelect.querySelector('option:not([disabled])');
+        if (firstOpt) firstOpt.selected = true;
     }
 });
 

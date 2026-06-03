@@ -43,6 +43,38 @@
                 return;
             }
 
+            // Sales: show customer selection modal first
+            if (window.PAS?.auth?.isSales) {
+                const customerId = await this._pickSalesCustomer();
+                if (!customerId) {
+                    return; // user cancelled
+                }
+                const productId = product?.id;
+                if (!productId) return;
+
+                const rawQty = product?.quantity;
+                let quantity = typeof rawQty === 'number' ? rawQty : parseInt(rawQty, 10);
+                if (!Number.isFinite(quantity)) quantity = 1;
+                quantity = Math.max(1, Math.min(9999, quantity));
+
+                const now = Date.now();
+                const lastAt = this._lastAddAt.get(String(productId)) || 0;
+                if (now - lastAt < 700) return;
+                this._lastAddAt.set(String(productId), now);
+
+                try {
+                    const data = await API.request('/cart/items', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': this.csrfToken() },
+                        body: JSON.stringify({ product_id: productId, quantity, customer_id: customerId }),
+                    });
+                    this.summary = data.summary || this.summary;
+                    this.updateUI();
+                    this.showNotification('Produk ditambahkan ke keranjang!', 'success');
+                } catch (_) {}
+                return;
+            }
+
             const productId = product?.id;
             if (!productId) return;
 
@@ -73,6 +105,82 @@
             }
         },
         
+        /**
+         * Show customer selection modal for sales users.
+         * Returns a Promise that resolves with customer ID or null if cancelled.
+         */
+        _pickSalesCustomer() {
+            return new Promise((resolve) => {
+                const modalEl = document.getElementById('salesCustomerModal');
+                if (!modalEl) { resolve(null); return; }
+
+                const modal = new bootstrap.Modal(modalEl);
+                const listEl = document.getElementById('salesCustList');
+                const searchEl = document.getElementById('salesCustSearch');
+                const emptyEl = document.getElementById('salesCustEmpty');
+                let customers = [];
+
+                const renderList = (filter = '') => {
+                    const q = (filter || '').trim().toLowerCase();
+                    const filtered = q ? customers.filter(c =>
+                        (c.full_name || '').toLowerCase().includes(q) ||
+                        (c.company_name || '').toLowerCase().includes(q)
+                    ) : customers;
+
+                    if (filtered.length === 0) {
+                        listEl.innerHTML = '';
+                        emptyEl.classList.remove('d-none');
+                    } else {
+                        emptyEl.classList.add('d-none');
+                        listEl.innerHTML = filtered.map(c => `
+                            <button type="button" class="list-group-item list-group-item-action" data-cid="${c.id}">
+                                <div class="fw-semibold">${c.full_name}</div>
+                                ${c.company_name ? `<small class="text-muted">${c.company_name}</small>` : ''}
+                            </button>
+                        `).join('');
+                    }
+                };
+
+                const loadCustomers = async () => {
+                    try {
+                        const data = await API.request(window.PAS?.urls?.myCustomers || '/cart/my-customers', { method: 'GET' });
+                        customers = Array.isArray(data.customers) ? data.customers : [];
+                        renderList();
+                    } catch (_) {
+                        listEl.innerHTML = '<div class="text-center text-danger py-3 small">Gagal memuat customer.</div>';
+                    }
+                };
+
+                // Listen for customer click
+                listEl.addEventListener('click', (e) => {
+                    const btn = e.target.closest('[data-cid]');
+                    if (btn) {
+                        const cid = parseInt(btn.dataset.cid, 10);
+                        modal.hide();
+                        resolve(Number.isFinite(cid) ? cid : null);
+                    }
+                });
+
+                // Search
+                searchEl.addEventListener('input', () => {
+                    renderList(searchEl.value);
+                });
+
+                // On modal hidden (cancelled)
+                modalEl.addEventListener('hidden.bs.modal', () => {
+                    resolve(null);
+                }, { once: true });
+
+                // On modal shown: load customers
+                modalEl.addEventListener('shown.bs.modal', () => {
+                    if (searchEl) searchEl.value = '';
+                    loadCustomers();
+                }, { once: true });
+
+                modal.show();
+            });
+        },
+
         async removeItem(productId) {
             if (!window.PAS?.auth?.loggedIn) {
                 const from = window.location.pathname + window.location.search;
