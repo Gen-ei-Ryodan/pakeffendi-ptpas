@@ -114,11 +114,25 @@
                 const modalEl = document.getElementById('salesCustomerModal');
                 if (!modalEl) { resolve(null); return; }
 
-                const modal = new bootstrap.Modal(modalEl);
+                // Clean up any stale backdrops from previous modal instances
+                document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+
+                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
                 const listEl = document.getElementById('salesCustList');
                 const searchEl = document.getElementById('salesCustSearch');
                 const emptyEl = document.getElementById('salesCustEmpty');
                 let customers = [];
+                let resolved = false;
+
+                const finish = (value) => {
+                    if (resolved) return;
+                    resolved = true;
+                    modal.hide();
+                    resolve(value);
+                };
 
                 const renderList = (filter = '') => {
                     const q = (filter || '').trim().toLowerCase();
@@ -141,7 +155,18 @@
                     }
                 };
 
-                const loadCustomers = async () => {
+                const onListClick = (e) => {
+                    const btn = e.target.closest('[data-cid]');
+                    if (btn) {
+                        const cid = parseInt(btn.dataset.cid, 10);
+                        finish(Number.isFinite(cid) ? cid : null);
+                    }
+                };
+
+                const onSearchInput = () => renderList(searchEl.value);
+
+                const onShown = async () => {
+                    if (searchEl) searchEl.value = '';
                     try {
                         const data = await API.request(window.PAS?.urls?.myCustomers || '/cart/my-customers', { method: 'GET' });
                         customers = Array.isArray(data.customers) ? data.customers : [];
@@ -151,31 +176,23 @@
                     }
                 };
 
-                // Listen for customer click
-                listEl.addEventListener('click', (e) => {
-                    const btn = e.target.closest('[data-cid]');
-                    if (btn) {
-                        const cid = parseInt(btn.dataset.cid, 10);
-                        modal.hide();
-                        resolve(Number.isFinite(cid) ? cid : null);
-                    }
-                });
+                const onHidden = () => {
+                    if (!resolved) finish(null);
+                };
 
-                // Search
-                searchEl.addEventListener('input', () => {
-                    renderList(searchEl.value);
-                });
+                const cleanup = () => {
+                    listEl.removeEventListener('click', onListClick);
+                    if (searchEl) searchEl.removeEventListener('input', onSearchInput);
+                    modalEl.removeEventListener('shown.bs.modal', onShown);
+                    modalEl.removeEventListener('hidden.bs.modal', onHidden);
+                };
 
-                // On modal hidden (cancelled)
-                modalEl.addEventListener('hidden.bs.modal', () => {
-                    resolve(null);
-                }, { once: true });
-
-                // On modal shown: load customers
-                modalEl.addEventListener('shown.bs.modal', () => {
-                    if (searchEl) searchEl.value = '';
-                    loadCustomers();
-                }, { once: true });
+                // Remove any leftover listeners first, then register fresh ones
+                cleanup();
+                listEl.addEventListener('click', onListClick);
+                if (searchEl) searchEl.addEventListener('input', onSearchInput);
+                modalEl.addEventListener('shown.bs.modal', onShown);
+                modalEl.addEventListener('hidden.bs.modal', onHidden);
 
                 modal.show();
             });
