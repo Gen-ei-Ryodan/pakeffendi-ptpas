@@ -45,18 +45,31 @@
                             <p class="text-muted small mb-1">{{ $product->variant }}</p>
                         @endif
                         <div class="prod-tiers">
-                            @foreach($product->pricing_tiers as $tier)
-                                <div class="tier-row">
-                                    <span class="tier-qty">
-                                        @if($tier['qty_end'])
-                                            {{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs
-                                        @else
-                                            {{ $tier['qty_start'] }}+ pcs
-                                        @endif
-                                    </span>
-                                    <span class="tier-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
-                                </div>
-                            @endforeach
+                            @php
+                                $isLoggedIn = Auth::guard('customer')->check() || (Auth::guard('web')->check() && Auth::guard('web')->user()->isSales());
+                            @endphp
+                            @if($isLoggedIn)
+                                @foreach($product->pricing_tiers as $tier)
+                                    <div class="tier-row">
+                                        <span class="tier-qty">
+                                            @if($tier['qty_end'])
+                                                {{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs
+                                            @else
+                                                {{ $tier['qty_start'] }}+ pcs
+                                            @endif
+                                        </span>
+                                        <span class="tier-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
+                                    </div>
+                                @endforeach
+                            @else
+                                @php $firstTier = $product->pricing_tiers[0] ?? null; @endphp
+                                @if($firstTier)
+                                    <div class="tier-row">
+                                        <span class="tier-qty">1 pcs</span>
+                                        <span class="tier-price">Rp {{ number_format((float) $firstTier['net_price'], 0, ',', '.') }}</span>
+                                    </div>
+                                @endif
+                            @endif
                         </div>
                     </div>
                 </div>

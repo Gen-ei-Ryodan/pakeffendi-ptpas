@@ -20,11 +20,11 @@ class CartService
     public const COOKIE_NAME = 'pas_cart_sid';
 
     /**
-     * @param  Customer|null  $customer
+     * @param  Customer|null  $customer  The customer the cart belongs to (null for guest/session cart).
+     * @param  int|null  $salesId  ID of the sales person creating the cart on behalf of the customer.
      */
-    public function resolve(Request $request, $customer = null): array
+    public function resolve(Request $request, $customer = null, ?int $salesId = null): array
     {
-        // Only link cart to DB if it's a Customer. Sales users use session cart until checkout.
         if ($customer instanceof Customer) {
             $cart = Cart::query()
                 ->where('customer_id', $customer->id)
@@ -33,11 +33,17 @@ class CartService
                 ->first();
 
             if (! $cart) {
-                $cart = Cart::query()->create([
+                $cartData = [
                     'customer_id' => $customer->id,
                     'session_id' => (string) Str::uuid(),
                     'status' => 'active',
-                ]);
+                ];
+                if ($salesId !== null) {
+                    $cartData['sales_id'] = $salesId;
+                }
+                $cart = Cart::query()->create($cartData);
+            } elseif ($salesId !== null && $cart->sales_id === null) {
+                $cart->update(['sales_id' => $salesId]);
             }
 
             $guestSessionId = (string) $request->cookie(self::COOKIE_NAME, '');

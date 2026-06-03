@@ -15,6 +15,8 @@ use Illuminate\Validation\Rule;
 
 class CartController extends Controller
 {
+    public const SALES_CUSTOMER_COOKIE = 'pas_sales_cid';
+
     public function __construct(
         private readonly CartService $cartService
     ) {}
@@ -31,31 +33,81 @@ class CartController extends Controller
         return null;
     }
 
-    public function index(Request $request)
+    /**
+     * Resolve the cart for the current shopper context.
+     * For sales users, checks the selected customer cookie to determine which customer's cart to use.
+     *
+     * @return array{cart: Cart, cookie: mixed, customer: Customer|null, salesId: int|null}
+     */
+    private function resolveCart(Request $request): array
     {
         $shopper = $this->getShopper();
 
-        // Pass Customer to resolve if it is a Customer, otherwise null (Sales uses session cart)
-        $resolveCustomer = ($shopper instanceof Customer) ? $shopper : null;
+        if ($shopper instanceof Customer) {
+            $resolved = $this->cartService->resolve($request, $shopper);
 
-        $resolved = $this->cartService->resolve($request, $resolveCustomer);
+            return [
+                'cart' => $resolved['cart'],
+                'cookie' => $resolved['cookie'],
+                'customer' => $shopper,
+                'salesId' => null,
+            ];
+        }
+
+        if ($shopper instanceof User && $shopper->isSales()) {
+            $customerId = (int) $request->cookie(self::SALES_CUSTOMER_COOKIE, '0');
+            if ($customerId > 0) {
+                $customer = Customer::where('id', $customerId)
+                    ->where('sales_id', $shopper->id)
+                    ->first();
+
+                if ($customer) {
+                    $resolved = $this->cartService->resolve($request, $customer, (int) $shopper->id);
+
+                    return [
+                        'cart' => $resolved['cart'],
+                        'cookie' => $resolved['cookie'],
+                        'customer' => $customer,
+                        'salesId' => (int) $shopper->id,
+                    ];
+                }
+            }
+
+            // Sales logged in but no customer selected — use session cart (guest-like)
+            $resolved = $this->cartService->resolve($request, null);
+
+            return [
+                'cart' => $resolved['cart'],
+                'cookie' => $resolved['cookie'],
+                'customer' => null,
+                'salesId' => null,
+            ];
+        }
+
+        // Guest
+        $resolved = $this->cartService->resolve($request, null);
+
+        return [
+            'cart' => $resolved['cart'],
+            'cookie' => $resolved['cookie'],
+            'customer' => null,
+            'salesId' => null,
+        ];
+    }
+
+    public function index(Request $request)
+    {
+        $resolved = $this->resolveCart($request);
         $cart = $resolved['cart']->load(['items.product.brand']);
+        $shopper = $this->getShopper();
 
         $summary = $this->buildSummary($cart->items);
-
-        // View expects 'customer' variable.
-        // If Sales is logged in, we might need to pass something else or handle it in view.
-        // For now, we pass $shopper as customer if it's a Customer, else null?
-        // But if we pass null, the view might show "Login".
-        // The Sales user IS logged in.
-        // We'll pass 'customer' => $shopper. The view should handle User object if it just displays name.
-        // If view checks specific Customer fields, it might break.
-        // But usually header just shows name.
 
         $isSales = ($shopper instanceof User && $shopper->isSales());
         $myCustomers = $isSales ? Customer::where('sales_id', $shopper->id)->orderBy('full_name')->get() : collect();
         $addresses = collect();
         $activeAddressId = null;
+        $selectedCustomer = $resolved['customer'];
 
         if ($shopper instanceof Customer) {
             $addresses = CustomerAddress::query()
@@ -64,14 +116,21 @@ class CartController extends Controller
                 ->orderByDesc('id')
                 ->get();
             $activeAddressId = $addresses->firstWhere('is_active', true)?->id;
+        } elseif ($isSales && $selectedCustomer) {
+            $addresses = CustomerAddress::query()
+                ->where('customer_id', $selectedCustomer->id)
+                ->orderByDesc('is_active')
+                ->orderByDesc('id')
+                ->get();
+            $activeAddressId = $addresses->firstWhere('is_active', true)?->id;
         }
 
-        // Pass 'customer' as shopper (User or Customer) so the view detects logged in state
         return response()
             ->view('guest.cart.index', [
                 'cart' => $cart,
                 'summary' => $summary,
                 'customer' => $shopper,
+                'selected_customer' => $selectedCustomer,
                 'is_sales' => $isSales,
                 'my_customers' => $myCustomers,
                 'addresses' => $addresses,
@@ -82,10 +141,7 @@ class CartController extends Controller
 
     public function summary(Request $request)
     {
-        $shopper = $this->getShopper();
-        $resolveCustomer = ($shopper instanceof Customer) ? $shopper : null;
-
-        $resolved = $this->cartService->resolve($request, $resolveCustomer);
+        $resolved = $this->resolveCart($request);
         $cart = $resolved['cart']->load(['items.product']);
 
         $summary = $this->buildSummary($cart->items);
@@ -100,18 +156,33 @@ class CartController extends Controller
         Log::info('Adding item to cart', $request->all());
 
         try {
-            $validated = $request->validate([
+            $rules = [
                 'product_id' => ['required', 'integer', 'exists:products,id'],
                 'quantity' => ['nullable', 'integer', 'min:1', 'max:9999'],
-            ]);
+            ];
 
             $shopper = $this->getShopper();
-            Log::info('Shopper info', ['id' => $shopper?->id, 'type' => $shopper ? get_class($shopper) : 'guest']);
+            if ($shopper instanceof User && $shopper->isSales()) {
+                $rules['customer_id'] = ['required', 'integer', 'exists:customers,id'];
+            }
 
-            $resolveCustomer = ($shopper instanceof Customer) ? $shopper : null;
-            // Sales user (User model) will resolve to null customer, so it uses session based cart
+            $validated = $request->validate($rules);
 
-            $resolved = $this->cartService->resolve($request, $resolveCustomer);
+            // For sales: resolve cart for the selected customer
+            if ($shopper instanceof User && $shopper->isSales()) {
+                $customer = Customer::where('id', $validated['customer_id'])
+                    ->where('sales_id', $shopper->id)
+                    ->first();
+
+                if (! $customer) {
+                    abort(422, 'Customer tidak ditemukan atau bukan milik Anda.');
+                }
+
+                $resolved = $this->cartService->resolve($request, $customer, (int) $shopper->id);
+            } else {
+                $resolved = $this->resolveCart($request);
+            }
+
             $cart = $resolved['cart'];
             Log::info('Cart resolved', ['cart_id' => $cart->id, 'session_id' => $cart->session_id]);
 
@@ -130,7 +201,16 @@ class CartController extends Controller
                 ? response()->json(['summary' => $summary], 201)
                 : redirect()->to('/cart');
 
-            return $response->cookie($resolved['cookie']);
+            $response = $response->cookie($resolved['cookie']);
+
+            // Set sales customer cookie so cart page auto-selects this customer
+            if ($shopper instanceof User && $shopper->isSales() && isset($validated['customer_id'])) {
+                $response = $response->cookie(
+                    cookie(self::SALES_CUSTOMER_COOKIE, (string) $validated['customer_id'], 60 * 24 * 30)
+                );
+            }
+
+            return $response;
         } catch (\Exception $e) {
             Log::error('Error adding item to cart: '.$e->getMessage());
             Log::error($e->getTraceAsString());
@@ -146,9 +226,7 @@ class CartController extends Controller
 
         abort_if($product->discontinued, 404);
 
-        $shopper = $this->getShopper();
-        $resolveCustomer = ($shopper instanceof Customer) ? $shopper : null;
-        $resolved = $this->cartService->resolve($request, $resolveCustomer);
+        $resolved = $this->resolveCart($request);
         $cart = $resolved['cart'];
 
         $this->cartService->setItemQuantity($cart, $product, (int) $validated['quantity']);
@@ -167,9 +245,7 @@ class CartController extends Controller
     {
         abort_if($product->discontinued, 404);
 
-        $shopper = $this->getShopper();
-        $resolveCustomer = ($shopper instanceof Customer) ? $shopper : null;
-        $resolved = $this->cartService->resolve($request, $resolveCustomer);
+        $resolved = $this->resolveCart($request);
         $cart = $resolved['cart'];
 
         $this->cartService->removeItem($cart, $product);
@@ -186,9 +262,7 @@ class CartController extends Controller
 
     public function clear(Request $request)
     {
-        $shopper = $this->getShopper();
-        $resolveCustomer = ($shopper instanceof Customer) ? $shopper : null;
-        $resolved = $this->cartService->resolve($request, $resolveCustomer);
+        $resolved = $this->resolveCart($request);
         $cart = $resolved['cart'];
 
         $this->cartService->clear($cart);
@@ -213,7 +287,6 @@ class CartController extends Controller
         ];
 
         if ($shopper instanceof User && $shopper->isSales()) {
-            $rules['customer_id'] = ['required', 'exists:customers,id'];
             $rules['address_id'] = ['required', 'integer', 'exists:customer_addresses,id'];
         } elseif ($shopper instanceof Customer) {
             $rules['address_id'] = [
@@ -225,9 +298,20 @@ class CartController extends Controller
 
         $validated = $request->validate($rules);
 
+        $resolved = $this->resolveCart($request);
+        $cart = $resolved['cart'];
+
+        // For sales, ensure customer_id is passed to checkout
         if ($shopper instanceof User && $shopper->isSales()) {
+            $resolvedCustomer = $resolved['customer'];
+            if (! $resolvedCustomer) {
+                abort(422, 'Silakan pilih customer terlebih dahulu.');
+            }
+            $validated['customer_id'] = $resolvedCustomer->id;
+
+            // Verify customer belongs to this sales person
             $customer = Customer::query()
-                ->where('id', $validated['customer_id'])
+                ->where('id', $resolvedCustomer->id)
                 ->where('sales_id', $shopper->id)
                 ->first();
 
@@ -235,25 +319,24 @@ class CartController extends Controller
                 abort(422, 'Customer tidak ditemukan atau bukan milik Anda.');
             }
 
-            $address = CustomerAddress::query()
-                ->where('id', $validated['address_id'])
-                ->where('customer_id', $customer->id)
-                ->first();
+            // Verify address belongs to this customer
+            if (isset($validated['address_id'])) {
+                $address = CustomerAddress::query()
+                    ->where('id', $validated['address_id'])
+                    ->where('customer_id', $customer->id)
+                    ->first();
 
-            if (! $address) {
-                abort(422, 'Alamat tidak ditemukan untuk customer tersebut.');
+                if (! $address) {
+                    abort(422, 'Alamat tidak ditemukan untuk customer tersebut.');
+                }
             }
         }
-
-        $resolveCustomer = ($shopper instanceof Customer) ? $shopper : null;
-        $resolved = $this->cartService->resolve($request, $resolveCustomer);
-        $cart = $resolved['cart'];
 
         $order = $this->cartService->checkout($cart, $shopper, $validated);
 
         return redirect()
             ->to('/orders/'.$order->id)
-            ->withCookie($resolved['cookie']); // Make sure to use withCookie
+            ->withCookie($resolved['cookie']);
     }
 
     public function customerAddresses(Request $request, Customer $customer)
@@ -296,6 +379,58 @@ class CartController extends Controller
                 'is_active' => (bool) $addr->is_active,
             ]),
             'active_address_id' => $activeAddressId,
+        ]);
+    }
+
+    public function setActiveCustomer(int $customerId)
+    {
+        $shopper = $this->getShopper();
+        abort_unless($shopper && $shopper instanceof User && $shopper->isSales(), 401);
+
+        $customer = Customer::where('id', $customerId)
+            ->where('sales_id', $shopper->id)
+            ->first();
+
+        if (! $customer) {
+            abort(422, 'Customer tidak ditemukan atau bukan milik Anda.');
+        }
+
+        return redirect()
+            ->to('/cart')
+            ->withCookie(cookie(self::SALES_CUSTOMER_COOKIE, (string) $customer->id, 60 * 24 * 30));
+    }
+
+    public function clearActiveCustomer()
+    {
+        $shopper = $this->getShopper();
+        abort_unless($shopper && $shopper instanceof User && $shopper->isSales(), 401);
+
+        return redirect()
+            ->to('/cart')
+            ->withCookie(cookie(self::SALES_CUSTOMER_COOKIE, '', -1));
+    }
+
+    /**
+     * Return list of customers belonging to the logged-in sales person (JSON).
+     */
+    public function myCustomers(Request $request)
+    {
+        $shopper = $this->getShopper();
+        abort_unless($shopper && $shopper instanceof User && $shopper->isSales(), 401);
+
+        $q = $request->query('q', '');
+        $customers = Customer::where('sales_id', $shopper->id)
+            ->when($q !== '', fn ($query) => $query->where('full_name', 'like', '%'.$q.'%'))
+            ->orderBy('full_name')
+            ->limit(20)
+            ->get(['id', 'full_name', 'company_name']);
+
+        return response()->json([
+            'customers' => $customers->map(fn ($c) => [
+                'id' => $c->id,
+                'full_name' => $c->full_name,
+                'company_name' => $c->company_name,
+            ]),
         ]);
     }
 

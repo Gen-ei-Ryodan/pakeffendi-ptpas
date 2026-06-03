@@ -1,5 +1,6 @@
 @php
     $tierCount = count($product->pricing_tiers);
+    $isLoggedIn = Auth::guard('customer')->check() || (Auth::guard('web')->check() && Auth::guard('web')->user()->isSales());
 @endphp
 <div class="product-card" data-product-id="{{ $product->id }}">
     <div class="position-relative">
@@ -14,22 +15,32 @@
             <div class="text-muted small text-truncate">{{ $product->variant }}</div>
         @endif
         <div class="pricing-tiers">
-        @foreach($product->pricing_tiers as $tier)
-        <div class="tier-row">
-            @if($tier['qty_end'])
-                <span class="text-muted">{{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs</span>
-            @else
-                <span class="text-muted">{{ $tier['qty_start'] }}+ pcs</span>
+        @if($isLoggedIn)
+            @foreach($product->pricing_tiers as $tier)
+            <div class="tier-row">
+                @if($tier['qty_end'])
+                    <span class="text-muted">{{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs</span>
+                @else
+                    <span class="text-muted">{{ $tier['qty_start'] }}+ pcs</span>
+                @endif
+                <span class="product-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
+            </div>
+            @endforeach
+            @for($i = $tierCount; $i < 3; $i++)
+            <div class="tier-row tier-row-hidden">
+                <span class="text-muted">-</span>
+                <span class="product-price">-</span>
+            </div>
+            @endfor
+        @else
+            @php $firstTier = $product->pricing_tiers[0] ?? null; @endphp
+            @if($firstTier)
+            <div class="tier-row">
+                <span class="text-muted">1 pcs</span>
+                <span class="product-price">Rp {{ number_format((float) $firstTier['net_price'], 0, ',', '.') }}</span>
+            </div>
             @endif
-            <span class="product-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
-        </div>
-        @endforeach
-        @for($i = $tierCount; $i < 3; $i++)
-        <div class="tier-row tier-row-hidden">
-            <span class="text-muted">-</span>
-            <span class="product-price">-</span>
-        </div>
-        @endfor
+        @endif
         </div>
         <div class="product-card-actions d-flex justify-content-end">
             <button class="btn btn-primary btn-sm btn-add-to-cart product-cart-btn" data-product-id="{{ $product->id }}">
