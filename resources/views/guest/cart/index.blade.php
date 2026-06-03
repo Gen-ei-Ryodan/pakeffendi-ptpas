@@ -42,8 +42,11 @@
                                 <span class="badge bg-primary fs-6 px-3 py-2">{{ $selected_customer->full_name }}</span>
                                 <a href="{{ route('guest.cart.clear-customer') }}" class="btn btn-outline-secondary btn-sm ms-auto">Ganti Customer</a>
                             @else
+                                @if($my_customers->isEmpty())
+                                    <div class="text-muted small">Belum ada customer. Silakan tambahkan customer melalui menu Profile.</div>
+                                @else
                                 <div class="d-flex align-items-center gap-2 w-100">
-                                    <select id="customerSelect" class="form-select form-select-sm" style="max-width: 300px;">
+                                    <select id="customerSelect" class="form-select form-select-sm" style="max-width: 300px;" onchange="goToCustomer()">
                                         <option value="" selected disabled>-- Pilih Customer --</option>
                                         @foreach($my_customers as $c)
                                             <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }} {{ $c->company_name ? '('.$c->company_name.')' : '' }}</option>
@@ -51,6 +54,7 @@
                                     </select>
                                     <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToCustomer()">Pilih</button>
                                 </div>
+                                @endif
                             @endif
                         </div>
                     </div>
@@ -309,8 +313,11 @@
                 <span class="badge bg-primary">{{ $selected_customer->full_name }}</span>
                 <a href="{{ route('guest.cart.clear-customer') }}" class="btn btn-outline-secondary btn-sm py-0 px-2 ms-auto" style="font-size:0.75rem;">Ganti</a>
             @else
+                @if($my_customers->isEmpty())
+                    <div class="text-muted small px-3">Belum ada customer.</div>
+                @else
                 <div class="d-flex align-items-center gap-2 w-100">
-                    <select id="mobCustomerSelect" class="form-select form-select-sm">
+                    <select id="mobCustomerSelect" class="form-select form-select-sm" onchange="goToMobCustomer()">
                         <option value="" selected disabled>-- Pilih Customer --</option>
                         @foreach($my_customers as $c)
                             <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }}</option>
@@ -318,6 +325,7 @@
                     </select>
                     <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToMobCustomer()">Pilih</button>
                 </div>
+                @endif
             @endif
         </div>
     </div>
