@@ -48,9 +48,15 @@ class MyCustomerController extends Controller
     {
         $sales = Auth::guard('web')->user();
 
-        // Ensure user is Sales and owns this customer
-        if (!$sales || !$sales->isSales() || $customer->sales_id !== $sales->id) {
-            abort(403, 'Anda tidak memiliki akses ke data pelanggan ini.');
+        if (!$sales || !$sales->isSales()) {
+            abort(403);
+        }
+
+        // Redirect to index if sales doesn't own this customer
+        if ((int) $customer->sales_id !== (int) $sales->id) {
+            return redirect()
+                ->route('guest.profile.my-customers.index')
+                ->with('error', 'Customer tidak ditemukan atau bukan milik Anda.');
         }
 
         $customer->loadCount('salesOrders');
