@@ -308,15 +308,24 @@
 <script>
     (function () {
         function bindRegionSelects(prefix) {
-            const provinceSelect = document.getElementById(prefix + 'Province');
-            const regencySelect = document.getElementById(prefix + 'Regency');
-            const districtSelect = document.getElementById(prefix + 'District');
-            const villageSelect = document.getElementById(prefix + 'Village');
+            const provinceId = prefix ? prefix + 'Province' : 'province';
+            const regencyId = prefix ? prefix + 'Regency' : 'regency';
+            const districtId = prefix ? prefix + 'District' : 'district';
+            const villageId = prefix ? prefix + 'Village' : 'village';
+            const provinceNameId = prefix ? prefix + 'ProvinceName' : 'province_name';
+            const regencyNameId = prefix ? prefix + 'RegencyName' : 'regency_name';
+            const districtNameId = prefix ? prefix + 'DistrictName' : 'district_name';
+            const villageNameId = prefix ? prefix + 'VillageName' : 'village_name';
 
-            const provinceNameInput = document.getElementById(prefix + 'ProvinceName');
-            const regencyNameInput = document.getElementById(prefix + 'RegencyName');
-            const districtNameInput = document.getElementById(prefix + 'DistrictName');
-            const villageNameInput = document.getElementById(prefix + 'VillageName');
+            const provinceSelect = document.getElementById(provinceId);
+            const regencySelect = document.getElementById(regencyId);
+            const districtSelect = document.getElementById(districtId);
+            const villageSelect = document.getElementById(villageId);
+
+            const provinceNameInput = document.getElementById(provinceNameId);
+            const regencyNameInput = document.getElementById(regencyNameId);
+            const districtNameInput = document.getElementById(districtNameId);
+            const villageNameInput = document.getElementById(villageNameId);
 
             if (!provinceSelect || !regencySelect || !districtSelect || !villageSelect) return;
 
