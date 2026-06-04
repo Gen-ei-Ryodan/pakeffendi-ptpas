@@ -48,7 +48,17 @@ class RegionController extends Controller
                 return ['data' => []];
             }
             $json = $res->json();
-            return is_array($json) && isset($json['data']) ? $json : ['data' => []];
+            if (! is_array($json) || ! isset($json['data'])) {
+                return ['data' => []];
+            }
+            // Map id to code for compatibility with existing JS
+            $mapped = array_map(function ($item) {
+                return [
+                    'code' => $item['id'] ?? $item['code'] ?? '',
+                    'name' => $item['name'] ?? ''
+                ];
+            }, $json['data']);
+            return ['data' => $mapped];
         });
     }
 }
