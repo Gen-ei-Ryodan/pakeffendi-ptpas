@@ -443,6 +443,25 @@
     @endif
 </form>
 
+<!-- Confirm Checkout Modal -->
+<div class="modal fade" id="confirmCheckoutModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 14px;">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="modal-title fw-bold">Konfirmasi Checkout</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Apakah Anda yakin ingin melanjutkan ke pembayaran?</p>
+            </div>
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border: 1px solid #e5e7eb;">Batal</button>
+                <button type="button" class="btn btn-primary" onclick="submitCheckout()">Lanjutkan</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -555,6 +574,25 @@ document.addEventListener('DOMContentLoaded', function() {
         // Auto-select first option if available
         var firstOpt = addressSelect.querySelector('option:not([disabled])');
         if (firstOpt) firstOpt.selected = true;
+    }
+
+    // Initialize mobile sales address ID
+    var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
+    if (isSales) {
+        var deskAddr = document.querySelector('#checkoutForm select[name="address_id"], #checkoutForm input[name="address_id"]');
+        var mobAddr = document.getElementById('mobSalesAddressId');
+        if (deskAddr && mobAddr) {
+            mobAddr.value = deskAddr.value;
+        }
+
+        // Update mobile address ID when desktop address changes
+        if (addressSelect) {
+            addressSelect.addEventListener('change', function() {
+                if (mobAddr) {
+                    mobAddr.value = this.value;
+                }
+            });
+        }
     }
 });
 
@@ -840,6 +878,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Checkout button
     var checkoutBtn = document.getElementById('mobCheckoutBtn');
     var checkoutBar = document.getElementById('mobCheckoutBar');
+    var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
+    
     if (checkoutBtn) {
         checkoutBtn.addEventListener('click', function() {
             // Check login
@@ -849,15 +889,37 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Check address
-            var hasAddress = checkoutBar ? parseInt(checkoutBar.dataset.hasAddress) : 0;
-            if (!hasAddress) {
-                var addrModalEl = document.getElementById('mobAddressPrompt');
-                if (addrModalEl) {
-                    var addrModal = new bootstrap.Modal(addrModalEl);
-                    addrModal.show();
+            if (isSales) {
+                // For sales: check customer and address
+                var selectedCustomer = {{ $selected_customer ? 'true' : 'false' }};
+                if (!selectedCustomer) {
+                    alert('Silakan pilih customer terlebih dahulu.');
+                    return;
                 }
-                return;
+
+                // Sync address_id from desktop to mobile
+                var deskAddr = document.querySelector('#checkoutForm select[name="address_id"]');
+                var mobAddr = document.getElementById('mobSalesAddressId');
+                if (deskAddr && mobAddr) {
+                    mobAddr.value = deskAddr.value;
+                }
+
+                // Check if address_id is set
+                if (!mobAddr || !mobAddr.value) {
+                    alert('Silakan pilih alamat terlebih dahulu.');
+                    return;
+                }
+            } else {
+                // For regular customers: check address
+                var hasAddress = checkoutBar ? parseInt(checkoutBar.dataset.hasAddress) : 0;
+                if (!hasAddress) {
+                    var addrModalEl = document.getElementById('mobAddressPrompt');
+                    if (addrModalEl) {
+                        var addrModal = new bootstrap.Modal(addrModalEl);
+                        addrModal.show();
+                    }
+                    return;
+                }
             }
 
             // Direct submit (skip confirmation modal on mobile)
