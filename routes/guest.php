@@ -278,7 +278,7 @@ Route::prefix('/')->group(function () {
         Route::post('/{address}/active', [CustomerAddressController::class, 'setActive'])->name('set-active');
     });
 
-    Route::middleware('guest.auth')->prefix('regions')->group(function () {
+    Route::prefix('regions')->group(function () {
         Route::get('/provinces', [RegionController::class, 'provinces'])->name('guest.regions.provinces');
         Route::get('/regencies/{provinceCode}', [RegionController::class, 'regencies'])->name('guest.regions.regencies');
         Route::get('/districts/{regencyCode}', [RegionController::class, 'districts'])->name('guest.regions.districts');
