@@ -518,12 +518,11 @@ function confirmCheckout() {
         }
     }
 
-    var addressSelect = document.querySelector('#checkoutForm select[name="address_id"]');
-    if (addressSelect) {
-        if (!addressSelect.value) {
-            alert('Silakan pilih alamat terlebih dahulu.');
-            return;
-        }
+    // Check address_id (both select and hidden input)
+    var addressInput = document.querySelector('#checkoutForm select[name="address_id"], #checkoutForm input[name="address_id"]');
+    if (addressInput && !addressInput.value) {
+        alert('Silakan pilih alamat terlebih dahulu.');
+        return;
     }
 
     var form = document.getElementById('checkoutForm') || document.getElementById('mobCheckoutForm');
@@ -531,7 +530,7 @@ function confirmCheckout() {
 
     // For sales on mobile: sync address_id
     if (isSales) {
-        var deskAddr = document.querySelector('#checkoutForm select[name="address_id"]');
+        var deskAddr = document.querySelector('#checkoutForm select[name="address_id"], #checkoutForm input[name="address_id"]');
         var mobAddr = document.getElementById('mobSalesAddressId');
         if (deskAddr && mobAddr) mobAddr.value = deskAddr.value;
     }
