@@ -82,32 +82,12 @@ class GuestProductApiController extends Controller
             'category' => $product->category?->name,
             'photo_path' => $product->photo_path,
             'image_path' => $product->photo_path,
-            'price_tiers' => [
-                [
-                    'min_qty' => 1,
-                    'max_qty' => $product->qty_1 ? ((int) $product->qty_1 - 1) : null,
-                    'price' => (float) $product->price_1,
-                    'discount_percent' => (float) ($product->disc_1 ?? 0),
-                ],
-                [
-                    'min_qty' => $product->qty_1 ? (int) $product->qty_1 : null,
-                    'max_qty' => $product->qty_2 ? ((int) $product->qty_2 - 1) : null,
-                    'price' => (float) ($product->price_2 ?? $product->price_1),
-                    'discount_percent' => (float) ($product->disc_2 ?? 0),
-                ],
-                [
-                    'min_qty' => $product->qty_2 ? (int) $product->qty_2 : null,
-                    'max_qty' => $product->qty_3 ? ((int) $product->qty_3 - 1) : null,
-                    'price' => (float) ($product->price_3 ?? $product->price_2 ?? $product->price_1),
-                    'discount_percent' => (float) ($product->disc_3 ?? 0),
-                ],
-                [
-                    'min_qty' => $product->qty_3 ? (int) $product->qty_3 : null,
-                    'max_qty' => null,
-                    'price' => (float) ($product->price_3 ?? $product->price_2 ?? $product->price_1),
-                    'discount_percent' => (float) ($product->disc_3 ?? 0),
-                ],
-            ],
+            'price_tiers' => collect($product->pricing_tiers)->map(fn ($t) => [
+                'min_qty' => $t['qty_start'],
+                'max_qty' => $t['qty_end'],
+                'price' => $t['price'],
+                'discount_percent' => $t['discount'],
+            ])->values(),
             'updated_at' => $product->updated_at?->toISOString(),
         ]);
     }
