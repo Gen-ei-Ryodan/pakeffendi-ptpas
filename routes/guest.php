@@ -18,12 +18,14 @@ Route::prefix('/')->group(function () {
     // Home
     Route::get('/', function () {
         $categories = ProductCategory::query()
+            ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
         $featuredProducts = Product::query()
             ->with(['brand:brand_code,brand_name'])
             ->active()
+            ->activeCategory()
             ->hasPhoto()
             ->orderBy('name')
             ->limit(8)
@@ -35,6 +37,7 @@ Route::prefix('/')->group(function () {
             $products = Product::query()
                 ->with(['brand:brand_code,brand_name'])
                 ->active()
+                ->activeCategory()
                 ->hasPhoto()
                 ->byStatus($status->code)
                 ->limit(8)
@@ -82,6 +85,7 @@ Route::prefix('/')->group(function () {
         $query = Product::query()
             ->with(['brand:brand_code,brand_name', 'category:category_code,name'])
             ->active()
+            ->activeCategory()
             ->hasPhoto()
             ->orderBy('name');
 
@@ -125,7 +129,7 @@ Route::prefix('/')->group(function () {
 
         $products = $query->paginate(12)->withQueryString();
 
-        $categories = ProductCategory::query()->orderBy('name')->get(['category_code', 'name']);
+        $categories = ProductCategory::query()->where('is_active', true)->orderBy('name')->get(['category_code', 'name']);
         $brands = ProductBrand::query()->orderBy('brand_name')->get(['brand_code', 'brand_name']);
 
         return view('guest.products.index', [
@@ -156,6 +160,7 @@ Route::prefix('/')->group(function () {
         $query = Product::query()
             ->with(['brand:brand_code,brand_name'])
             ->active()
+            ->activeCategory()
             ->hasPhoto()
             ->orderBy('name');
 
@@ -213,6 +218,7 @@ Route::prefix('/')->group(function () {
 
     Route::get('/categories', function () {
         $categories = ProductCategory::query()
+            ->where('is_active', true)
             ->orderBy('name')
             ->get(['category_code', 'name', 'image_path']);
 
@@ -227,10 +233,11 @@ Route::prefix('/')->group(function () {
                 'brand:brand_code,brand_name',
                 'category:category_code,name',
                 'relatedProducts' => function ($q) {
-                    $q->with(['brand:brand_code,brand_name'])->active()->hasPhoto()->orderBy('name');
+                    $q->with(['brand:brand_code,brand_name'])->active()->activeCategory()->hasPhoto()->orderBy('name');
                 },
             ])
             ->active()
+            ->activeCategory()
             ->hasPhoto()
             ->findOrFail($id);
 
@@ -259,8 +266,24 @@ Route::prefix('/')->group(function () {
     Route::middleware('guest:customer')->group(function () {
         Route::get('/login', [AuthController::class, 'showLogin'])->name('guest.login');
         Route::post('/login', [AuthController::class, 'login'])->name('guest.login.store');
-        Route::get('/register', [AuthController::class, 'showRegister'])->name('guest.register');
-        Route::post('/register', [AuthController::class, 'register'])->name('guest.register.store');
+    });
+
+    // Email Verification
+    Route::get('/verify-email', [AuthController::class, 'showVerifyEmail'])->name('guest.verify-email');
+    Route::post('/verify-email', [AuthController::class, 'verifyEmail'])->name('guest.verify-email.store');
+    Route::get('/verify-email/{code}', [AuthController::class, 'verifyEmailDirect'])->name('guest.verify-email.direct');
+
+    // Register Buyer (by Sales/Admin)
+    Route::middleware(['auth:web'])->group(function () {
+        Route::get('/register-buyer', [AuthController::class, 'showRegisterBuyer'])->name('guest.register-buyer');
+        Route::post('/register-buyer', [AuthController::class, 'registerBuyer'])->name('guest.register-buyer.store');
+    });
+
+    // Change Password
+    Route::middleware('guest.auth')->group(function () {
+        Route::get('/change-password', [AuthController::class, 'showChangePassword'])->name('guest.change-password');
+        Route::post('/change-password/send-code', [AuthController::class, 'sendChangePasswordCode'])->name('guest.change-password.send-code');
+        Route::post('/change-password', [AuthController::class, 'changePassword'])->name('guest.change-password.store');
     });
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('guest.auth')->name('guest.logout');
 

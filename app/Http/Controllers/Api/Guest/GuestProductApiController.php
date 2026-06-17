@@ -22,6 +22,7 @@ class GuestProductApiController extends Controller
         $query = Product::query()
             ->with(['brand:brand_code,brand_name', 'category:category_code,name'])
             ->where('discontinued', false)
+            ->whereHas('category', fn ($q) => $q->where('is_active', true))
             ->orderByDesc('created_at');
 
         if (! empty($validated['q'])) {
@@ -62,6 +63,10 @@ class GuestProductApiController extends Controller
     public function show(Product $product)
     {
         if ($product->discontinued) {
+            abort(404);
+        }
+
+        if ($product->category && !$product->category->is_active) {
             abort(404);
         }
 

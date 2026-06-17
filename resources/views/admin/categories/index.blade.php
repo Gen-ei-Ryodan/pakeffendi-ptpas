@@ -22,6 +22,7 @@
                         <th class="py-3 pr-4">#</th>
                         <th class="py-3 pr-4">Image</th>
                         <th class="py-3 pr-4">Category Name</th>
+                        <th class="py-3 pr-4">Status</th>
                         <th class="py-3 pr-4">Action</th>
                     </tr>
                 </thead>
@@ -38,6 +39,13 @@
                         </td>
                         <td class="py-3 pr-4 font-medium">{{ $category->name }}</td>
                         <td class="py-3 pr-4">
+                            @if ($category->is_active)
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
+                            @else
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Inactive</span>
+                            @endif
+                        </td>
+                        <td class="py-3 pr-4">
                             <div class="flex items-center gap-2">
                                 <a href="{{ route('admin.categories.edit', $category) }}" class="px-3 py-1.5 rounded-lg bg-sky-50 border border-sky-200 text-sky-700 hover:bg-sky-100">Edit</a>
                                 <form method="post" action="{{ route('admin.categories.destroy', $category) }}" onsubmit="return confirm('Hapus category ini?')">
@@ -50,7 +58,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="4" class="py-6 text-center text-slate-500">Tidak ada data.</td>
+                        <td colspan="5" class="py-6 text-center text-slate-500">Tidak ada data.</td>
                     </tr>
                 @endforelse
                 </tbody>

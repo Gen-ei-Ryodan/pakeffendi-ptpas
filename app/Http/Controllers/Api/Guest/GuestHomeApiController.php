@@ -27,6 +27,7 @@ class GuestHomeApiController extends Controller
     public function home(Request $request)
     {
         $categories = ProductCategory::query()
+            ->where('is_active', true)
             ->orderBy('name')
             ->get(['category_code', 'name', 'image_path', 'updated_at'])
             ->map(fn (ProductCategory $c) => [
@@ -70,6 +71,7 @@ class GuestHomeApiController extends Controller
         $featuredProducts = Product::query()
             ->with(['brand:brand_code,brand_name'])
             ->where('discontinued', false)
+            ->whereHas('category', fn ($q) => $q->where('is_active', true))
             ->latest()
             ->limit(10)
             ->get()

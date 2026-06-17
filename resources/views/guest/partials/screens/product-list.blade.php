@@ -62,13 +62,10 @@
                                     </div>
                                 @endforeach
                             @else
-                                @php $firstTier = $product->pricing_tiers[0] ?? null; @endphp
-                                @if($firstTier)
-                                    <div class="tier-row">
-                                        <span class="tier-qty">1 pcs</span>
-                                        <span class="tier-price">Rp {{ number_format((float) $firstTier['net_price'], 0, ',', '.') }}</span>
-                                    </div>
-                                @endif
+                                <div class="tier-row">
+                                    <span class="tier-qty">1 pcs</span>
+                                    <span class="tier-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</span>
+                                </div>
                             @endif
                         </div>
                     </div>

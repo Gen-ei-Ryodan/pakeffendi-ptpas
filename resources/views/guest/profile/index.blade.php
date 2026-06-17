@@ -310,12 +310,18 @@
                 <a href="{{ route('guest.profile.my-customers.index') }}" class="mob-sheet-item">
                     <i class="bi bi-people"></i><span>Pelanggan Saya</span>
                 </a>
+                <a href="{{ route('guest.register-buyer') }}" class="mob-sheet-item">
+                    <i class="bi bi-person-plus"></i><span>Tambah Buyer</span>
+                </a>
                 <a href="{{ route('guest.profile.logs') }}" class="mob-sheet-item">
                     <i class="bi bi-clock-history"></i><span>Log Aktivitas</span>
                 </a>
                 @else
                 <a href="{{ url('/profile/addresses') }}" class="mob-sheet-item">
                     <i class="bi bi-geo-alt"></i><span>Alamat</span>
+                </a>
+                <a href="{{ route('guest.change-password') }}" class="mob-sheet-item">
+                    <i class="bi bi-key"></i><span>Ubah Password</span>
                 </a>
                 @endif
                 <div class="mob-sheet-divider"></div>

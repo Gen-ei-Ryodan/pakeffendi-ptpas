@@ -54,14 +54,21 @@
                         @endif
                         
                         <!-- Price -->
+                        @php
+                            $isLoggedIn = Auth::guard('customer')->check() || (Auth::guard('web')->check() && Auth::guard('web')->user()->isSales());
+                        @endphp
                         <div class="mb-4">
                             <div class="d-flex align-items-center gap-3">
+                                @if($isLoggedIn)
                                 <span class="h2 fw-bold text-primary mb-0 product-price">Rp {{ number_format((float) ($product->pricing_tiers[0]['net_price'] ?? $product->price_1), 0, ',', '.') }}</span>
+                                @else
+                                <span class="h2 fw-bold text-primary mb-0 product-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</span>
+                                @endif
                             </div>
                         </div>
 
                         <!-- Tiered Pricing -->
-                        @if(count($product->pricing_tiers) > 1)
+                        @if($isLoggedIn && count($product->pricing_tiers) > 1)
                         <div class="mb-4">
                             <h6 class="fw-bold mb-2">Harga Grosir</h6>
                             <div class="table-responsive">
@@ -192,6 +199,7 @@
                                     @endif
 
                                     <div class="pricing-tiers">
+                                    @if($isLoggedIn)
                                     @foreach($related->pricing_tiers as $tier)
                                     <div class="tier-row">
                                         @if($tier['qty_end'])
@@ -208,6 +216,12 @@
                                         <span class="product-price">-</span>
                                     </div>
                                     @endfor
+                                    @else
+                                    <div class="tier-row">
+                                        <span class="text-muted">1 pcs</span>
+                                        <span class="product-price">Rp {{ number_format((float) $related->price_1, 0, ',', '.') }}</span>
+                                    </div>
+                                    @endif
                                     </div>
 
                                     <div class="d-flex justify-content-end">

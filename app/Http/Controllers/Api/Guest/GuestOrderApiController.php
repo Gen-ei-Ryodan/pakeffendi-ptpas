@@ -56,6 +56,7 @@ class GuestOrderApiController extends Controller
             $products = Product::query()
                 ->whereIn('id', $productIds)
                 ->where('discontinued', false)
+                ->whereHas('category', fn ($q) => $q->where('is_active', true))
                 ->get()
                 ->keyBy('id');
 

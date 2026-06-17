@@ -33,13 +33,10 @@
             </div>
             @endfor
         @else
-            @php $firstTier = $product->pricing_tiers[0] ?? null; @endphp
-            @if($firstTier)
             <div class="tier-row">
                 <span class="text-muted">1 pcs</span>
-                <span class="product-price">Rp {{ number_format((float) $firstTier['net_price'], 0, ',', '.') }}</span>
+                <span class="product-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</span>
             </div>
-            @endif
         @endif
         </div>
         <div class="product-card-actions d-flex justify-content-end">

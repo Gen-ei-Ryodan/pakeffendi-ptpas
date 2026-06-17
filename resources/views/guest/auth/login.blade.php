@@ -87,8 +87,7 @@
 
                         <div class="text-center">
                             <p class="text-muted mb-0">
-                                Belum punya akun?
-                                <a href="{{ url('/register') }}{{ request('redirect') ? ('?redirect=' . urlencode(request('redirect'))) : '' }}" class="text-decoration-none text-primary fw-semibold">Daftar sekarang</a>
+                                &nbsp;
                             </p>
                         </div>
                     </div>
@@ -155,8 +154,8 @@
         <p class="login-mob-terms">Dengan masuk, Anda menyetujui <a href="#">Syarat &amp; Ketentuan</a></p>
     </div>
 
-    <div class="login-mob-register">
-        Belum punya akun? <a href="{{ url('/register') }}{{ request('redirect') ? ('?redirect=' . urlencode(request('redirect'))) : '' }}">Daftar</a>
+    <div class="login-mob-register" style="visibility:hidden;">
+        &nbsp;
     </div>
 </section>
 @endsection
