@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Guest;
 
 use App\Http\Controllers\Controller;
+use App\Mail\BuyerVerificationMail;
+use App\Mail\ChangePasswordMail;
 use App\Models\Customer;
 use App\Services\CartService;
 use Illuminate\Http\Request;
@@ -50,6 +52,17 @@ class AuthController extends Controller
                 return back()->withErrors(['login' => 'Akun Anda belum aktif atau ditolak. Silakan hubungi Admin.']);
             }
 
+            // Check if email is verified
+            if (is_null($customer->email_verified_at)) {
+                Auth::guard('customer')->logout();
+
+                // Resend verification code
+                $this->sendVerificationCode($customer);
+
+                return redirect()->route('guest.verify-email', ['email' => $customer->email])
+                    ->with('info', 'Silakan verifikasi email Anda terlebih dahulu. Kode verifikasi telah dikirim ke email Anda.');
+            }
+
             $request->session()->regenerate();
             $resolved = $this->cartService->resolve($request, $customer);
 
@@ -59,12 +72,10 @@ class AuthController extends Controller
         }
 
         // 2. Try Sales/Admin Login (User guard)
-        // Note: Users usually login via email, not phone. But we'll try with email.
         if (filter_var($login, FILTER_VALIDATE_EMAIL)) {
             if (Auth::guard('web')->attempt(['email' => $login, 'password' => $validated['password']], $remember)) {
                 $user = Auth::guard('web')->user();
 
-                // Check Role
                 if ($user->role === 'sales') {
                     $request->session()->regenerate();
 
@@ -72,7 +83,6 @@ class AuthController extends Controller
                         ->with('success', 'Login berhasil sebagai Sales! Selamat datang kembali, '.$user->name);
                 }
 
-                // Admin is not allowed to login here
                 Auth::guard('web')->logout();
             }
         }
@@ -82,71 +92,226 @@ class AuthController extends Controller
             ->onlyInput('login');
     }
 
-    public function showRegister(Request $request)
+    // ──────────────────────────────────────────────
+    // REGISTER BUYER (by Sales / Admin)
+    // ──────────────────────────────────────────────
+
+    public function showRegisterBuyer()
     {
-        if ($request->filled('redirect')) {
-            $request->session()->put('url.intended', $request->string('redirect')->toString());
+        $user = Auth::guard('web')->user();
+        // Only sales or admin can access
+        if (!$user || !($user->isSales() || $user->isAdmin())) {
+            return redirect()->route('guest.profile.index')->with('error', 'Akses ditolak.');
         }
 
-        return view('guest.auth.register');
+        return view('guest.auth.register-buyer');
     }
 
-    public function register(Request $request)
+    public function registerBuyer(Request $request)
     {
+        $user = Auth::guard('web')->user();
+        // Only sales or admin can access
+        if (!$user || !($user->isSales() || $user->isAdmin())) {
+            return redirect()->route('guest.profile.index')->with('error', 'Akses ditolak.');
+        }
+
         $validated = $request->validate([
             'full_name' => ['required', 'string', 'max:120'],
             'email' => ['required', 'email', 'max:190', 'unique:customers,email'],
             'phone' => ['required', 'string', 'max:30', 'unique:customers,phone'],
             'address' => ['nullable', 'string', 'max:500'],
+            'company_name' => ['nullable', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
+        $code = $this->generateVerificationCode();
+
         $customer = Customer::create([
+            'customer_code' => $this->generateCustomerCode(),
             'full_name' => $validated['full_name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'address' => $validated['address'] ?? null,
+            'company_name' => $validated['company_name'] ?? null,
             'password' => Hash::make($validated['password']),
             'status' => 'active',
+            'sales_id' => $user->id,
+            'account_type' => 'personal',
+            'ktp_number' => '-',
+            'contact_person' => $validated['full_name'],
+            'email_verification_code' => $code,
         ]);
 
+        // Send verification email
         try {
-            $adminEmail = env('ADMIN_EMAIL', 'admin@example.com');
-            $mailBody = implode(PHP_EOL, [
-                'New Customer Registration:',
-                '',
-                'Name: '.$customer->full_name,
-                'Email: '.$customer->email,
-                'Phone: '.$customer->phone,
-                '',
-                'Please review in Admin Dashboard.',
-            ]);
-
-            Mail::raw($mailBody, function ($message) use ($adminEmail) {
-                $message->to($adminEmail)
-                    ->subject('New Customer Registration Request');
-            });
+            Mail::to($customer->email)->send(new BuyerVerificationMail($customer, $code));
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Registration Mail Failed: '.$e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Verification Mail Failed: '.$e->getMessage());
         }
 
-        Auth::guard('customer')->login($customer);
-        $request->session()->regenerate();
-        $resolved = $this->cartService->resolve($request, $customer);
-
-        return redirect()->intended('/profile')
-            ->withCookie($resolved['cookie'])
-            ->with('success', 'Pendaftaran berhasil! Selamat datang, '.$customer->full_name);
+        return redirect()->route('guest.profile.my-customers.index')
+            ->with('success', 'Akun buyer berhasil dibuat. Kode verifikasi telah dikirim ke email '.$customer->email.'.');
     }
+
+    // ──────────────────────────────────────────────
+    // EMAIL VERIFICATION
+    // ──────────────────────────────────────────────
+
+    public function showVerifyEmail(Request $request)
+    {
+        $email = $request->query('email', '');
+        return view('guest.auth.verify-email', compact('email'));
+    }
+
+    public function verifyEmail(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:190'],
+            'code' => ['required', 'string', 'size:6'],
+        ]);
+
+        $customer = Customer::query()
+            ->where('email', $validated['email'])
+            ->where('email_verification_code', $validated['code'])
+            ->first();
+
+        if (!$customer) {
+            return back()->withErrors(['code' => 'Kode verifikasi tidak valid.'])->withInput();
+        }
+
+        $customer->update([
+            'email_verified_at' => now(),
+            'email_verification_code' => null,
+        ]);
+
+        return redirect()->route('guest.login')
+            ->with('success', 'Email berhasil diverifikasi! Silakan login.');
+    }
+
+    public function verifyEmailDirect(string $code)
+    {
+        $customer = Customer::query()
+            ->where('email_verification_code', $code)
+            ->first();
+
+        if (!$customer) {
+            return redirect()->route('guest.login')
+                ->with('error', 'Kode verifikasi tidak valid atau sudah kadaluarsa.');
+        }
+
+        $customer->update([
+            'email_verified_at' => now(),
+            'email_verification_code' => null,
+        ]);
+
+        return redirect()->route('guest.login')
+            ->with('success', 'Email berhasil diverifikasi! Silakan login.');
+    }
+
+    private function sendVerificationCode(Customer $customer): void
+    {
+        $code = $this->generateVerificationCode();
+        $customer->update(['email_verification_code' => $code]);
+
+        try {
+            Mail::to($customer->email)->send(new BuyerVerificationMail($customer, $code));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Resend Verification Mail Failed: '.$e->getMessage());
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    // CHANGE PASSWORD
+    // ──────────────────────────────────────────────
+
+    public function showChangePassword()
+    {
+        $shopper = $this->getShopper();
+
+        // Only for buyers (Customer)
+        if (!$shopper || $shopper instanceof \App\Models\User) {
+            return redirect()->route('guest.profile.index')
+                ->with('error', 'Halaman ini hanya untuk pembeli.');
+        }
+
+        $hasVerifiedEmail = !is_null($shopper->email_verified_at);
+
+        return view('guest.auth.change-password', [
+            'customer' => $shopper,
+            'hasVerifiedEmail' => $hasVerifiedEmail,
+            'step' => session('change_password_step', 'send_code'),
+        ]);
+    }
+
+    public function sendChangePasswordCode(Request $request)
+    {
+        $shopper = $this->getShopper();
+
+        if (!$shopper || $shopper instanceof \App\Models\User) {
+            return redirect()->route('guest.profile.index')->with('error', 'Akses ditolak.');
+        }
+
+        $code = $this->generateVerificationCode();
+        $shopper->update(['email_verification_code' => $code]);
+
+        try {
+            Mail::to($shopper->email)->send(new ChangePasswordMail($shopper, $code));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Change Password Mail Failed: '.$e->getMessage());
+        }
+
+        // Store email in session for verification step
+        session()->put('change_password_step', 'verify');
+        session()->put('change_password_email', $shopper->email);
+
+        return redirect()->route('guest.change-password')
+            ->with('success', 'Kode verifikasi telah dikirim ke email '.$shopper->email);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $shopper = $this->getShopper();
+
+        if (!$shopper || $shopper instanceof \App\Models\User) {
+            return redirect()->route('guest.profile.index')->with('error', 'Akses ditolak.');
+        }
+
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'size:6'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if ($shopper->email_verification_code !== $validated['code']) {
+            return back()->withErrors(['code' => 'Kode verifikasi tidak valid.'])->withInput();
+        }
+
+        $shopper->update([
+            'password' => Hash::make($validated['password']),
+            'email_verification_code' => null,
+            'email_verified_at' => now(),
+        ]);
+
+        session()->forget(['change_password_step', 'change_password_email']);
+
+        // Logout from all sessions for security
+        Auth::guard('customer')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('guest.login')
+            ->with('success', 'Password berhasil diubah. Silakan login dengan password baru Anda.');
+    }
+
+    // ──────────────────────────────────────────────
+    // LOGOUT
+    // ──────────────────────────────────────────────
 
     public function logout(Request $request)
     {
-        // 1. Logout Customer if logged in
         if (Auth::guard('customer')->check()) {
             Auth::guard('customer')->logout();
         }
 
-        // 2. Logout Sales (Web Guard) if logged in
         if (Auth::guard('web')->check()) {
             $user = Auth::guard('web')->user();
             if ($user->role === 'sales') {
@@ -154,8 +319,6 @@ class AuthController extends Controller
             }
         }
 
-        // 3. Invalidate session ONLY if no one is logged in anymore
-        // This preserves the Admin session if they were logged in while a Customer logged out
         if (! Auth::guard('customer')->check() && ! Auth::guard('web')->check()) {
             $request->session()->invalidate();
             $request->session()->regenerateToken();
@@ -164,13 +327,28 @@ class AuthController extends Controller
         return redirect()->to('/')->with('success', 'Anda telah berhasil logout.');
     }
 
+    // ──────────────────────────────────────────────
+    // HELPERS
+    // ──────────────────────────────────────────────
+
+    private function getShopper()
+    {
+        if (Auth::guard('customer')->check()) {
+            return Auth::guard('customer')->user();
+        }
+        if (Auth::guard('web')->check() && Auth::guard('web')->user()->isSales()) {
+            return Auth::guard('web')->user();
+        }
+        return null;
+    }
+
+    private function generateVerificationCode(): string
+    {
+        return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+    }
+
     private function generateCustomerCode(): string
     {
         return 'W'.now()->format('ym').str_pad((string) random_int(1, 999999), 6, '0', STR_PAD_LEFT);
-    }
-
-    private function generateKtpNumber(): string
-    {
-        return (string) random_int(1000000000000000, 9999999999999999);
     }
 }

@@ -68,6 +68,11 @@ class Product extends Model
         return $query->where('discontinued', false);
     }
 
+    public function scopeActiveCategory($query)
+    {
+        return $query->whereHas('category', fn ($q) => $q->where('is_active', true));
+    }
+
     public function scopeHasPhoto($query)
     {
         return $query->whereNotNull('photo_path')->where('photo_path', '!=', '');

@@ -188,6 +188,7 @@ class CartController extends Controller
 
             $product = Product::query()
                 ->where('discontinued', false)
+                ->whereHas('category', fn ($q) => $q->where('is_active', true))
                 ->findOrFail($validated['product_id']);
 
             $this->cartService->addItem($cart, $product, (int) ($validated['quantity'] ?? 1));

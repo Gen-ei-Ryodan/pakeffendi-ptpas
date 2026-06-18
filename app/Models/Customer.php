@@ -15,6 +15,8 @@ class Customer extends Authenticatable
         'ktp_number',
         'npwp',
         'email',
+        'email_verified_at',
+        'email_verification_code',
         'password',
         'address',
         'province',

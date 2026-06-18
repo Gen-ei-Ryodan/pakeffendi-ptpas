@@ -26,8 +26,15 @@
                     <a href="{{ route('guest.profile.my-customers.index') }}" class="list-group-item list-group-item-action {{ request()->routeIs('guest.profile.my-customers.*') ? 'active' : '' }}">
                         <i class="bi bi-people me-2"></i>Pelanggan Saya
                     </a>
+                    <a href="{{ route('guest.register-buyer') }}" class="list-group-item list-group-item-action {{ request()->routeIs('guest.register-buyer') ? 'active' : '' }}">
+                        <i class="bi bi-person-plus me-2"></i>Tambah Buyer
+                    </a>
                     <a href="{{ route('guest.profile.logs') }}" class="list-group-item list-group-item-action {{ request()->routeIs('guest.profile.logs') ? 'active' : '' }}">
                         <i class="bi bi-clock-history me-2"></i>Log Aktivitas
+                    </a>
+                @else
+                    <a href="{{ route('guest.change-password') }}" class="list-group-item list-group-item-action {{ request()->routeIs('guest.change-password') ? 'active' : '' }}">
+                        <i class="bi bi-key me-2"></i>Ubah Password
                     </a>
                 @endif
 

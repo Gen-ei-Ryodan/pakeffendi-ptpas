@@ -16,6 +16,7 @@ class HomeController extends Controller
     public function index()
     {
         $categories = ProductCategory::query()
+            ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
@@ -34,6 +35,7 @@ class HomeController extends Controller
         $featuredProducts = Product::query()
             ->with(['brand', 'images'])
             ->active()
+            ->activeCategory()
             ->hasPhoto()
             ->orderBy('name')
             ->limit(10)
@@ -45,6 +47,7 @@ class HomeController extends Controller
             $products = Product::query()
                 ->with(['brand', 'images'])
                 ->active()
+                ->activeCategory()
                 ->validPricing()
                 ->hasPhoto()
                 ->byStatus($status->code)
@@ -74,7 +77,12 @@ class HomeController extends Controller
     {
         abort_if($product->discontinued, 404);
 
+        if ($product->category && !$product->category->is_active) {
+            abort(404);
+        }
+
         $categories = ProductCategory::query()
+            ->where('is_active', true)
             ->orderBy('name')
             ->get();
 
@@ -93,6 +101,7 @@ class HomeController extends Controller
         $featuredProducts = Product::query()
             ->with(['brand', 'images'])
             ->active()
+            ->activeCategory()
             ->hasPhoto()
             ->orderBy('name')
             ->limit(10)
@@ -104,6 +113,7 @@ class HomeController extends Controller
             $products = Product::query()
                 ->with(['brand', 'images'])
                 ->active()
+                ->activeCategory()
                 ->validPricing()
                 ->hasPhoto()
                 ->byStatus($status->code)

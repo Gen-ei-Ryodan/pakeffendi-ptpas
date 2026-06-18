@@ -348,6 +348,10 @@ class CartService
                     abort(422, 'Ada produk yang tidak tersedia.');
                 }
 
+                if ($product->category && !$product->category->is_active) {
+                    abort(422, 'Produk "'.$product->name.'" tidak tersedia karena kategori tidak aktif.');
+                }
+
                 $qty = (int) $item->quantity;
                 $pricing = $product->pricingForQuantity($qty);
                 $unitPrice = (float) $pricing['unit_price'];

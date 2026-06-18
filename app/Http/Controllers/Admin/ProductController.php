@@ -57,7 +57,7 @@ class ProductController extends Controller
             'sortBy' => $sortBy,
             'sortDir' => $sortDir,
             'brands' => ProductBrand::query()->orderBy('brand_name')->get(),
-            'categories' => ProductCategory::query()->orderBy('name')->get(),
+            'categories' => ProductCategory::query()->where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -65,7 +65,7 @@ class ProductController extends Controller
     {
         return view('admin.products.create', [
             'brands' => ProductBrand::query()->orderBy('brand_name')->get(),
-            'categories' => ProductCategory::query()->orderBy('name')->get(),
+            'categories' => ProductCategory::query()->where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 
@@ -124,7 +124,7 @@ class ProductController extends Controller
         return view('admin.products.edit', [
             'product' => $product,
             'brands' => ProductBrand::query()->orderBy('brand_name')->get(),
-            'categories' => ProductCategory::query()->orderBy('name')->get(),
+            'categories' => ProductCategory::query()->where('is_active', true)->orderBy('name')->get(),
         ]);
     }
 

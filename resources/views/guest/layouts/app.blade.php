@@ -21,7 +21,7 @@
 
     @stack('styles')
 </head>
-<body class="d-flex flex-column min-vh-100 has-bottom-nav" @if(Request::is('login', 'register')) data-spa="false" @endif>
+<body class="d-flex flex-column min-vh-100 has-bottom-nav" @if(Request::is('login', 'register', 'register-buyer', 'verify-email', 'verify-email/*', 'change-password')) data-spa="false" @endif>
 
     {{-- Sales Customer Select Modal (for add-to-cart) --}}
     @if(Auth::guard('web')->check() && Auth::guard('web')->user()->isSales())

@@ -37,6 +37,7 @@ class ProductCategoryController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', 'unique:product_categories,name'],
             'image' => ['nullable', 'image', 'max:4096'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
 
         $imagePath = null;
@@ -48,6 +49,7 @@ class ProductCategoryController extends Controller
             'category_code' => $this->generateCategoryCode($validated['name']),
             'name' => $validated['name'],
             'image_path' => $imagePath,
+            'is_active' => $request->boolean('is_active', true),
         ]);
 
         ActivityLogger::log('created', 'ProductCategory - '.$category->name);
@@ -67,6 +69,7 @@ class ProductCategoryController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('product_categories', 'name')->ignore($category->category_code, 'category_code')],
             'image' => ['nullable', 'image', 'max:4096'],
+            'is_active' => ['nullable', 'boolean'],
         ]);
 
         if ($request->hasFile('image')) {
@@ -74,6 +77,7 @@ class ProductCategoryController extends Controller
         }
 
         $category->name = $validated['name'];
+        $category->is_active = $request->boolean('is_active', true);
         $category->save();
 
         ActivityLogger::log('updated', 'ProductCategory - '.$category->name);
