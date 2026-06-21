@@ -10,6 +10,7 @@ use App\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
@@ -59,7 +60,7 @@ class AuthController extends Controller
                 // Resend verification code
                 $this->sendVerificationCode($customer);
 
-                return redirect()->route('guest.verify-email', ['email' => $customer->email])
+                return redirect()->route('guest.verify-email', ['email' => $customer->email, 'mode' => 'login'])
                     ->with('info', 'Silakan verifikasi email Anda terlebih dahulu. Kode verifikasi telah dikirim ke email Anda.');
             }
 
@@ -94,12 +95,12 @@ class AuthController extends Controller
 
     // ──────────────────────────────────────────────
     // REGISTER BUYER (by Sales / Admin)
+    // Data disimpan di session dulu, baru ke DB setelah OTP diverifikasi
     // ──────────────────────────────────────────────
 
     public function showRegisterBuyer()
     {
         $user = Auth::guard('web')->user();
-        // Only sales or admin can access
         if (!$user || !($user->isSales() || $user->isAdmin())) {
             return redirect()->route('guest.profile.index')->with('error', 'Akses ditolak.');
         }
@@ -110,7 +111,6 @@ class AuthController extends Controller
     public function registerBuyer(Request $request)
     {
         $user = Auth::guard('web')->user();
-        // Only sales or admin can access
         if (!$user || !($user->isSales() || $user->isAdmin())) {
             return redirect()->route('guest.profile.index')->with('error', 'Akses ditolak.');
         }
@@ -120,37 +120,44 @@ class AuthController extends Controller
             'email' => ['required', 'email', 'max:190', 'unique:customers,email'],
             'phone' => ['required', 'string', 'max:30', 'unique:customers,phone'],
             'address' => ['nullable', 'string', 'max:500'],
+            'province' => ['nullable', 'string', 'max:100'],
+            'city' => ['nullable', 'string', 'max:100'],
+            'postal_code' => ['nullable', 'string', 'max:20'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
         $code = $this->generateVerificationCode();
 
-        $customer = Customer::create([
-            'customer_code' => $this->generateCustomerCode(),
+        // Simpan data ke session — belum ke DB
+        session()->put('pending_buyer', [
+            'sales_id' => $user->id,
             'full_name' => $validated['full_name'],
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'address' => $validated['address'] ?? null,
+            'province' => $validated['province'] ?? null,
+            'city' => $validated['city'] ?? null,
+            'postal_code' => $validated['postal_code'] ?? null,
             'company_name' => $validated['company_name'] ?? null,
             'password' => Hash::make($validated['password']),
-            'status' => 'active',
-            'sales_id' => $user->id,
-            'account_type' => 'personal',
-            'ktp_number' => '-',
-            'contact_person' => $validated['full_name'],
-            'email_verification_code' => $code,
+            'verification_code' => $code,
+            'otp_expires_at' => now()->addMinute()->timestamp,
         ]);
 
-        // Send verification email
+        // Kirim OTP
         try {
-            Mail::to($customer->email)->send(new BuyerVerificationMail($customer, $code));
+            $tempCustomer = new Customer();
+            $tempCustomer->full_name = $validated['full_name'];
+            $tempCustomer->email = $validated['email'];
+
+            Mail::to($validated['email'])->send(new BuyerVerificationMail($tempCustomer, $code));
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Verification Mail Failed: '.$e->getMessage());
+            Log::error('Verification Mail Failed: '.$e->getMessage());
         }
 
-        return redirect()->route('guest.profile.my-customers.index')
-            ->with('success', 'Akun buyer berhasil dibuat. Kode verifikasi telah dikirim ke email '.$customer->email.'.');
+        return redirect()->route('guest.verify-email', ['email' => $validated['email'], 'mode' => 'register'])
+            ->with('info', 'Kode verifikasi telah dikirim ke email '.$validated['email'].'. Silakan verifikasi untuk menyelesaikan pendaftaran.');
     }
 
     // ──────────────────────────────────────────────
@@ -160,7 +167,16 @@ class AuthController extends Controller
     public function showVerifyEmail(Request $request)
     {
         $email = $request->query('email', '');
-        return view('guest.auth.verify-email', compact('email'));
+        $mode = $request->query('mode', ''); // 'register' or 'login'
+        $otpExpiresAt = null;
+
+        // Get OTP expiry from session if pending
+        $pending = session('pending_buyer');
+        if ($pending && $pending['email'] === $email) {
+            $otpExpiresAt = $pending['otp_expires_at'] ?? null;
+        }
+
+        return view('guest.auth.verify-email', compact('email', 'mode', 'otpExpiresAt'));
     }
 
     public function verifyEmail(Request $request)
@@ -170,6 +186,41 @@ class AuthController extends Controller
             'code' => ['required', 'string', 'size:6'],
         ]);
 
+        // Cek apakah ini dari pendaftaran baru (data di session)
+        $pending = session('pending_buyer');
+        if ($pending && $pending['email'] === $validated['email']) {
+            // Verify OTP
+            if ($pending['verification_code'] !== $validated['code']) {
+                return back()->withErrors(['code' => 'Kode verifikasi tidak valid.'])->withInput();
+            }
+
+            // OTP valid — simpan ke DB
+            $customer = Customer::create([
+                'customer_code' => $this->generateCustomerCode(),
+                'full_name' => $pending['full_name'],
+                'email' => $pending['email'],
+                'phone' => $pending['phone'],
+                'address' => $pending['address'],
+                'province' => $pending['province'] ?? null,
+                'city' => $pending['city'] ?? null,
+                'postal_code' => $pending['postal_code'] ?? null,
+                'company_name' => $pending['company_name'],
+                'password' => $pending['password'],
+                'status' => 'pending',
+                'sales_id' => $pending['sales_id'],
+                'account_type' => 'personal',
+                'ktp_number' => '-',
+                'contact_person' => $pending['full_name'],
+                'email_verified_at' => now(),
+            ]);
+
+            session()->forget('pending_buyer');
+
+            return redirect()->route('guest.profile.my-customers.index')
+                ->with('success', 'Akun buyer '.$customer->full_name.' berhasil dibuat dan email sudah diverifikasi! Menunggu persetujuan Admin.');
+        }
+
+        // Jika bukan dari pending (misal buyer yang sudah ada tapi belum verifikasi)
         $customer = Customer::query()
             ->where('email', $validated['email'])
             ->where('email_verification_code', $validated['code'])
@@ -184,12 +235,46 @@ class AuthController extends Controller
             'email_verification_code' => null,
         ]);
 
+        if (Auth::guard('web')->check() && (Auth::guard('web')->user()->isSales() || Auth::guard('web')->user()->isAdmin())) {
+            return redirect()->route('guest.profile.my-customers.index')
+                ->with('success', 'Email buyer berhasil diverifikasi! Buyer sudah bisa login.');
+        }
+
         return redirect()->route('guest.login')
             ->with('success', 'Email berhasil diverifikasi! Silakan login.');
     }
 
     public function verifyEmailDirect(string $code)
     {
+        // Cek session pending dulu
+        $pending = session('pending_buyer');
+        if ($pending && $pending['verification_code'] === $code) {
+            $customer = Customer::create([
+                'customer_code' => $this->generateCustomerCode(),
+                'full_name' => $pending['full_name'],
+                'email' => $pending['email'],
+                'phone' => $pending['phone'],
+                'address' => $pending['address'],
+                'province' => $pending['province'] ?? null,
+                'city' => $pending['city'] ?? null,
+                'postal_code' => $pending['postal_code'] ?? null,
+                'company_name' => $pending['company_name'],
+                'password' => $pending['password'],
+                'status' => 'pending',
+                'sales_id' => $pending['sales_id'],
+                'account_type' => 'personal',
+                'ktp_number' => '-',
+                'contact_person' => $pending['full_name'],
+                'email_verified_at' => now(),
+            ]);
+
+            session()->forget('pending_buyer');
+
+            return redirect()->route('guest.profile.my-customers.index')
+                ->with('success', 'Akun buyer '.$customer->full_name.' berhasil dibuat dan email sudah diverifikasi! Menunggu persetujuan Admin.');
+        }
+
+        // Cek customer yang sudah ada
         $customer = Customer::query()
             ->where('email_verification_code', $code)
             ->first();
@@ -204,8 +289,51 @@ class AuthController extends Controller
             'email_verification_code' => null,
         ]);
 
+        if (Auth::guard('web')->check() && (Auth::guard('web')->user()->isSales() || Auth::guard('web')->user()->isAdmin())) {
+            return redirect()->route('guest.profile.my-customers.index')
+                ->with('success', 'Email buyer berhasil diverifikasi! Buyer sudah bisa login.');
+        }
+
         return redirect()->route('guest.login')
             ->with('success', 'Email berhasil diverifikasi! Silakan login.');
+    }
+
+    public function resendVerificationCode(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:190'],
+        ]);
+
+        $email = $validated['email'];
+
+        // 1. Cek apakah ada pending registration di session
+        $pending = session('pending_buyer');
+        if ($pending && $pending['email'] === $email) {
+            $code = $this->generateVerificationCode();
+            $pending['verification_code'] = $code;
+            $pending['otp_expires_at'] = now()->addMinute()->timestamp;
+            session()->put('pending_buyer', $pending);
+
+            try {
+                $tempCustomer = new Customer();
+                $tempCustomer->full_name = $pending['full_name'];
+                $tempCustomer->email = $email;
+                Mail::to($email)->send(new BuyerVerificationMail($tempCustomer, $code));
+            } catch (\Exception $e) {
+                Log::error('Resend OTP Failed: '.$e->getMessage());
+            }
+
+            return back()->with('info', 'Kode verifikasi baru telah dikirim ke email '.$email.'.');
+        }
+
+        // 2. Cek customer yang sudah ada tapi belum verifikasi
+        $customer = Customer::query()->where('email', $email)->whereNull('email_verified_at')->first();
+        if ($customer) {
+            $this->sendVerificationCode($customer);
+            return back()->with('info', 'Kode verifikasi baru telah dikirim ke email '.$email.'.');
+        }
+
+        return back()->withErrors(['email' => 'Email tidak ditemukan.']);
     }
 
     private function sendVerificationCode(Customer $customer): void
@@ -216,7 +344,7 @@ class AuthController extends Controller
         try {
             Mail::to($customer->email)->send(new BuyerVerificationMail($customer, $code));
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Resend Verification Mail Failed: '.$e->getMessage());
+            Log::error('Resend Verification Mail Failed: '.$e->getMessage());
         }
     }
 
@@ -228,7 +356,6 @@ class AuthController extends Controller
     {
         $shopper = $this->getShopper();
 
-        // Only for buyers (Customer)
         if (!$shopper || $shopper instanceof \App\Models\User) {
             return redirect()->route('guest.profile.index')
                 ->with('error', 'Halaman ini hanya untuk pembeli.');
@@ -257,10 +384,9 @@ class AuthController extends Controller
         try {
             Mail::to($shopper->email)->send(new ChangePasswordMail($shopper, $code));
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Change Password Mail Failed: '.$e->getMessage());
+            Log::error('Change Password Mail Failed: '.$e->getMessage());
         }
 
-        // Store email in session for verification step
         session()->put('change_password_step', 'verify');
         session()->put('change_password_email', $shopper->email);
 
@@ -293,7 +419,6 @@ class AuthController extends Controller
 
         session()->forget(['change_password_step', 'change_password_email']);
 
-        // Logout from all sessions for security
         Auth::guard('customer')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();

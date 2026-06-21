@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\AboutController;
 use App\Http\Controllers\Admin\AccountController;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\BroadcastController;
+use App\Http\Controllers\Admin\CustomerAddressController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FavoriteBrandController;
@@ -34,6 +35,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('customers', CustomerController::class)->except(['show']);
         Route::patch('customers/{customer}/approve', [CustomerController::class, 'approve'])->name('customers.approve');
         Route::patch('customers/{customer}/reject', [CustomerController::class, 'reject'])->name('customers.reject');
+        Route::resource('customers.addresses', CustomerAddressController::class)->only(['index', 'store', 'update', 'destroy']);
+        Route::post('customers/{customer}/addresses/{address}/active', [CustomerAddressController::class, 'setActive'])->name('customers.addresses.set-active');
         Route::resource('categories', ProductCategoryController::class)->except(['show']);
         Route::resource('brands', ProductBrandController::class)->except(['show']);
         Route::resource('products', ProductController::class)->except(['show']);

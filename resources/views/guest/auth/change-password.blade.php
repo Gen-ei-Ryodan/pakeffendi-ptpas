@@ -61,7 +61,7 @@
                         @endif
 
                         @if($step === 'send_code')
-                        <form method="POST" action="{{ route('guest.change-password.send-code') }}" novalidate>
+                        <form method="POST" action="{{ route('guest.change-password.send-code') }}" novalidate data-ajax="false">
                             @csrf
                             <div class="alert alert-info">
                                 <i class="bi bi-info-circle me-2"></i>Klik tombol di bawah untuk mengirim kode verifikasi ke email <strong>{{ $customer->email }}</strong>.
@@ -71,7 +71,7 @@
                             </button>
                         </form>
                         @elseif($step === 'verify')
-                        <form method="POST" action="{{ route('guest.change-password.store') }}" novalidate>
+                        <form method="POST" action="{{ route('guest.change-password.store') }}" novalidate data-ajax="false">
                             @csrf
                             <div class="mb-3">
                                 <label for="code" class="form-label">Kode Verifikasi</label>
@@ -142,7 +142,7 @@
         </div>
 
         @if($step === 'send_code')
-        <form method="POST" action="{{ route('guest.change-password.send-code') }}" novalidate>
+        <form method="POST" action="{{ route('guest.change-password.send-code') }}" novalidate data-ajax="false">
             @csrf
             <div class="login-mob-info" style="padding:10px 16px;background:#cff4fc;border-radius:8px;margin:12px 0;font-size:13px;color:#055160;">
                 <i class="bi bi-info-circle me-1"></i>Kode verifikasi akan dikirim ke <strong>{{ $customer->email }}</strong>
@@ -150,7 +150,7 @@
             <button type="submit" class="login-mob-btn">Kirim Kode Verifikasi</button>
         </form>
         @elseif($step === 'verify')
-        <form method="POST" action="{{ route('guest.change-password.store') }}" novalidate>
+        <form method="POST" action="{{ route('guest.change-password.store') }}" novalidate data-ajax="false">
             @csrf
             <div class="login-mob-field">
                 <div class="login-mob-input-wrap" style="text-align:center;">
