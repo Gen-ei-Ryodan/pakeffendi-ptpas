@@ -271,6 +271,7 @@ Route::prefix('/')->group(function () {
     // Email Verification
     Route::get('/verify-email', [AuthController::class, 'showVerifyEmail'])->name('guest.verify-email');
     Route::post('/verify-email', [AuthController::class, 'verifyEmail'])->name('guest.verify-email.store');
+    Route::post('/verify-email/resend-code', [AuthController::class, 'resendVerificationCode'])->name('guest.verify-email.resend');
     Route::get('/verify-email/{code}', [AuthController::class, 'verifyEmailDirect'])->name('guest.verify-email.direct');
 
     // Register Buyer (by Sales/Admin)
@@ -312,6 +313,7 @@ Route::prefix('/')->group(function () {
     Route::middleware(['auth:web', 'sales'])->prefix('profile/my-customers')->name('guest.profile.my-customers.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Guest\MyCustomerController::class, 'index'])->name('index');
         Route::get('/{customer}', [\App\Http\Controllers\Guest\MyCustomerController::class, 'show'])->name('show');
+        Route::delete('/{customer}', [\App\Http\Controllers\Guest\MyCustomerController::class, 'destroy'])->name('destroy');
     });
 
     // Orders

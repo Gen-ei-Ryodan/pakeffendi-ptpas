@@ -71,9 +71,18 @@
                                             @endif
                                         </td>
                                         <td>
-                                            <a href="{{ route('guest.profile.my-customers.show', $cust) }}" class="btn btn-outline-primary btn-sm">
-                                                <i class="bi bi-eye"></i> Detail
-                                            </a>
+                                            <div class="d-flex gap-1">
+                                                <a href="{{ route('guest.profile.my-customers.show', $cust) }}" class="btn btn-outline-primary btn-sm">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <form method="POST" action="{{ route('guest.profile.my-customers.destroy', $cust) }}" data-ajax="false" onsubmit="return confirm('Yakin ingin menghapus customer {{ $cust->full_name }}? Semua data terkait akan ikut terhapus.');">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
                                         </td>
                                     </tr>
                                     @empty

@@ -34,11 +34,7 @@
                 template: 'login',
                 controller: 'AuthController'
             },
-            '/register': {
-                title: 'Daftar - PAS Market',
-                template: 'register',
-                controller: 'AuthController'
-            },
+
             '/profile': {
                 title: 'Profil Saya - PAS Market',
                 template: 'profile',
@@ -121,11 +117,33 @@
             if (href.includes('?')) {
                 return false;
             }
-            return !href.startsWith('http') && 
-                   !href.startsWith('#') && 
-                   !link.hasAttribute('download') && 
-                   link.getAttribute('target') !== '_blank' &&
-                   !link.classList.contains('no-spa');
+            const isExternal = href.startsWith('http') || 
+                   href.startsWith('#') || 
+                   link.hasAttribute('download') || 
+                   link.getAttribute('target') === '_blank' ||
+                   link.classList.contains('no-spa');
+            if (isExternal) {
+                return false;
+            }
+            // Do full page navigation for routes not registered in SPA
+            if (!this.isRouteRegistered(href)) {
+                return false;
+            }
+            return true;
+        },
+        
+        isRouteRegistered(path) {
+            // Exact match
+            if (this.routes[path]) {
+                return true;
+            }
+            // Pattern match (e.g. /products/:id)
+            for (const pattern of Object.keys(this.routes)) {
+                if (this.matchPattern(pattern, path)) {
+                    return true;
+                }
+            }
+            return false;
         },
         
         navigate(path, pushState = true) {
@@ -336,9 +354,6 @@
             this.navigate('/login');
         },
         
-        goToRegister() {
-            this.navigate('/register');
-        },
         
         goToProfile() {
             this.navigate('/profile');

@@ -16,6 +16,31 @@
 
 @push('styles')
 <link href="{{ asset('guest/css/auth.css') }}" rel="stylesheet">
+<style>
+.form-section {
+    margin-bottom: 1.75rem;
+}
+.form-section-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1e293b;
+    padding-bottom: 0.6rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+.form-section-title .icon-wrap {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+}
+</style>
 @endpush
 
 @section('content')
@@ -38,7 +63,7 @@
 <section class="py-5 login-page mobile-hide">
     <div class="container">
         <div class="row justify-content-center">
-            <div class="col-md-8 col-lg-6">
+            <div class="col-md-10 col-lg-8">
                 <div class="card border-0 shadow-sm auth-card">
                     <div class="card-body p-5">
                         <div class="text-center mb-4">
@@ -47,7 +72,7 @@
                                     <i class="bi bi-person-plus"></i> Tambah Buyer
                                 </h3>
                             </a>
-                            <p class="text-muted mt-2">Buatkan akun buyer baru</p>
+                            <p class="text-muted mt-2">Buatkan akun buyer baru dengan data lengkap</p>
                         </div>
                         
                         @if($errors->any())
@@ -60,58 +85,100 @@
                             </div>
                         @endif
 
-                        <form method="POST" action="{{ route('guest.register-buyer.store') }}" novalidate>
+                        <form method="POST" action="{{ route('guest.register-buyer.store') }}" novalidate data-ajax="false">
                             @csrf
-                            <div class="mb-3">
-                                <label for="fullName" class="form-label">Nama Lengkap *</label>
-                                <input type="text" class="form-control" id="fullName" name="full_name" value="{{ old('full_name') }}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email *</label>
-                                <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="phone" class="form-label">Nomor HP *</label>
-                                <input type="tel" class="form-control" id="phone" name="phone" value="{{ old('phone') }}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="address" class="form-label">Alamat</label>
-                                <textarea class="form-control" id="address" name="address" rows="2">{{ old('address') }}</textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label for="company_name" class="form-label">Nama Perusahaan</label>
-                                <input type="text" class="form-control" id="company_name" name="company_name" value="{{ old('company_name') }}">
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Password *</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
+
+                            {{-- Informasi Login --}}
+                            <div class="form-section">
+                                <div class="form-section-title">
+                                    <div class="icon-wrap" style="background:#dbeafe;color:#2563eb;"><i class="bi bi-shield-lock" style="font-size:0.7rem;"></i></div>
+                                    Informasi Login
                                 </div>
-                                <small class="text-muted">Minimal 8 karakter</small>
-                            </div>
-                            <div class="mb-3">
-                                <label for="confirmPassword" class="form-label">Konfirmasi Password *</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="confirmPassword" name="password_confirmation" required>
-                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email <span class="text-danger">*</span></label>
+                                        <input type="email" class="form-control" name="email" value="{{ old('email') }}" required placeholder="nama@email.com">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" name="full_name" value="{{ old('full_name') }}" required placeholder="Nama lengkap buyer">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Password <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="password" name="password" required placeholder="Min 8 karakter">
+                                            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted">Minimal 8 karakter</small>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Konfirmasi Password <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="password" class="form-control" id="confirmPassword" name="password_confirmation" required placeholder="Ulangi password">
+                                            <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
+                                                <i class="bi bi-eye"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <div class="alert alert-info">
-                                <i class="bi bi-info-circle me-2"></i>Setelah akun dibuat, kode verifikasi akan dikirim ke email buyer. Buyer harus memverifikasi email sebelum bisa login.
                             </div>
 
-                            <button type="submit" class="btn btn-primary w-100 mb-3">
-                                <i class="bi bi-person-plus me-2"></i>Buat Akun Buyer
+                            {{-- Identitas --}}
+                            <div class="form-section">
+                                <div class="form-section-title">
+                                    <div class="icon-wrap" style="background:#fef3c7;color:#d97706;"><i class="bi bi-person-badge" style="font-size:0.7rem;"></i></div>
+                                    Identitas
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">No HP <span class="text-danger">*</span></label>
+                                        <input type="tel" class="form-control" name="phone" value="{{ old('phone') }}" required placeholder="08xxxxxxxxxx">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Nama Perusahaan</label>
+                                        <input type="text" class="form-control" name="company_name" value="{{ old('company_name') }}" placeholder="Opsional">
+                                    </div>
+                                </div>
+                            </div>
+
+                            {{-- Alamat --}}
+                            <div class="form-section">
+                                <div class="form-section-title">
+                                    <div class="icon-wrap" style="background:#d1fae5;color:#059669;"><i class="bi bi-geo-alt" style="font-size:0.7rem;"></i></div>
+                                    Alamat
+                                </div>
+                                <div class="row g-3">
+                                    <div class="col-12">
+                                        <label class="form-label">Alamat</label>
+                                        <textarea class="form-control" name="address" rows="2" placeholder="Alamat lengkap">{{ old('address') }}</textarea>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Provinsi</label>
+                                        <input type="text" class="form-control" name="province" value="{{ old('province') }}" placeholder="Nama provinsi">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Kota</label>
+                                        <input type="text" class="form-control" name="city" value="{{ old('city') }}" placeholder="Nama kota">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label">Kode POS</label>
+                                        <input type="text" class="form-control" name="postal_code" value="{{ old('postal_code') }}" placeholder="Kode POS">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="bi bi-info-circle me-2"></i>Setelah form ini dikirim, kode verifikasi akan dikirim ke email buyer untuk verifikasi.
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 mb-3 py-2">
+                                <i class="bi bi-person-plus me-2"></i>Kirim & Verifikasi Email
                             </button>
                             
                             <div class="text-center">
-                                <a href="{{ route('guest.profile.my-customers.index') }}" class="text-decoration-none">Kembali</a>
+                                <a href="{{ route('guest.profile.my-customers.index') }}" class="text-decoration-none text-muted">Kembali ke daftar pelanggan</a>
                             </div>
                         </form>
                     </div>
@@ -144,7 +211,7 @@
         </div>
 
         <div class="login-mob-scroll">
-        <form method="POST" action="{{ route('guest.register-buyer.store') }}" novalidate>
+        <form method="POST" action="{{ route('guest.register-buyer.store') }}" novalidate data-ajax="false">
             @csrf
             <div class="login-mob-field">
                 <div class="login-mob-input-wrap">
@@ -166,14 +233,14 @@
             </div>
             <div class="login-mob-field">
                 <div class="login-mob-input-wrap">
-                    <i class="bi bi-geo-alt"></i>
-                    <textarea name="address" rows="2" placeholder="Alamat (opsional)">{{ old('address') }}</textarea>
+                    <i class="bi bi-building"></i>
+                    <input type="text" name="company_name" value="{{ old('company_name') }}" placeholder="Nama perusahaan (opsional)">
                 </div>
             </div>
             <div class="login-mob-field">
                 <div class="login-mob-input-wrap">
-                    <i class="bi bi-building"></i>
-                    <input type="text" name="company_name" value="{{ old('company_name') }}" placeholder="Nama perusahaan (opsional)">
+                    <i class="bi bi-geo-alt"></i>
+                    <textarea name="address" rows="2" placeholder="Alamat (opsional)">{{ old('address') }}</textarea>
                 </div>
             </div>
             <div class="login-mob-field">

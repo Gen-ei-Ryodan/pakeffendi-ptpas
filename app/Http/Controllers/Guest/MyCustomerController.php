@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Guest;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\SalesOrder;
+use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -72,5 +73,30 @@ class MyCustomerController extends Controller
             'is_sales' => true,
             'customer' => $sales, // For layout compatibility
         ]);
+    }
+
+    public function destroy(Customer $customer)
+    {
+        $sales = Auth::guard('web')->user();
+
+        if (!$sales || !$sales->isSales()) {
+            abort(403);
+        }
+
+        // Ensure sales only deletes their own customer
+        if ((int) $customer->sales_id !== (int) $sales->id) {
+            return redirect()
+                ->route('guest.profile.my-customers.index')
+                ->with('error', 'Customer tidak ditemukan atau bukan milik Anda.');
+        }
+
+        $customerName = $customer->full_name;
+        $customer->delete();
+
+        ActivityLogger::log('deleted', 'Customer deleted by Sales - '.$customerName);
+
+        return redirect()
+            ->route('guest.profile.my-customers.index')
+            ->with('success', 'Customer '.$customerName.' berhasil dihapus.');
     }
 }
