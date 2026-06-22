@@ -239,7 +239,7 @@
                 this.pageIndicator.style.transform = 'translateX(0%)';
                 this.pageIndicator.style.transition = 'transform 0.3s ease';
                 
-                // Simulate progress
+                // Animate progress bar
                 let progress = 0;
                 const interval = setInterval(() => {
                     progress += Math.random() * 30;

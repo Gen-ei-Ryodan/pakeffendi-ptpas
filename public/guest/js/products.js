@@ -112,57 +112,78 @@
         navigateToProductDetail(productId) {
             const path = `/products/${productId}`;
             if (PAS.Router && typeof PAS.Router.navigate === 'function' && document.body?.dataset?.spa === 'true') {
+                notify('Memuat detail produk...', 'info');
+                this.loadProductDetailData(productId);
                 PAS.Router.navigate(path);
             } else {
                 window.location.href = path;
             }
-
-            notify('Memuat detail produk...', 'info');
-            
-            // Simulate loading delay
-            setTimeout(() => {
-                this.loadProductDetailData(productId);
-            }, 500);
         },
         
-        loadProductDetailData(productId) {
-            // Simulate API call to load product data
-            console.log(`Loading product detail for ID: ${productId}`);
-            
-            // This would typically make an AJAX call
-            const mockProduct = {
-                id: productId,
-                name: `Produk ${productId}`,
-                price: Math.floor(Math.random() * 5000000) + 100000,
-                image: `https://via.placeholder.com/600x600/f8f9fa/333333?text=Product+${productId}`,
-                description: 'Deskripsi produk yang lengkap dan detail...',
-                rating: 4.5,
-                reviews: 128
-            };
-            
-            // Update page with product data
-            this.updateProductDetailPage(mockProduct);
+        async loadProductDetailData(productId) {
+            try {
+                const response = await fetch(`/api/guest/products/${productId}`);
+                if (!response.ok) throw new Error('Product not found');
+                const product = await response.json();
+                this.updateProductDetailPage(product);
+            } catch (e) {
+                console.error('Failed to load product detail:', e);
+                // Fallback: let the page load normally via navigation
+                if (PAS.Router && typeof PAS.Router.navigate === 'function') {
+                    window.location.href = `/products/${productId}`;
+                }
+            }
         },
         
         updateProductDetailPage(product) {
-            // Update product detail page with loaded data
+            // Update product detail page with loaded data from API
+            const placeholderImg = '/guest/img/placeholder-product.svg';
+            
             const titleElement = document.querySelector('h1, .product-title');
             if (titleElement) {
-                titleElement.textContent = product.name;
+                titleElement.textContent = product.name || product.title || '-';
             }
             
             const priceElement = document.querySelector('.product-price, .price');
             if (priceElement) {
-                priceElement.textContent = `Rp ${product.price.toLocaleString('id-ID')}`;
+                const rawPrice = product.price_tiers?.[0]?.price ?? product.price_1 ?? product.price ?? 0;
+                priceElement.textContent = `Rp ${Number(rawPrice).toLocaleString('id-ID')}`;
             }
             
-            const imageElement = document.querySelector('#mainProductImage, .product-main-image');
+            // Helper: get valid photo URL or placeholder
+            const getPhotoUrl = (path) => {
+                if (!path) return placeholderImg;
+                if (path.startsWith('http')) return path;
+                return `/storage/${path}`;
+            };
+            
+            // Main product image
+            const imageElement = document.querySelector('#mainProductImage, .product-main-image, [data-detail-image]');
             if (imageElement) {
-                imageElement.src = product.image;
-                imageElement.alt = product.name;
+                imageElement.src = getPhotoUrl(product.photo_path);
+                imageElement.alt = product.name || 'Product';
             }
             
-            notify('Detail produk dimuat', 'success');
+            // Detail screen image (mobile SPA)
+            const detailImage = document.querySelector('[data-detail-image]');
+            if (detailImage) {
+                detailImage.src = getPhotoUrl(product.photo_path);
+            }
+            
+            const descElement = document.querySelector('[data-detail-description], .product-description');
+            if (descElement && product.description) {
+                descElement.textContent = product.description;
+            }
+            
+            const brandElement = document.querySelector('[data-detail-brand]');
+            if (brandElement && product.brand) {
+                brandElement.textContent = product.brand;
+            }
+            
+            const weightElement = document.querySelector('[data-detail-weight]');
+            if (weightElement && product.weight_kg) {
+                weightElement.textContent = `${Number(product.weight_kg).toLocaleString('id-ID')} kg`;
+            }
         },
         
         handleAddToCart(button) {

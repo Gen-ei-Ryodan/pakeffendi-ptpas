@@ -313,38 +313,9 @@
         },
         
         performSearch(query) {
-            if (!query.trim()) {
-                Cart.showNotification('Masukkan kata kunci pencarian', 'warning');
-                return;
-            }
-            
-            // Show loading
-            this.showLoading();
-            
-            // Simulate search (replace with actual API call)
-            setTimeout(() => {
-                this.hideLoading();
-                Cart.showNotification(`Mencari: "${query}"`, 'info');
-                // Redirect to search results page or update content
-                console.log('Searching for:', query);
-            }, 1000);
+            if (!query.trim()) return;
+            window.location.href = `/products?q=${encodeURIComponent(query.trim())}`;
         },
-        
-        showLoading() {
-            const loading = document.createElement('div');
-            loading.id = 'search-loading';
-            loading.className = 'position-fixed top-50 start-50 translate-middle';
-            loading.innerHTML = '<div class="loading-spinner"></div>';
-            loading.style.zIndex = '9999';
-            document.body.appendChild(loading);
-        },
-        
-        hideLoading() {
-            const loading = document.getElementById('search-loading');
-            if (loading) {
-                loading.remove();
-            }
-        }
     };
 
     // Back to Top Button
@@ -400,15 +371,6 @@
                     const productData = this.getProductData(button);
                     Cart.addItem(productData);
                 }
-                
-                // Product card click (for detail view)
-                if (e.target.closest('.product-card')) {
-                    const card = e.target.closest('.product-card');
-                    const productId = card.dataset.productId;
-                    if (productId) {
-                        this.showProductDetail(productId);
-                    }
-                }
             });
         },
         
@@ -416,17 +378,11 @@
             const card = button.closest('.product-card');
             return {
                 id: card.dataset.productId,
-                name: card.querySelector('.product-title')?.textContent || 'Produk',
+                name: card.querySelector('.product-title')?.textContent || '',
                 price: parseFloat(card.querySelector('.product-price')?.textContent?.replace(/[^0-9,-]/g, '').replace(',', '.') || 0),
                 image: card.querySelector('.product-image')?.src || ''
             };
         },
-        
-        showProductDetail(productId) {
-            // Simulate loading product detail
-            console.log('Loading product detail for ID:', productId);
-            // This would typically open a modal or navigate to product page
-        }
     };
 
     // Smooth Scrolling for Navigation Links
