@@ -144,8 +144,12 @@
                 </div>
             </div>
 
-            <div class="login-mob-forgot">
-                <a href="#">Lupa password?</a>
+            <div class="login-mob-remember">
+                <label class="login-mob-remember-label">
+                    <input type="checkbox" name="remember" value="1" @checked(old('remember'))>
+                    <span>Ingat saya</span>
+                </label>
+                <a href="#" class="login-mob-forgot-link">Lupa password?</a>
             </div>
 
             <button type="submit" class="login-mob-btn" id="mobLoginBtn">Masuk</button>

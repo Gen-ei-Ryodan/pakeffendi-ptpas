@@ -28,10 +28,12 @@ class Customer extends Authenticatable
         'internal_code',
         'sales_id',
         'status', // Added status
+        'remember_token',
     ];
 
     protected $hidden = [
         'password',
+        'remember_token',
     ];
 
     // Scopes

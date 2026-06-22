@@ -4639,6 +4639,38 @@ body {
         font-weight: 600;
     }
 
+    .login-mob-remember {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 0 0 14px;
+        flex-shrink: 0;
+    }
+
+    .login-mob-remember-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.8rem;
+        color: #555;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .login-mob-remember-label input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #003B7A;
+        cursor: pointer;
+    }
+
+    .login-mob-forgot-link {
+        font-size: 0.75rem;
+        color: #003B7A;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
     .login-mob-btn {
         width: 100%;
         border: none;

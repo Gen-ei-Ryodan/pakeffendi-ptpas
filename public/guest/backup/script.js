@@ -153,6 +153,12 @@ document.addEventListener('DOMContentLoaded', () => {
             dom.screens[screenKey].style.display = screenKey === 'home' ? 'block' : 'flex';
         }
 
+        // Restore search input value when returning to product list screen
+        if (screenKey === 'productList') {
+            const input = document.querySelector('[data-product-search]');
+            if (input) input.value = state.productList.q || '';
+        }
+
         // Map screen to nav index
         const screenToNavIndex = {
             'home': 0,
