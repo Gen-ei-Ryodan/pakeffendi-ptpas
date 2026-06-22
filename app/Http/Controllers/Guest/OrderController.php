@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\SalesOrder;
 use App\Models\User;
+use App\Services\RemoteStockService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -120,7 +121,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function show(SalesOrder $order)
+    public function show(SalesOrder $order, RemoteStockService $remoteStock)
     {
         $shopper = $this->getShopper();
         abort_unless($shopper, 401);
@@ -134,9 +135,13 @@ class OrderController extends Controller
 
         $order->load(['items.product', 'customer']);
 
+        $skus = $order->items->pluck('product.sku')->filter()->values()->toArray();
+        $stockMap = $remoteStock->getStockBatch($skus);
+
         return view('guest.orders.show', [
             'customer' => $shopper,
             'order' => $order,
+            'stockMap' => $stockMap,
             'is_sales' => ($shopper instanceof User && $shopper->isSales()),
         ]);
     }

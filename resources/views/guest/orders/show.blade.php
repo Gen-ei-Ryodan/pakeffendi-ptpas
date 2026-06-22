@@ -79,12 +79,17 @@
                                             <tr>
                                                 <th>Produk</th>
                                                 <th class="text-center">Jumlah</th>
+                                                @if($is_sales)<th class="text-center">Stock</th>@endif
                                                 <th class="text-end">Harga</th>
                                                 <th class="text-end">Subtotal</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             @foreach(($order->items ?? collect()) as $item)
+                                                @php
+                                                    $sku = $item->product?->sku;
+                                                    $stockQty = $sku && isset($stockMap[$sku]) ? $stockMap[$sku] : null;
+                                                @endphp
                                                 <tr>
                                                     <td>
                                                         <div class="d-flex align-items-center">
@@ -95,6 +100,13 @@
                                                         </div>
                                                     </td>
                                                     <td class="text-center">{{ (int) $item->quantity }}</td>
+                                                    @if($is_sales)<td class="text-center fw-semibold">
+                                                        @if($stockQty !== null)
+                                                            <span class="text-success">{{ number_format($stockQty, 0) }}</span>
+                                                        @else
+                                                            <span class="text-muted">-</span>
+                                                        @endif
+                                                    </td>@endif
                                                     <td class="text-end">
                                                         Rp {{ number_format((float) $item->net_price, 0, ',', '.') }}
                                                         @if(((float) $item->discount_percent) > 0)
@@ -215,6 +227,10 @@
         <div class="mob-order-section-title">Produk yang Dibeli</div>
 
         @foreach(($order->items ?? collect()) as $item)
+        @php
+            $sku = $item->product?->sku;
+            $stockQty = $sku && isset($stockMap[$sku]) ? $stockMap[$sku] : null;
+        @endphp
         <div class="mob-order-product-item">
             <div class="mob-order-product-top">
                 <span class="mob-order-product-name">{{ $item->product_name }}</span>
@@ -227,6 +243,13 @@
                 <span class="mob-order-product-unit">Rp {{ number_format((float) $item->net_price, 0, ',', '.') }}/pcs</span>
                 <span class="mob-order-product-subtotal">Rp {{ number_format((float) $item->final_total, 0, ',', '.') }}</span>
             </div>
+            @if($is_sales && $stockQty !== null)
+            <div class="mt-1">
+                <span class="badge bg-success bg-opacity-10 text-success rounded-pill small">
+                    <i class="bi bi-box-seam me-1"></i>Stock: {{ number_format($stockQty, 0) }}
+                </span>
+            </div>
+            @endif
             @if(((float) $item->discount_percent) > 0)
             <div class="mob-order-product-disc">Disc {{ rtrim(rtrim(number_format((float) $item->discount_percent, 2, '.', ''), '0'), '.') }}%</div>
             @endif
