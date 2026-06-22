@@ -157,7 +157,6 @@
             this.isNavigating = true;
             this.showLoading();
             
-            // Simulate loading delay for better UX
             setTimeout(() => {
                 this.handleRouteChange(path, pushState);
                 this.hideLoading();
@@ -259,11 +258,7 @@
         },
         
         loadRouteContent(route) {
-            // This would typically load content via AJAX
-            // For now, we'll simulate it
             console.log(`Loading ${route.template} with controller ${route.controller}`);
-            
-            // Trigger controller
             if (window[route.controller]) {
                 window[route.controller].init(route.params);
             }
@@ -294,47 +289,7 @@
         },
         
         handleFormSubmission(form) {
-            // Skip login/register forms
-            if (form.id === 'loginForm' || form.id === 'registerForm') {
-                return; // Let them submit normally
-            }
-            
-            const action = form.getAttribute('action') || window.location.pathname;
-            const method = form.getAttribute('method') || 'POST';
-            
-            // Get form data
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData);
-            
-            // Simulate form submission
-            this.showLoading();
-            
-            setTimeout(() => {
-                this.hideLoading();
-                PAS.Notification.show('Form berhasil disubmit!', 'success');
-                
-                // Handle different form types
-                if (form.id === 'profileForm') {
-                    this.handleProfileUpdate(data);
-                }
-            }, 1500);
-        },
-        
-        handleLogin(data) {
-            console.log('Login attempt:', data);
-            PAS.Notification.show('Login berhasil!', 'success');
-            this.navigate('/profile');
-        },
-        
-        handleRegister(data) {
-            console.log('Register attempt:', data);
-            PAS.Notification.show('Registrasi berhasil!', 'success');
-            this.navigate('/login');
-        },
-        
-        handleProfileUpdate(data) {
-            console.log('Profile update:', data);
-            PAS.Notification.show('Profil berhasil diperbarui!', 'success');
+            return; // Forms use server-side submission (data-ajax="false")
         },
         
         // Navigation helpers
