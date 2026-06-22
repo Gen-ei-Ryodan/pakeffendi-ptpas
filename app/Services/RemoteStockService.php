@@ -10,6 +10,24 @@ class RemoteStockService
     private ?PDO $pdo = null;
     private ?bool $connected = null;
 
+    public function __construct()
+    {
+        $this->configureOpenSsl();
+    }
+
+    /**
+     * Set OPENSSL_CONF untuk kompatibilitas dengan SQL Server 2005 (TLS lama).
+     */
+    private function configureOpenSsl(): void
+    {
+        $opensslConf = config('remote_stock.openssl_conf')
+            ?: base_path('openssl_custom.cnf');
+
+        if (! getenv('OPENSSL_CONF') && is_string($opensslConf) && $opensslConf !== '' && is_file($opensslConf)) {
+            putenv("OPENSSL_CONF={$opensslConf}");
+        }
+    }
+
     protected function connection(): ?PDO
     {
         if ($this->connected === false) {
@@ -25,7 +43,7 @@ class RemoteStockService
 
             try {
                 if (extension_loaded('pdo_sqlsrv')) {
-                    $dsn = "sqlsrv:Server={$host},{$port};Database={$database};Encrypt=0;TrustServerCertificate=1;LoginTimeout=10;";
+                    $dsn = "sqlsrv:Server={$host},{$port};Database={$database};Encrypt=no;TrustServerCertificate=true;LoginTimeout=10;";
                 } else {
                     $dsn = "dblib:version=7.0;host={$host}:{$port};dbname={$database}";
                 }
