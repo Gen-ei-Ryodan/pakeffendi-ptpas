@@ -8,9 +8,14 @@ use PDOException;
 class RemoteStockService
 {
     private ?PDO $pdo = null;
+    private ?bool $connected = null;
 
-    protected function connection(): PDO
+    protected function connection(): ?PDO
     {
+        if ($this->connected === false) {
+            return null;
+        }
+
         if ($this->pdo === null) {
             $host = config('database.connections.remote_stock.host', 'ptpasonline.dyndns.org');
             $port = config('database.connections.remote_stock.port', '1699');
@@ -18,23 +23,31 @@ class RemoteStockService
             $username = config('database.connections.remote_stock.username', 'intravis');
             $password = config('database.connections.remote_stock.password', 'isen@777');
 
-            // Use sqlsrv driver if available (production), fallback to dblib (local dev)
-            if (extension_loaded('pdo_sqlsrv')) {
-                $dsn = "sqlsrv:Server={$host},{$port};Database={$database};Encrypt=no;TrustServerCertificate=yes;";
-            } else {
-                $dsn = "dblib:version=7.0;host={$host}:{$port};dbname={$database}";
-            }
+            try {
+                if (extension_loaded('pdo_sqlsrv')) {
+                    $dsn = "sqlsrv:Server={$host},{$port};Database={$database};Encrypt=0;TrustServerCertificate=1;LoginTimeout=10;";
+                } else {
+                    $dsn = "dblib:version=7.0;host={$host}:{$port};dbname={$database}";
+                }
 
-            $this->pdo = new PDO(
-                $dsn,
-                $username,
-                $password,
-                [
-                    PDO::ATTR_TIMEOUT => 5,
-                    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-                    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-                ]
-            );
+                $this->pdo = new PDO(
+                    $dsn,
+                    $username,
+                    $password,
+                    [
+                        PDO::ATTR_TIMEOUT => 10,
+                        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+                        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+                    ]
+                );
+
+                $this->connected = true;
+            } catch (PDOException $e) {
+                $this->connected = false;
+                logger()->warning('RemoteStockService: connection failed - '.$e->getMessage());
+
+                return null;
+            }
         }
 
         return $this->pdo;
@@ -43,6 +56,10 @@ class RemoteStockService
     public function getStockBySku(string $sku): ?float
     {
         $pdo = $this->connection();
+        if (! $pdo) {
+            return null;
+        }
+
         $stmt = $pdo->prepare('SELECT totalqty FROM vwtotalqtystock WHERE stockid = ?');
         $stmt->execute([$sku]);
         $row = $stmt->fetch();
@@ -57,31 +74,41 @@ class RemoteStockService
         }
 
         $pdo = $this->connection();
-        $placeholders = implode(',', array_fill(0, count($skus), '?'));
-        $stmt = $pdo->prepare("SELECT stockid, totalqty FROM vwtotalqtystock WHERE stockid IN ({$placeholders})");
-        $stmt->execute(array_values($skus));
-        $rows = $stmt->fetchAll();
-
-        $result = [];
-        foreach ($rows as $row) {
-            $result[$row['stockid']] = (float) $row['totalqty'];
+        if (! $pdo) {
+            return [];
         }
 
-        return $result;
-    }
+        try {
+            $placeholders = implode(',', array_fill(0, count($skus), '?'));
+            $stmt = $pdo->prepare("SELECT stockid, totalqty FROM vwtotalqtystock WHERE stockid IN ({$placeholders})");
+            $stmt->execute(array_values($skus));
+            $rows = $stmt->fetchAll();
 
-    public function getAllStock(): array
-    {
-        $pdo = $this->connection();
-        $stmt = $pdo->query('SELECT stockid, totalqty FROM vwtotalqtystock WHERE totalqty > 0 ORDER BY stockid');
+            $result = [];
+            foreach ($rows as $row) {
+                $result[$row['stockid']] = (float) $row['totalqty'];
+            }
 
-        return $stmt->fetchAll();
+            return $result;
+        } catch (PDOException $e) {
+            logger()->warning('RemoteStockService: query failed - '.$e->getMessage());
+
+            return [];
+        }
     }
 
     public function testConnection(): array
     {
+        $pdo = $this->connection();
+
+        if (! $pdo) {
+            return [
+                'success' => false,
+                'error' => 'Could not connect to remote database server.',
+            ];
+        }
+
         try {
-            $pdo = $this->connection();
             $stmt = $pdo->query('SELECT @@VERSION AS ver');
             $row = $stmt->fetch();
 
