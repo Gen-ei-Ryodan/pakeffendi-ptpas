@@ -107,12 +107,17 @@
                         <th class="py-3 pr-4">Netprice</th>
                         <th class="py-3 pr-4">Diskon</th>
                         <th class="py-3 pr-4">Final</th>
+                        <th class="py-3 pr-4 text-center">Stock</th>
                     </tr>
                 </thead>
                 <tbody>
                     @php $sum = 0; @endphp
                     @foreach ($order->items as $i => $item)
-                        @php $sum += (float) $item->final_total; @endphp
+                        @php
+                            $sum += (float) $item->final_total;
+                            $sku = $item->product?->sku;
+                            $stockQty = $sku && isset($stockMap[$sku]) ? $stockMap[$sku] : null;
+                        @endphp
                         <tr class="border-b">
                             <td class="py-3 pr-4">{{ $i + 1 }}</td>
                             <td class="py-3 pr-4">{{ $item->product_name }}</td>
@@ -120,12 +125,19 @@
                             <td class="py-3 pr-4">{{ number_format((float) $item->net_price, 2) }}</td>
                             <td class="py-3 pr-4">{{ number_format((float) $item->discount_percent, 2) }}%</td>
                             <td class="py-3 pr-4">{{ number_format((float) $item->final_total, 2) }}</td>
+                            <td class="py-3 pr-4 text-center font-semibold">
+                                @if($stockQty !== null)
+                                    <span class="text-green-600">{{ number_format($stockQty, 0) }}</span>
+                                @else
+                                    <span class="text-slate-300">-</span>
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
                 <tfoot>
                     <tr>
-                        <td colspan="5" class="py-3 pr-4 text-right font-semibold">Total</td>
+                        <td colspan="6" class="py-3 pr-4 text-right font-semibold">Total</td>
                         <td class="py-3 pr-4 font-semibold">{{ number_format($sum, 2) }}</td>
                     </tr>
                 </tfoot>

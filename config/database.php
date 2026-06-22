@@ -113,6 +113,18 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'remote_stock' => [
+            'driver' => 'sqlsrv',
+            'host' => env('REMOTE_DB_HOST', 'ptpasonline.dyndns.org'),
+            'port' => env('REMOTE_DB_PORT', '1699'),
+            'database' => env('REMOTE_DB_DATABASE', 'EzSystem'),
+            'username' => env('REMOTE_DB_USERNAME', 'intravis'),
+            'password' => env('REMOTE_DB_PASSWORD', 'isen@777'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
+
     ],
 
     /*

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\SalesOrder;
 use App\Services\ActivityLogger;
+use App\Services\RemoteStockService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -38,10 +39,16 @@ class SalesOrderController extends Controller
         ]);
     }
 
-    public function show(SalesOrder $salesOrder)
+    public function show(SalesOrder $salesOrder, RemoteStockService $remoteStock)
     {
+        $order = $salesOrder->load(['customer', 'items.product']);
+
+        $skus = $order->items->pluck('product.sku')->filter()->values()->toArray();
+        $stockMap = $remoteStock->getStockBatch($skus);
+
         return view('admin.sales-orders.show', [
-            'order' => $salesOrder->load(['customer', 'items.product']),
+            'order' => $order,
+            'stockMap' => $stockMap,
         ]);
     }
 

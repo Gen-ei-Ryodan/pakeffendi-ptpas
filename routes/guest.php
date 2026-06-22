@@ -6,6 +6,7 @@ use App\Http\Controllers\Guest\CustomerAddressController;
 use App\Http\Controllers\Guest\OrderController;
 use App\Http\Controllers\Guest\ProfileController;
 use App\Http\Controllers\Guest\RegionController;
+use App\Http\Controllers\Guest\RemoteStockController;
 use App\Models\Broadcast;
 use App\Models\Product;
 use App\Models\ProductBrand;
@@ -328,4 +329,7 @@ Route::prefix('/')->group(function () {
     Route::get('/contact', function () {
         return view('guest.contact.index');
     });
+
+    // Remote Stock Test
+    Route::get('/remote-stock', [RemoteStockController::class, 'index'])->name('guest.remote-stock');
 });
