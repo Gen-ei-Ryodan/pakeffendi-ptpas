@@ -6,7 +6,7 @@
 <div class="mobile-prod-topbar-inner">
     <div class="search-wrap">
         <i class="bi bi-search search-ico"></i>
-        <input type="text" placeholder="Cari produk..." id="mobileProdSearch">
+        <input type="text" placeholder="Cari produk..." id="mobileProdSearch" value="{{ request('q') }}">
     </div>
     <button class="topbar-btn" type="button" id="mobileSortBtn"><i class="bi bi-arrow-up-short"></i></button>
     <button class="topbar-btn" type="button" id="mobileFilterBtn"><i class="bi bi-sliders"></i></button>

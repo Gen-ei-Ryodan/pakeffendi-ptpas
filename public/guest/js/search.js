@@ -23,7 +23,7 @@
             const params = new URLSearchParams(window.location.search);
             const q = params.get('q');
             if (q) {
-                const searchInputs = document.querySelectorAll('#searchInput, #searchInputMobile');
+                const searchInputs = document.querySelectorAll('#searchInput, #searchInputMobile, #mobileProdSearch');
                 searchInputs.forEach(input => {
                     input.value = q;
                 });
