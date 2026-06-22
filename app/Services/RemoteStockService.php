@@ -18,8 +18,15 @@ class RemoteStockService
             $username = config('database.connections.remote_stock.username', 'intravis');
             $password = config('database.connections.remote_stock.password', 'isen@777');
 
+            // Use sqlsrv driver if available (production), fallback to dblib (local dev)
+            if (extension_loaded('pdo_sqlsrv')) {
+                $dsn = "sqlsrv:Server={$host},{$port};Database={$database};Encrypt=no;TrustServerCertificate=yes;";
+            } else {
+                $dsn = "dblib:version=7.0;host={$host}:{$port};dbname={$database}";
+            }
+
             $this->pdo = new PDO(
-                "dblib:version=7.0;host={$host}:{$port};dbname={$database}",
+                $dsn,
                 $username,
                 $password,
                 [
