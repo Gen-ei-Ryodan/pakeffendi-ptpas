@@ -2427,6 +2427,8 @@ body {
         transform: translateY(-50%);
         color: #999;
         font-size: 0.95rem;
+        cursor: pointer;
+        z-index: 1;
     }
 
     .mobile-prod-topbar-inner .topbar-btn {

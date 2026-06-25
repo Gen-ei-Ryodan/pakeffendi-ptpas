@@ -217,21 +217,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Mobile: search input enter/submit
+    // Mobile: search hanya saat klik tombol search atau tekan Enter
     const mobileSearch = document.getElementById('mobileProdSearch');
+    const mobileSearchIcon = document.querySelector('.search-ico');
+    const doSearch = function() {
+        const params = new URLSearchParams(window.location.search);
+        if (mobileSearch.value.trim()) {
+            params.set('q', mobileSearch.value.trim());
+        } else {
+            params.delete('q');
+        }
+        window.location.search = params.toString();
+    };
     if (mobileSearch) {
-        let searchTimer;
-        mobileSearch.addEventListener('input', function() {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(() => {
-                const params = new URLSearchParams(window.location.search);
-                if (this.value.trim()) {
-                    params.set('q', this.value.trim());
-                } else {
-                    params.delete('q');
-                }
-                window.location.search = params.toString();
-            }, 500);
+        mobileSearch.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                doSearch();
+            }
+        });
+    }
+    if (mobileSearchIcon) {
+        mobileSearchIcon.addEventListener('click', function(e) {
+            e.preventDefault();
+            doSearch();
         });
     }
 
