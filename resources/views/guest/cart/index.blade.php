@@ -51,12 +51,10 @@
                             </div>
                             {{-- Dropdown + Pilih + Batal --}}
                             <div id="custSelectRow" class="d-flex align-items-center gap-2 w-100 @if($selected_customer) d-none @endif">
-                                <select id="customerSelect" class="form-select form-select-sm" style="max-width: 300px;">
-                                    <option value="" selected disabled>-- Pilih Customer --</option>
-                                    @foreach($my_customers as $c)
-                                        <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }} {{ $c->company_name ? '('.$c->company_name.')' : '' }}</option>
-                                    @endforeach
-                                </select>
+                                <div class="position-relative" style="flex:1;max-width:300px;">
+                                    <input type="text" id="customerSearch" class="form-control form-control-sm" placeholder="Cari customer..." autocomplete="off">
+                                    <div id="customerSearchDropdown" class="list-group position-absolute w-100" style="z-index:1000;max-height:260px;overflow-y:auto;display:none;border:1px solid #dee2e6;border-radius:0.25rem;"></div>
+                                </div>
                                 <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToCustomer()">Pilih</button>
                                 <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" onclick="cancelCustomerSelect()">Batal</button>
                             </div>
@@ -324,12 +322,10 @@
             </div>
             {{-- Dropdown + Pilih + Batal (mobile) --}}
             <div id="mobCustSelectRow" class="d-flex align-items-center gap-2 w-100 @if($selected_customer) d-none @endif">
-                <select id="mobCustomerSelect" class="form-select form-select-sm">
-                    <option value="" selected disabled>-- Pilih Customer --</option>
-                    @foreach($my_customers as $c)
-                        <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }}</option>
-                    @endforeach
-                </select>
+                <div class="position-relative" style="flex:1;">
+                    <input type="text" id="mobCustomerSearch" class="form-control form-control-sm" placeholder="Cari customer..." autocomplete="off">
+                    <div id="mobCustomerSearchDropdown" class="list-group position-absolute w-100" style="z-index:1000;max-height:200px;overflow-y:auto;display:none;border:1px solid #dee2e6;border-radius:0.25rem;"></div>
+                </div>
                 <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToMobCustomer()">Pilih</button>
                 <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 text-nowrap" style="font-size:0.75rem;" onclick="cancelMobCustomerSelect()">Batal</button>
             </div>
@@ -466,11 +462,71 @@
 
 @push('scripts')
 <script>
+// Customer data for searchable selectors
+var salesCustomers = @json($my_customers->map(fn($c) => [
+    'id' => $c->id,
+    'full_name' => $c->full_name,
+    'company_name' => $c->company_name,
+    'url' => route('guest.cart.select-customer', $c->id),
+]));
+
+function initCustomerSearch(inputId, dropdownId) {
+    var input = document.getElementById(inputId);
+    var dropdown = document.getElementById(dropdownId);
+    if (!input || !dropdown) return;
+
+    var renderDropdown = function(filter) {
+        var q = (filter || '').trim().toLowerCase();
+        var filtered = q ? salesCustomers.filter(function(c) {
+            return (c.full_name || '').toLowerCase().indexOf(q) !== -1 ||
+                   (c.company_name || '').toLowerCase().indexOf(q) !== -1;
+        }) : salesCustomers;
+
+        if (filtered.length === 0) {
+            dropdown.style.display = 'none';
+            return;
+        }
+
+        dropdown.innerHTML = filtered.map(function(c) {
+            var label = c.full_name;
+            if (c.company_name) label += ' (' + c.company_name + ')';
+            return '<button type="button" class="list-group-item list-group-item-action" data-url="' + c.url + '">' + label + '</button>';
+        }).join('');
+        dropdown.style.display = 'block';
+    };
+
+    input.addEventListener('input', function() {
+        renderDropdown(this.value);
+    });
+
+    dropdown.addEventListener('click', function(e) {
+        var btn = e.target.closest('[data-url]');
+        if (btn) {
+            input.value = btn.textContent.trim();
+            input.dataset.selectedUrl = btn.dataset.url;
+            dropdown.style.display = 'none';
+        }
+    });
+
+    document.addEventListener('click', function(e) {
+        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+
+    // Show all on focus if empty
+    input.addEventListener('focus', function() {
+        if (!this.value) renderDropdown('');
+    });
+}
+
 function showCustomerSelect() {
     var badge = document.getElementById('custBadgeRow');
     var select = document.getElementById('custSelectRow');
     if (badge) badge.classList.add('d-none');
     if (select) select.classList.remove('d-none');
+    var input = document.getElementById('customerSearch');
+    if (input) { input.value = ''; delete input.dataset.selectedUrl; input.focus(); }
 }
 
 function cancelCustomerSelect() {
@@ -485,6 +541,8 @@ function showMobCustomerSelect() {
     var select = document.getElementById('mobCustSelectRow');
     if (badge) badge.classList.add('d-none');
     if (select) select.classList.remove('d-none');
+    var input = document.getElementById('mobCustomerSearch');
+    if (input) { input.value = ''; delete input.dataset.selectedUrl; input.focus(); }
 }
 
 function cancelMobCustomerSelect() {
@@ -495,16 +553,16 @@ function cancelMobCustomerSelect() {
 }
 
 function goToCustomer() {
-    var sel = document.getElementById('customerSelect');
-    if (sel && sel.value) {
-        window.location.href = sel.value;
+    var input = document.getElementById('customerSearch');
+    if (input && input.dataset.selectedUrl) {
+        window.location.href = input.dataset.selectedUrl;
     }
 }
 
 function goToMobCustomer() {
-    var sel = document.getElementById('mobCustomerSelect');
-    if (sel && sel.value) {
-        window.location.href = sel.value;
+    var input = document.getElementById('mobCustomerSearch');
+    if (input && input.dataset.selectedUrl) {
+        window.location.href = input.dataset.selectedUrl;
     }
 }
 
@@ -592,6 +650,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             });
         }
+
+        // Initialize searchable customer selectors
+        initCustomerSearch('customerSearch', 'customerSearchDropdown');
+        initCustomerSearch('mobCustomerSearch', 'mobCustomerSearchDropdown');
     }
 });
 

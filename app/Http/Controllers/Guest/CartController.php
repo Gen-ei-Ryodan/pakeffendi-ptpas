@@ -423,7 +423,6 @@ class CartController extends Controller
         $customers = Customer::where('sales_id', $shopper->id)
             ->when($q !== '', fn ($query) => $query->where('full_name', 'like', '%'.$q.'%'))
             ->orderBy('full_name')
-            ->limit(20)
             ->get(['id', 'full_name', 'company_name']);
 
         return response()->json([
