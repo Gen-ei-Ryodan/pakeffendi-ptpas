@@ -463,12 +463,15 @@
 @push('scripts')
 <script>
 // Customer data for searchable selectors
-var salesCustomers = @json($my_customers->map(fn($c) => [
+@php
+$salesCustomersMapped = $my_customers->map(fn($c) => [
     'id' => $c->id,
     'full_name' => $c->full_name,
     'company_name' => $c->company_name,
     'url' => route('guest.cart.select-customer', $c->id),
-]));
+]);
+@endphp
+var salesCustomers = @json($salesCustomersMapped);
 
 function initCustomerSearch(inputId, dropdownId) {
     var input = document.getElementById(inputId);
