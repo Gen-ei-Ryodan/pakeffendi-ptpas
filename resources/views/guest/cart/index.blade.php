@@ -34,7 +34,7 @@
             <div class="col-lg-8">
                 {{-- Sales Customer Selector --}}
                 @if(isset($is_sales) && $is_sales)
-                <div class="card border-0 shadow-sm mb-3">
+                <div class="card border-0 shadow-sm mb-3" style="overflow:visible;">
                     <div class="card-body py-3">
                         @if($my_customers->isEmpty())
                             <div class="d-flex align-items-center gap-3">
