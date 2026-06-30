@@ -34,7 +34,7 @@
             <div class="col-lg-8">
                 {{-- Sales Customer Selector --}}
                 @if(isset($is_sales) && $is_sales)
-                <div class="card border-0 shadow-sm mb-3" style="overflow:visible;">
+                <div class="card border-0 shadow-sm mb-3">
                     <div class="card-body py-3">
                         @if($my_customers->isEmpty())
                             <div class="d-flex align-items-center gap-3">
@@ -51,9 +51,8 @@
                             </div>
                             {{-- Dropdown + Pilih + Batal --}}
                             <div id="custSelectRow" class="d-flex align-items-center gap-2 w-100 @if($selected_customer) d-none @endif">
-                                <div class="position-relative" style="flex:1;max-width:300px;">
+                                <div style="flex:1;max-width:300px;">
                                     <input type="text" id="customerSearch" class="form-control form-control-sm" placeholder="Cari customer..." autocomplete="off">
-                                    <div id="customerSearchDropdown" class="list-group position-absolute w-100" style="z-index:1000;max-height:260px;overflow-y:auto;display:none;border:1px solid #dee2e6;border-radius:0.25rem;"></div>
                                 </div>
                                 <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToCustomer()">Pilih</button>
                                 <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" onclick="cancelCustomerSelect()">Batal</button>
@@ -322,9 +321,8 @@
             </div>
             {{-- Dropdown + Pilih + Batal (mobile) --}}
             <div id="mobCustSelectRow" class="d-flex align-items-center gap-2 w-100 @if($selected_customer) d-none @endif">
-                <div class="position-relative" style="flex:1;">
+                <div style="flex:1;">
                     <input type="text" id="mobCustomerSearch" class="form-control form-control-sm" placeholder="Cari customer..." autocomplete="off">
-                    <div id="mobCustomerSearchDropdown" class="list-group position-absolute w-100" style="z-index:1000;max-height:200px;overflow-y:auto;display:none;border:1px solid #dee2e6;border-radius:0.25rem;"></div>
                 </div>
                 <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToMobCustomer()">Pilih</button>
                 <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 text-nowrap" style="font-size:0.75rem;" onclick="cancelMobCustomerSelect()">Batal</button>
@@ -473,12 +471,28 @@ $salesCustomersMapped = $my_customers->map(fn($c) => [
 @endphp
 var salesCustomers = @json($salesCustomersMapped);
 
-function initCustomerSearch(inputId, dropdownId) {
+function initCustomerSearch(inputId) {
     var input = document.getElementById(inputId);
-    var dropdown = document.getElementById(dropdownId);
-    if (!input || !dropdown) return;
+    if (!input) return;
 
-    var renderDropdown = function(filter) {
+    // Create portal dropdown in document.body — immune to any parent overflow/clipping
+    var portal = document.createElement('div');
+    portal.className = 'list-group';
+    portal.style.cssText = 'position:fixed;z-index:99999;display:none;max-height:260px;overflow-y:auto;border:1px solid #dee2e6;border-radius:0.25rem;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,0.15);';
+    portal.setAttribute('data-portal-for', inputId);
+    document.body.appendChild(portal);
+
+    var isVisible = false;
+
+    var updatePosition = function() {
+        if (!isVisible) return;
+        var rect = input.getBoundingClientRect();
+        portal.style.left = rect.left + 'px';
+        portal.style.width = rect.width + 'px';
+        portal.style.top = rect.bottom + 'px';
+    };
+
+    var show = function(filter) {
         var q = (filter || '').trim().toLowerCase();
         var filtered = q ? salesCustomers.filter(function(c) {
             return (c.full_name || '').toLowerCase().indexOf(q) !== -1 ||
@@ -486,41 +500,71 @@ function initCustomerSearch(inputId, dropdownId) {
         }) : salesCustomers;
 
         if (filtered.length === 0) {
-            dropdown.style.display = 'none';
+            portal.style.display = 'none';
+            isVisible = false;
             return;
         }
 
-        dropdown.innerHTML = filtered.map(function(c) {
+        portal.innerHTML = filtered.map(function(c) {
             var label = c.full_name;
             if (c.company_name) label += ' (' + c.company_name + ')';
             return '<button type="button" class="list-group-item list-group-item-action" data-url="' + c.url + '">' + label + '</button>';
         }).join('');
-        dropdown.style.display = 'block';
+        portal.style.display = 'block';
+        isVisible = true;
+        updatePosition();
     };
 
+    var hide = function() {
+        portal.style.display = 'none';
+        isVisible = false;
+    };
+
+    // --- Input events ---
     input.addEventListener('input', function() {
-        renderDropdown(this.value);
+        show(this.value);
     });
 
-    dropdown.addEventListener('click', function(e) {
+    input.addEventListener('focus', function() {
+        if (!this.value) show('');
+    });
+
+    input.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') hide();
+    });
+
+    // --- Portal selection via mousedown (fires BEFORE blur, preventing flicker) ---
+    portal.addEventListener('mousedown', function(e) {
+        var btn = e.target.closest('[data-url]');
+        if (btn) {
+            e.preventDefault();     // Prevent blur on input so focus stays
+            input.value = btn.textContent.trim();
+            input.dataset.selectedUrl = btn.dataset.url;
+            hide();
+        }
+    });
+
+    // Fallback click handler for accessibility
+    portal.addEventListener('click', function(e) {
         var btn = e.target.closest('[data-url]');
         if (btn) {
             input.value = btn.textContent.trim();
             input.dataset.selectedUrl = btn.dataset.url;
-            dropdown.style.display = 'none';
+            hide();
         }
     });
 
-    document.addEventListener('click', function(e) {
-        if (!input.contains(e.target) && !dropdown.contains(e.target)) {
-            dropdown.style.display = 'none';
-        }
-    });
+    // --- Outside click: mousedown fires BEFORE blur, so no flicker ---
+    var outsideHandler = function(e) {
+        if (!isVisible) return;
+        if (portal.contains(e.target) || input.contains(e.target)) return;
+        hide();
+    };
+    document.addEventListener('mousedown', outsideHandler);
 
-    // Show all on focus if empty
-    input.addEventListener('focus', function() {
-        if (!this.value) renderDropdown('');
-    });
+    // --- Update position on scroll/resize ---
+    window.addEventListener('scroll', updatePosition, true);
+    window.addEventListener('resize', updatePosition);
 }
 
 function showCustomerSelect() {
@@ -655,8 +699,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // Initialize searchable customer selectors
-        initCustomerSearch('customerSearch', 'customerSearchDropdown');
-        initCustomerSearch('mobCustomerSearch', 'mobCustomerSearchDropdown');
+        initCustomerSearch('customerSearch');
+        initCustomerSearch('mobCustomerSearch');
     }
 });
 
