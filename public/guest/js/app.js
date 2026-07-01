@@ -43,12 +43,9 @@
                 return;
             }
 
-            // Sales: show customer selection modal first
+            // Sales: customer must be selected on the cart page first (once per session)
+            // Backend reads the selected customer from the cookie — no need to ask again
             if (window.PAS?.auth?.isSales) {
-                const customerId = await this._pickSalesCustomer();
-                if (!customerId) {
-                    return; // user cancelled
-                }
                 const productId = product?.id;
                 if (!productId) return;
 
@@ -66,12 +63,16 @@
                     const data = await API.request('/cart/items', {
                         method: 'POST',
                         headers: { 'X-CSRF-TOKEN': this.csrfToken() },
-                        body: JSON.stringify({ product_id: productId, quantity, customer_id: customerId }),
+                        body: JSON.stringify({ product_id: productId, quantity }),
                     });
                     this.summary = data.summary || this.summary;
                     this.updateUI();
                     this.showNotification('Produk ditambahkan ke keranjang!', 'success');
-                } catch (_) {}
+                } catch (err) {
+                    // Backend will reject if no customer is selected (cookie missing)
+                    // Show a helpful message so the user knows to go to cart page first
+                    this.showNotification('Silakan pilih customer terlebih dahulu di halaman Keranjang.', 'warning');
+                }
                 return;
             }
 
@@ -103,99 +104,6 @@
                 this.showNotification('Produk ditambahkan ke keranjang!', 'success');
             } catch (_) {
             }
-        },
-        
-        /**
-         * Show customer selection modal for sales users.
-         * Returns a Promise that resolves with customer ID or null if cancelled.
-         */
-        _pickSalesCustomer() {
-            return new Promise((resolve) => {
-                const modalEl = document.getElementById('salesCustomerModal');
-                if (!modalEl) { resolve(null); return; }
-
-                // Clean up any stale backdrops from previous modal instances
-                document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-                document.body.classList.remove('modal-open');
-                document.body.style.removeProperty('overflow');
-                document.body.style.removeProperty('padding-right');
-
-                const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                const listEl = document.getElementById('salesCustList');
-                const searchEl = document.getElementById('salesCustSearch');
-                const emptyEl = document.getElementById('salesCustEmpty');
-                let customers = [];
-                let resolved = false;
-
-                const finish = (value) => {
-                    if (resolved) return;
-                    resolved = true;
-                    modal.hide();
-                    resolve(value);
-                };
-
-                const renderList = (filter = '') => {
-                    const q = (filter || '').trim().toLowerCase();
-                    const filtered = q ? customers.filter(c =>
-                        (c.full_name || '').toLowerCase().includes(q) ||
-                        (c.company_name || '').toLowerCase().includes(q)
-                    ) : customers;
-
-                    if (filtered.length === 0) {
-                        listEl.innerHTML = '';
-                        emptyEl.classList.remove('d-none');
-                    } else {
-                        emptyEl.classList.add('d-none');
-                        listEl.innerHTML = filtered.map(c => `
-                            <button type="button" class="list-group-item list-group-item-action" data-cid="${c.id}">
-                                <div class="fw-semibold">${c.full_name}</div>
-                                ${c.company_name ? `<small class="text-muted">${c.company_name}</small>` : ''}
-                            </button>
-                        `).join('');
-                    }
-                };
-
-                const onListClick = (e) => {
-                    const btn = e.target.closest('[data-cid]');
-                    if (btn) {
-                        const cid = parseInt(btn.dataset.cid, 10);
-                        finish(Number.isFinite(cid) ? cid : null);
-                    }
-                };
-
-                const onSearchInput = () => renderList(searchEl.value);
-
-                const onShown = async () => {
-                    if (searchEl) searchEl.value = '';
-                    try {
-                        const data = await API.request(window.PAS?.urls?.myCustomers || '/cart/my-customers', { method: 'GET' });
-                        customers = Array.isArray(data.customers) ? data.customers : [];
-                        renderList();
-                    } catch (_) {
-                        listEl.innerHTML = '<div class="text-center text-danger py-3 small">Gagal memuat customer.</div>';
-                    }
-                };
-
-                const onHidden = () => {
-                    if (!resolved) finish(null);
-                };
-
-                const cleanup = () => {
-                    listEl.removeEventListener('click', onListClick);
-                    if (searchEl) searchEl.removeEventListener('input', onSearchInput);
-                    modalEl.removeEventListener('shown.bs.modal', onShown);
-                    modalEl.removeEventListener('hidden.bs.modal', onHidden);
-                };
-
-                // Remove any leftover listeners first, then register fresh ones
-                cleanup();
-                listEl.addEventListener('click', onListClick);
-                if (searchEl) searchEl.addEventListener('input', onSearchInput);
-                modalEl.addEventListener('shown.bs.modal', onShown);
-                modalEl.addEventListener('hidden.bs.modal', onHidden);
-
-                modal.show();
-            });
         },
 
         async removeItem(productId) {
@@ -364,6 +272,28 @@
                     }
                 }
 
+                // Quantity +/- buttons
+                const qtyBtn = e.target.closest('.qty-btn');
+                if (qtyBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const card = qtyBtn.closest('.product-card');
+                    const input = card?.querySelector('.qty-input');
+                    if (!input) return;
+                    const current = parseInt(input.value, 10) || 1;
+                    const min = parseInt(input.min, 10) || 1;
+                    const max = parseInt(input.max, 10) || 9999;
+                    const action = qtyBtn.dataset.action;
+                    let newVal = current;
+                    if (action === 'increase') {
+                        newVal = Math.min(max, current + 1);
+                    } else if (action === 'decrease') {
+                        newVal = Math.max(min, current - 1);
+                    }
+                    input.value = newVal;
+                    return;
+                }
+
                 // Add to cart button
                 if (e.target.closest('.btn-add-to-cart')) {
                     e.preventDefault();
@@ -376,11 +306,20 @@
         
         getProductData(button) {
             const card = button.closest('.product-card');
+            const qtyInput = card?.querySelector('.qty-input');
+            let quantity = 1;
+            if (qtyInput) {
+                const raw = parseInt(qtyInput.value, 10);
+                const min = parseInt(qtyInput.min, 10) || 1;
+                const max = parseInt(qtyInput.max, 10) || 9999;
+                quantity = Number.isFinite(raw) ? Math.max(min, Math.min(max, raw)) : 1;
+            }
             return {
                 id: card.dataset.productId,
                 name: card.querySelector('.product-title')?.textContent || '',
                 price: parseFloat(card.querySelector('.product-price')?.textContent?.replace(/[^0-9,-]/g, '').replace(',', '.') || 0),
-                image: card.querySelector('.product-image')?.src || ''
+                image: card.querySelector('.product-image')?.src || '',
+                quantity: quantity
             };
         },
     };

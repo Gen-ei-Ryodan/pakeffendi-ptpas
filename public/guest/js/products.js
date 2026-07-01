@@ -34,7 +34,7 @@
             // Handle clicks on product cards
             document.addEventListener('click', (e) => {
                 const productCard = e.target.closest('.product-card');
-                if (productCard && !e.target.closest('.btn')) {
+                if (productCard && !e.target.closest('.btn, .qty-btn, .qty-input')) {
                     e.preventDefault();
                     const productId = productCard.dataset.productId;
                     if (productId) {

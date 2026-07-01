@@ -59,7 +59,7 @@
                                 <label class="form-label mb-1">Filter Status</label>
                                 <select name="status" class="form-select form-select-sm">
                                     <option value="">Semua Status</option>
-                                    @foreach([\App\Models\SalesOrder::STATUS_NEW, \App\Models\SalesOrder::STATUS_ON_PROGRESS, \App\Models\SalesOrder::STATUS_ON_DELIVERY, \App\Models\SalesOrder::STATUS_FINISHED] as $status)
+                                    @foreach([\App\Models\SalesOrder::STATUS_DRAFT, \App\Models\SalesOrder::STATUS_NEW, \App\Models\SalesOrder::STATUS_ON_PROGRESS, \App\Models\SalesOrder::STATUS_ON_DELIVERY, \App\Models\SalesOrder::STATUS_FINISHED] as $status)
                                         <option value="{{ $status }}" @selected(($f['status'] ?? '') === $status)>{{ $status }}</option>
                                     @endforeach
                                 </select>
@@ -114,19 +114,38 @@
                                 <tbody>
                                     @forelse(($orders ?? collect()) as $order)
                                         <tr>
-                                            <td class="fw-semibold">{{ $order->order_no }}</td>
+                                            <td class="fw-semibold">
+                                                @if($order->status === \App\Models\SalesOrder::STATUS_DRAFT)
+                                                    <span class="text-muted">Draft</span>
+                                                @else
+                                                    {{ $order->order_no }}
+                                                @endif
+                                            </td>
                                             @if(isset($is_sales) && $is_sales)
                                                 <td>{{ $order->customer?->full_name ?? '-' }}</td>
                                             @endif
                                             <td>{{ $order->order_date?->format('Y-m-d') }}</td>
                                             <td>
-                                                <span class="badge bg-secondary">{{ $order->status }}</span>
+                                                @if($order->status === \App\Models\SalesOrder::STATUS_DRAFT)
+                                                    <span class="badge bg-warning text-dark">Draft</span>
+                                                @else
+                                                    <span class="badge bg-secondary">{{ $order->status }}</span>
+                                                @endif
                                             </td>
                                             <td class="fw-semibold">Rp {{ number_format((float) $order->grand_total, 0, ',', '.') }}</td>
                                             <td>
-                                                <a href="{{ route('guest.orders.show', $order) }}" class="btn btn-outline-primary btn-sm">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
+                                                @if($order->status === \App\Models\SalesOrder::STATUS_DRAFT && isset($is_sales) && $is_sales)
+                                                    <form method="POST" action="{{ route('guest.cart.load-draft', $order) }}" style="display:inline;" data-ajax="false">
+                                                        @csrf
+                                                        <button type="submit" class="btn btn-success btn-sm">
+                                                            <i class="bi bi-cart-plus"></i> Load
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <a href="{{ route('guest.orders.show', $order) }}" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty
@@ -155,6 +174,7 @@
     @php
         $statusList = [
             '' => 'Semua',
+            \App\Models\SalesOrder::STATUS_DRAFT => 'Draft',
             \App\Models\SalesOrder::STATUS_NEW => 'Belum Bayar',
             \App\Models\SalesOrder::STATUS_ON_PROGRESS => 'Dikemas',
             \App\Models\SalesOrder::STATUS_ON_DELIVERY => 'Dikirim',
@@ -199,10 +219,11 @@
     <!-- Orders List -->
     <div class="mob-orders-list">
         @forelse(($orders ?? collect()) as $order)
-        <a href="{{ route('guest.orders.show', $order) }}" class="mob-order-card">
+        @php $isDraft = $order->status === \App\Models\SalesOrder::STATUS_DRAFT; @endphp
+        <div class="mob-order-card">
             <div class="mob-order-card-top">
-                <span class="mob-order-card-no">{{ $order->order_no }}</span>
-                <span class="mob-order-card-status status-badge-{{ strtolower($order->status) }}">{{ $order->status }}</span>
+                <span class="mob-order-card-no">{{ $isDraft ? 'Draft' : $order->order_no }}</span>
+                <span class="mob-order-card-status {{ $isDraft ? 'status-badge-draft' : 'status-badge-'.strtolower($order->status) }}">{{ $isDraft ? 'Draft' : $order->status }}</span>
             </div>
             @if(isset($is_sales) && $is_sales && $order->customer)
             <div class="mob-order-card-customer">{{ $order->customer->full_name ?? '-' }}</div>
@@ -212,9 +233,20 @@
                 <span class="mob-order-card-total">Rp {{ number_format((float) $order->grand_total, 0, ',', '.') }}</span>
             </div>
             <div class="mob-order-card-bot">
-                <span class="mob-order-card-detail">Lihat Detail <i class="bi bi-chevron-right"></i></span>
+                @if($isDraft && isset($is_sales) && $is_sales)
+                <form method="POST" action="{{ route('guest.cart.load-draft', $order) }}" style="display:inline;" data-ajax="false">
+                    @csrf
+                    <button type="submit" class="btn btn-success btn-sm w-100">
+                        <i class="bi bi-cart-plus"></i> Muat ke Keranjang
+                    </button>
+                </form>
+                @else
+                <a href="{{ route('guest.orders.show', $order) }}" class="mob-order-card-detail">
+                    Lihat Detail <i class="bi bi-chevron-right"></i>
+                </a>
+                @endif
             </div>
-        </a>
+        </div>
         @empty
         <div class="mob-orders-empty">
             <i class="bi bi-inbox"></i>

@@ -10,6 +10,7 @@ use Illuminate\Support\Carbon;
 
 class SalesOrder extends Model
 {
+    const STATUS_DRAFT = 'draft';
     const STATUS_NEW = 'new';
     const STATUS_ON_PROGRESS = 'on_progress';
     const STATUS_ON_DELIVERY = 'on_delivery';

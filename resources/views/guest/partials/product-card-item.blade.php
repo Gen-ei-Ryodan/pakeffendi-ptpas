@@ -39,10 +39,19 @@
             </div>
         @endif
         </div>
-        <div class="product-card-actions d-flex justify-content-end">
-            <button class="btn btn-primary btn-sm btn-add-to-cart product-cart-btn" data-product-id="{{ $product->id }}">
+        <div class="product-card-actions">
+            <div class="qty-selector">
+                <button class="qty-btn" type="button" data-action="decrease">
+                    <i class="bi bi-dash"></i>
+                </button>
+                <input type="number" class="qty-input" value="1" min="1" max="9999">
+                <button class="qty-btn" type="button" data-action="increase">
+                    <i class="bi bi-plus"></i>
+                </button>
+            </div>
+            <button class="btn btn-primary product-cart-btn btn-add-to-cart w-100" data-product-id="{{ $product->id }}">
                 <i class="bi bi-cart-plus"></i>
-                <span class="d-none d-lg-inline ms-1">Tambah</span>
+                <span>Tambah</span>
             </button>
         </div>
     </div>
