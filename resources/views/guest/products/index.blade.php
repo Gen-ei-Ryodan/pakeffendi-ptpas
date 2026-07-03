@@ -4,10 +4,10 @@
 
 @section('mobile-topbar-inner')
 <div class="mobile-prod-topbar-inner">
-    <div class="search-wrap">
+    <form action="{{ url('/products') }}" method="GET" class="search-wrap" id="mobileProdSearchForm">
         <i class="bi bi-search search-ico"></i>
-        <input type="text" placeholder="Cari produk..." id="mobileProdSearch" value="{{ request('q') }}">
-    </div>
+        <input type="text" name="q" placeholder="Cari produk..." id="mobileProdSearch" value="{{ request('q') }}" enterkeyhint="search" autocomplete="off">
+    </form>
     <button class="topbar-btn" type="button" id="mobileSortBtn"><i class="bi bi-arrow-up-short"></i></button>
     <button class="topbar-btn" type="button" id="mobileFilterBtn"><i class="bi bi-sliders"></i></button>
 </div>
@@ -217,31 +217,31 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Mobile: search hanya saat klik tombol search atau tekan Enter
-    const mobileSearch = document.getElementById('mobileProdSearch');
-    const mobileSearchIcon = document.querySelector('.search-ico');
+    // Mobile: search via form submit (handles Android Enter key properly)
+    const mobileSearchForm = document.getElementById('mobileProdSearchForm');
     const doSearch = function() {
+        const input = document.getElementById('mobileProdSearch');
         const params = new URLSearchParams(window.location.search);
-        if (mobileSearch.value.trim()) {
-            params.set('q', mobileSearch.value.trim());
+        if (input.value.trim()) {
+            params.set('q', input.value.trim());
         } else {
             params.delete('q');
         }
         window.location.search = params.toString();
     };
-    if (mobileSearch) {
-        mobileSearch.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                doSearch();
-            }
-        });
-    }
-    if (mobileSearchIcon) {
-        mobileSearchIcon.addEventListener('click', function(e) {
+    if (mobileSearchForm) {
+        mobileSearchForm.addEventListener('submit', function(e) {
             e.preventDefault();
             doSearch();
         });
+        // Click on search icon submits the form
+        const searchIcon = mobileSearchForm.querySelector('.search-ico');
+        if (searchIcon) {
+            searchIcon.addEventListener('click', function(e) {
+                e.preventDefault();
+                mobileSearchForm.dispatchEvent(new Event('submit'));
+            });
+        }
     }
 
     // Mobile: sort sheet

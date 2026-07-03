@@ -31,28 +31,15 @@
         },
         
         setupSearchFunctionality() {
-            // Setup search inputs
-            const searchInputs = document.querySelectorAll('#searchInput, #searchInputMobile');
-            const searchButtons = document.querySelectorAll('#searchBtn, #searchBtnMobile');
+            // Handle form submit (covers both Enter key on Android and button click)
+            const searchForms = document.querySelectorAll('form.input-group');
             
-            searchInputs.forEach(input => {
-                // Handle Enter key
-                input.addEventListener('keypress', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        this.performSearch(e.target.value, input);
-                    }
-                });
-            });
-            
-            // Setup search buttons
-            searchButtons.forEach(button => {
-                button.addEventListener('click', (e) => {
+            searchForms.forEach(form => {
+                form.addEventListener('submit', (e) => {
                     e.preventDefault();
-                    const relatedInput = button.previousElementSibling || 
-                                        button.parentElement.querySelector('input[type="text"]');
-                    if (relatedInput && relatedInput.value.trim()) {
-                        this.performSearch(relatedInput.value, relatedInput);
+                    const input = form.querySelector('input[type="text"]');
+                    if (input && input.value.trim()) {
+                        this.performSearch(input.value, input);
                     }
                 });
             });

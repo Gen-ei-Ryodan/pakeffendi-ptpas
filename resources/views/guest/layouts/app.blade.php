@@ -31,12 +31,12 @@
             </a>
 
             <div class="mx-auto" style="width: 50%;">
-                <div class="input-group">
-                    <input type="text" class="form-control" placeholder="Cari produk..." id="searchInput">
-                    <button class="btn btn-primary" type="button" id="searchBtn">
+                <form action="{{ url('/products') }}" method="GET" class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Cari produk..." id="searchInput" enterkeyhint="search" autocomplete="off">
+                    <button class="btn btn-primary" type="submit" id="searchBtn">
                         <i class="bi bi-search"></i>
                     </button>
-                </div>
+                </form>
             </div>
 
             <ul class="navbar-nav ms-auto">
@@ -78,12 +78,12 @@
         </div>
         <!-- Mobile Search (expandable) -->
         <div class="mobile-search-bar d-none" id="mobileSearchBar">
-            <div class="input-group">
-                <input type="text" class="form-control" placeholder="Cari produk..." id="searchInputMobile">
-                <button class="btn btn-primary" type="button" id="searchBtnMobile">
+            <form action="{{ url('/products') }}" method="GET" class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="Cari produk..." id="searchInputMobile" enterkeyhint="search" autocomplete="off">
+                <button class="btn btn-primary" type="submit" id="searchBtnMobile">
                     <i class="bi bi-search"></i>
                 </button>
-            </div>
+            </form>
         </div>
     </div>
 
