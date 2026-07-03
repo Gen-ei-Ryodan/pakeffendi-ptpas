@@ -193,6 +193,24 @@
                                         <i class="bi bi-save me-2"></i>Simpan sebagai Draft
                                     </button>
                                 </form>
+
+                                {{-- Sales: Buat Pesanan (Checkout) --}}
+                                @php
+                                    $salesAddresses = $addresses ?? collect();
+                                    $salesHasAddresses = $salesAddresses->count() > 0;
+                                @endphp
+                                <form method="POST" action="{{ route('guest.cart.checkout') }}" id="salesCheckoutForm" data-ajax="false">
+                                    @csrf
+                                    <input type="hidden" name="address_id" id="salesAddressId" value="">
+
+                                    <button type="button" class="btn btn-success btn-lg w-100 mb-3" @disabled($disableBtn || !$selected_customer || !$salesHasAddresses) onclick="showSalesAddressModal()">
+                                        <i class="bi bi-cart-check me-2"></i>Buat Pesanan
+                                    </button>
+
+                                    @if(!$salesHasAddresses && $selected_customer)
+                                        <div class="alert alert-warning mb-2 small">Pelanggan belum memiliki alamat. Silakan tambah alamat melalui menu <a href="{{ route('guest.profile.my-customers.show', $selected_customer) }}" class="alert-link">Detail Pelanggan</a>.</div>
+                                    @endif
+                                </form>
                             @else
                                 {{-- Buyer: Checkout --}}
                                 <form method="POST" action="{{ route('guest.cart.checkout') }}" id="checkoutForm" data-ajax="false">
@@ -383,8 +401,13 @@
         <span class="mob-total-price" id="mobTotalPrice">Rp {{ number_format((float) ($summary['grand_total'] ?? 0), 0, ',', '.') }}</span>
     </div>
     <button class="mob-checkout-btn" id="mobCheckoutBtn">
-        {{ isset($is_sales) && $is_sales ? 'Simpan Draft' : 'Checkout' }}
+        {{ isset($is_sales) && $is_sales ? 'Buat Pesanan' : 'Checkout' }}
     </button>
+    @if(isset($is_sales) && $is_sales)
+    <button class="mob-checkout-btn mob-draft-btn" id="mobDraftBtn" style="background:#6c757d;margin-left:4px;padding:0 16px;font-size:0.7rem;white-space:nowrap;">
+        Draft
+    </button>
+    @endif
 </div>
 @endif
 
@@ -417,6 +440,11 @@
 <form method="POST" action="{{ route('guest.cart.save-draft') }}" id="mobCheckoutForm" style="display:none;" data-ajax="false">
     @csrf
 </form>
+{{-- Sales mobile: hidden checkout form --}}
+<form method="POST" action="{{ route('guest.cart.checkout') }}" id="mobSalesCheckoutForm" style="display:none;">
+    @csrf
+    <input type="hidden" name="address_id" id="mobSalesAddressId" value="">
+</form>
 @else
 @php
     $mobAddrId = $active_address_id ?? (($addresses ?? collect())->first()?->id ?? '');
@@ -432,6 +460,62 @@
 @php
     $isSalesRole = isset($is_sales) && $is_sales;
 @endphp
+
+<!-- Sales: Pilih Alamat untuk Pesanan -->
+@if($isSalesRole)
+@php
+    $salesAddrList = $addresses ?? collect();
+@endphp
+<div class="modal fade" id="salesAddressModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content" style="border-radius: 14px;">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="modal-title fw-bold">Pilih Alamat Pengiriman</h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                @if($salesAddrList->isEmpty())
+                    <div class="text-center py-3">
+                        <i class="bi bi-geo-alt-fill" style="font-size: 2rem; color: var(--primary-color);"></i>
+                        <p class="text-muted mt-2 mb-3">Pelanggan belum memiliki alamat.</p>
+                        <a href="{{ route('guest.profile.my-customers.show', $selected_customer) }}" class="btn btn-primary btn-sm">Tambah Alamat</a>
+                    </div>
+                @else
+                    <div class="list-group list-group-flush">
+                        @foreach($salesAddrList as $addr)
+                        <label class="list-group-item d-flex align-items-start gap-3 py-3 border-bottom sales-addr-item" style="cursor:pointer;">
+                            <input type="radio" name="sales_selected_address" value="{{ $addr->id }}" class="form-check-input mt-2 flex-shrink-0 sales-addr-radio"
+                                {{ (int) $addr->id === (int) ($active_address_id ?? 0) ? 'checked' : '' }}>
+                            <div>
+                                <div class="fw-semibold">
+                                    {{ $addr->label ?: 'Alamat' }}
+                                    @if($addr->is_active)
+                                        <span class="badge bg-success ms-1">Aktif</span>
+                                    @endif
+                                </div>
+                                <div class="small text-muted">
+                                    {{ $addr->recipient_name ?: $selected_customer?->full_name }}
+                                    @if($addr->phone)
+                                        · {{ $addr->phone }}
+                                    @endif
+                                </div>
+                                <div class="mt-1 small">{{ $addr->full_address }}</div>
+                            </div>
+                        </label>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+            @if(!$salesAddrList->isEmpty())
+            <div class="modal-footer border-0 pt-0">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border:1px solid #e5e7eb;">Batal</button>
+                <button type="button" class="btn btn-success" onclick="confirmSalesCheckout()">Pilih & Buat Pesanan</button>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+@endif
 
 <!-- Confirm Checkout/Draft Modal -->
 <div class="modal fade" id="confirmCheckoutModal" tabindex="-1" aria-hidden="true">
@@ -948,12 +1032,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Checkout button
+    // Checkout button (buyer only — sales handled by separate handler below)
     var checkoutBtn = document.getElementById('mobCheckoutBtn');
     var checkoutBar = document.getElementById('mobCheckoutBar');
     var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
     
-    if (checkoutBtn) {
+    if (checkoutBtn && !isSales) {
         checkoutBtn.addEventListener('click', function() {
             // Check login
             var isLoggedIn = checkoutBar ? parseInt(checkoutBar.dataset.isLoggedIn) : 0;
@@ -962,35 +1046,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            if (isSales) {
-                // Sales: check customer selected, no address needed for draft
-                var selectedCustomer = {{ $selected_customer ? 'true' : 'false' }};
-                if (!selectedCustomer) {
-                    alert('Silakan pilih customer terlebih dahulu.');
-                    return;
+            // Buyer: check address
+            var hasAddress = checkoutBar ? parseInt(checkoutBar.dataset.hasAddress) : 0;
+            if (!hasAddress) {
+                var addrModalEl = document.getElementById('mobAddressPrompt');
+                if (addrModalEl) {
+                    var addrModal = new bootstrap.Modal(addrModalEl);
+                    addrModal.show();
                 }
+                return;
+            }
 
-                // Direct submit (skip confirmation modal on mobile)
-                var form = document.getElementById('mobCheckoutForm');
-                if (form) {
-                    form.submit();
-                }
-            } else {
-                // Buyer: check address
-                var hasAddress = checkoutBar ? parseInt(checkoutBar.dataset.hasAddress) : 0;
-                if (!hasAddress) {
-                    var addrModalEl = document.getElementById('mobAddressPrompt');
-                    if (addrModalEl) {
-                        var addrModal = new bootstrap.Modal(addrModalEl);
-                        addrModal.show();
-                    }
-                    return;
-                }
-
-                var form = document.getElementById('mobCheckoutForm');
-                if (form) {
-                    form.submit();
-                }
+            var form = document.getElementById('mobCheckoutForm');
+            if (form) {
+                form.submit();
             }
         });
     }
@@ -1029,5 +1098,84 @@ function mobUpdateCheckoutState() {
         checkoutBtn.style.opacity = checked.length > 0 ? '1' : '0.4';
     }
 }
+
+// ==================== SALES ADDRESS SELECTION ====================
+
+function showSalesAddressModal() {
+    var modal = new bootstrap.Modal(document.getElementById('salesAddressModal'));
+    modal.show();
+}
+
+function confirmSalesCheckout() {
+    var checked = document.querySelector('.sales-addr-radio:checked');
+    if (!checked) {
+        alert('Silakan pilih alamat pengiriman.');
+        return;
+    }
+
+    // Desktop form
+    var desktopForm = document.getElementById('salesCheckoutForm');
+    var desktopAddrInput = document.getElementById('salesAddressId');
+    if (desktopAddrInput && desktopForm) {
+        desktopAddrInput.value = checked.value;
+        desktopForm.submit();
+        return;
+    }
+
+    // Mobile form
+    var mobForm = document.getElementById('mobSalesCheckoutForm');
+    var mobAddrInput = document.getElementById('mobSalesAddressId');
+    if (mobAddrInput && mobForm) {
+        mobAddrInput.value = checked.value;
+        mobForm.submit();
+    }
+}
+
+// Update mobile handler for sales
+document.addEventListener('DOMContentLoaded', function() {
+    var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
+
+    // Mobile: Draft button
+    var mobDraftBtn = document.getElementById('mobDraftBtn');
+    if (mobDraftBtn) {
+        mobDraftBtn.addEventListener('click', function() {
+            var checkoutBar = document.getElementById('mobCheckoutBar');
+            var isLoggedIn = checkoutBar ? parseInt(checkoutBar.dataset.isLoggedIn) : 0;
+            if (!isLoggedIn) {
+                window.location.href = '{{ url('/login') }}?redirect={{ url('/cart') }}';
+                return;
+            }
+            var selectedCustomer = {{ $selected_customer ? 'true' : 'false' }};
+            if (!selectedCustomer) {
+                alert('Silakan pilih customer terlebih dahulu.');
+                return;
+            }
+            var form = document.getElementById('mobCheckoutForm');
+            if (form) form.submit();
+        });
+    }
+
+    // Mobile: Buat Pesanan (new handler overrides old one)
+    var mobCheckoutBtn = document.getElementById('mobCheckoutBtn');
+    var checkoutBar = document.getElementById('mobCheckoutBar');
+    if (mobCheckoutBtn && isSales) {
+        mobCheckoutBtn.addEventListener('click', function() {
+            var selectedCustomer = {{ $selected_customer ? 'true' : 'false' }};
+            if (!selectedCustomer) {
+                alert('Silakan pilih customer terlebih dahulu.');
+                return;
+            }
+
+            // Check if customer has addresses
+            var hasAddress = {{ (($addresses ?? collect())->count() > 0) ? 'true' : 'false' }};
+            if (!hasAddress) {
+                alert('Pelanggan belum memiliki alamat. Silakan tambah alamat terlebih dahulu.');
+                return;
+            }
+
+            showSalesAddressModal();
+        });
+    }
+});
 </script>
 @endpush
