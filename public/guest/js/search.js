@@ -31,17 +31,25 @@
         },
         
         setupSearchFunctionality() {
-            // Handle form submit (covers both Enter key on Android and button click)
-            const searchForms = document.querySelectorAll('form.input-group');
+            // Gunakan event search (native dari <input type="search"> untuk Enter/X button)
+            const searchInputs = document.querySelectorAll('#searchInput, #searchInputMobile');
             
-            searchForms.forEach(form => {
-                form.addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    const input = form.querySelector('input[type="text"]');
-                    if (input && input.value.trim()) {
+            searchInputs.forEach(input => {
+                input.addEventListener('search', (e) => {
+                    if (input.value.trim()) {
                         this.performSearch(input.value, input);
                     }
                 });
+            });
+            
+            // Handle search button clicks
+            document.getElementById('searchBtn')?.addEventListener('click', (e) => {
+                const input = document.getElementById('searchInput');
+                if (input && input.value.trim()) this.performSearch(input.value, input);
+            });
+            document.getElementById('searchBtnMobile')?.addEventListener('click', (e) => {
+                const input = document.getElementById('searchInputMobile');
+                if (input && input.value.trim()) this.performSearch(input.value, input);
             });
         },
         

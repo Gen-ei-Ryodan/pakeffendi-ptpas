@@ -6,7 +6,7 @@
 <div class="mobile-prod-topbar-inner">
     <form action="{{ url('/products') }}" method="GET" class="search-wrap" id="mobileProdSearchForm">
         <i class="bi bi-search search-ico"></i>
-        <input type="text" name="q" placeholder="Cari produk..." id="mobileProdSearch" value="{{ request('q') }}" enterkeyhint="search" autocomplete="off">
+        <input type="search" name="q" placeholder="Cari produk..." id="mobileProdSearch" value="{{ request('q') }}" autocomplete="off">
     </form>
     <button class="topbar-btn" type="button" id="mobileSortBtn"><i class="bi bi-arrow-up-short"></i></button>
     <button class="topbar-btn" type="button" id="mobileFilterBtn"><i class="bi bi-sliders"></i></button>
@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
         form.addEventListener('change', function(e) {
             const target = e.target;
             if (!(target instanceof HTMLElement)) return;
-            if (target.matches('input[name="q"], select[name="category_id"], select[name="brand_id"]')) {
+            if (target.matches('select[name="category_id"], select[name="brand_id"]')) {
                 form.submit();
             }
         });
@@ -217,29 +217,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Mobile: search via form submit (handles Android Enter key properly)
-    const mobileSearchForm = document.getElementById('mobileProdSearchForm');
+    // Mobile: search (type="search" fires search event natively on Enter)
+    const mobileProdSearch = document.getElementById('mobileProdSearch');
     const doSearch = function() {
-        const input = document.getElementById('mobileProdSearch');
         const params = new URLSearchParams(window.location.search);
-        if (input.value.trim()) {
-            params.set('q', input.value.trim());
+        if (mobileProdSearch.value.trim()) {
+            params.set('q', mobileProdSearch.value.trim());
         } else {
             params.delete('q');
         }
         window.location.search = params.toString();
     };
-    if (mobileSearchForm) {
-        mobileSearchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            doSearch();
+    if (mobileProdSearch) {
+        // Native search event handles Enter and clear (X) button
+        mobileProdSearch.addEventListener('search', function(e) {
+            if (this.value.trim()) {
+                doSearch();
+            }
         });
-        // Click on search icon submits the form
-        const searchIcon = mobileSearchForm.querySelector('.search-ico');
+    }
+    // Prevent form submit (gunakan JS navigation)
+    const mobileProdSearchForm = document.getElementById('mobileProdSearchForm');
+    if (mobileProdSearchForm) {
+        mobileProdSearchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+        });
+        // Click on search icon
+        const searchIcon = mobileProdSearchForm.querySelector('.search-ico');
         if (searchIcon) {
             searchIcon.addEventListener('click', function(e) {
                 e.preventDefault();
-                mobileSearchForm.dispatchEvent(new Event('submit'));
+                if (mobileProdSearch.value.trim()) {
+                    doSearch();
+                }
             });
         }
     }

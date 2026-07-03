@@ -31,8 +31,8 @@
             </a>
 
             <div class="mx-auto" style="width: 50%;">
-                <form action="{{ url('/products') }}" method="GET" class="input-group">
-                    <input type="text" name="q" class="form-control" placeholder="Cari produk..." id="searchInput" enterkeyhint="search" autocomplete="off">
+                <form action="{{ url('/products') }}" method="GET" class="input-group" id="searchFormDesktop">
+                    <input type="search" class="form-control" placeholder="Cari produk..." id="searchInput" name="q" autocomplete="off">
                     <button class="btn btn-primary" type="submit" id="searchBtn">
                         <i class="bi bi-search"></i>
                     </button>
@@ -78,8 +78,8 @@
         </div>
         <!-- Mobile Search (expandable) -->
         <div class="mobile-search-bar d-none" id="mobileSearchBar">
-            <form action="{{ url('/products') }}" method="GET" class="input-group">
-                <input type="text" name="q" class="form-control" placeholder="Cari produk..." id="searchInputMobile" enterkeyhint="search" autocomplete="off">
+            <form action="{{ url('/products') }}" method="GET" class="input-group" id="searchFormMobile">
+                <input type="search" name="q" class="form-control" placeholder="Cari produk..." id="searchInputMobile" autocomplete="off">
                 <button class="btn btn-primary" type="submit" id="searchBtnMobile">
                     <i class="bi bi-search"></i>
                 </button>
