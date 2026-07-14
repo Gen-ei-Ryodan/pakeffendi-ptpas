@@ -4979,17 +4979,19 @@ body[data-spa="false"] .mobile-topbar-inner {
         font-size: 0.78rem;
     }
 
-    /* Full-width add to cart button */
+    /* Full-width add to cart button - stacked layout on mobile */
     .products-grid-manual .product-card .product-card-actions {
         display: flex;
+        flex-direction: column;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         margin-top: 8px;
         padding-top: 4px;
     }
 
     .products-grid-manual .product-card .product-card-actions .qty-selector {
         flex-shrink: 0;
+        margin: 0 auto;
     }
 
     .products-grid-manual .product-card .product-card-actions .product-cart-btn {
