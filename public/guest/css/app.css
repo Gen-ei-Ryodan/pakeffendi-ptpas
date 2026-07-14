@@ -322,6 +322,60 @@ main > section:first-of-type {
     pointer-events: none;
 }
 
+/* Quantity Selector for Product Cards */
+.qty-selector {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    overflow: hidden;
+    background: #fff;
+    height: 32px;
+}
+
+.qty-selector .qty-btn {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: #f3f4f6;
+    color: #374151;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+    padding: 0;
+    line-height: 1;
+}
+
+.qty-selector .qty-btn:active {
+    background: #e5e7eb;
+}
+
+.qty-selector .qty-input {
+    width: 36px;
+    height: 30px;
+    border: none;
+    border-left: 1px solid #d1d5db;
+    border-right: 1px solid #d1d5db;
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #111827;
+    outline: none;
+    -moz-appearance: textfield;
+    padding: 0;
+}
+
+.qty-selector .qty-input::-webkit-inner-spin-button,
+.qty-selector .qty-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
 .product-card:hover {
     transform: translateY(-5px);
     box-shadow: var(--box-shadow-lg);
@@ -4928,8 +4982,14 @@ body[data-spa="false"] .mobile-topbar-inner {
     /* Full-width add to cart button */
     .products-grid-manual .product-card .product-card-actions {
         display: flex;
+        align-items: center;
+        gap: 6px;
         margin-top: 8px;
         padding-top: 4px;
+    }
+
+    .products-grid-manual .product-card .product-card-actions .qty-selector {
+        flex-shrink: 0;
     }
 
     .products-grid-manual .product-card .product-card-actions .product-cart-btn {
