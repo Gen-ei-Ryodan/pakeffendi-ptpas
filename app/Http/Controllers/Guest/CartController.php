@@ -97,46 +97,57 @@ class CartController extends Controller
 
     public function index(Request $request)
     {
-        $resolved = $this->resolveCart($request);
-        $cart = $resolved['cart']->load(['items.product.brand']);
-        $shopper = $this->getShopper();
+        try {
+            $resolved = $this->resolveCart($request);
+            $cart = $resolved['cart']->load(['items.product.brand']);
+            $shopper = $this->getShopper();
 
-        $summary = $this->buildSummary($cart->items);
+            $summary = $this->buildSummary($cart->items);
 
-        $isSales = ($shopper instanceof User && $shopper->isSales());
-        $myCustomers = $isSales ? Customer::where('sales_id', $shopper->id)->orderBy('full_name')->get() : collect();
-        $addresses = collect();
-        $activeAddressId = null;
-        $selectedCustomer = $resolved['customer'];
+            $isSales = ($shopper instanceof User && $shopper->isSales());
+            $myCustomers = $isSales ? Customer::where('sales_id', $shopper->id)->orderBy('full_name')->get() : collect();
+            $addresses = collect();
+            $activeAddressId = null;
+            $selectedCustomer = $resolved['customer'];
 
-        if ($shopper instanceof Customer) {
-            $addresses = CustomerAddress::query()
-                ->where('customer_id', $shopper->id)
-                ->orderByDesc('is_active')
-                ->orderByDesc('id')
-                ->get();
-            $activeAddressId = $addresses->firstWhere('is_active', true)?->id;
-        } elseif ($isSales && $selectedCustomer) {
-            $addresses = CustomerAddress::query()
-                ->where('customer_id', $selectedCustomer->id)
-                ->orderByDesc('is_active')
-                ->orderByDesc('id')
-                ->get();
-            $activeAddressId = $addresses->firstWhere('is_active', true)?->id;
+            if ($shopper instanceof Customer) {
+                $addresses = CustomerAddress::query()
+                    ->where('customer_id', $shopper->id)
+                    ->orderByDesc('is_active')
+                    ->orderByDesc('id')
+                    ->get();
+                $activeAddressId = $addresses->firstWhere('is_active', true)?->id;
+            } elseif ($isSales && $selectedCustomer) {
+                $addresses = CustomerAddress::query()
+                    ->where('customer_id', $selectedCustomer->id)
+                    ->orderByDesc('is_active')
+                    ->orderByDesc('id')
+                    ->get();
+                $activeAddressId = $addresses->firstWhere('is_active', true)?->id;
+            }
+
+            return response()
+                ->view('guest.cart.index', [
+                    'cart' => $cart,
+                    'summary' => $summary,
+                    'customer' => $shopper,
+                    'selected_customer' => $selectedCustomer,
+                    'is_sales' => $isSales,
+                    'my_customers' => $myCustomers,
+                    'addresses' => $addresses,
+                    'active_address_id' => $activeAddressId,
+                ])
+                ->cookie($resolved['cookie']);
+        } catch (\Exception $e) {
+            Log::error('Cart index error: '.$e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('guest.profile.index')
+                ->with('error', 'Terjadi kesalahan saat memuat keranjang. Silakan coba lagi.');
         }
-
-        return response()
-            ->view('guest.cart.index', [
-                'cart' => $cart,
-                'summary' => $summary,
-                'customer' => $shopper,
-                'selected_customer' => $selectedCustomer,
-                'is_sales' => $isSales,
-                'my_customers' => $myCustomers,
-                'addresses' => $addresses,
-                'active_address_id' => $activeAddressId,
-            ])
-            ->cookie($resolved['cookie']);
     }
 
     public function summary(Request $request)
@@ -416,23 +427,42 @@ class CartController extends Controller
      */
     public function myCustomers(Request $request)
     {
-        $shopper = $this->getShopper();
-        abort_unless($shopper && $shopper instanceof User && $shopper->isSales(), 401);
+        $user = Auth::guard('web')->user();
 
-        $q = $request->query('q', '');
-        $customers = Customer::where('sales_id', $shopper->id)
-            ->when($q !== '', fn ($query) => $query->where('full_name', 'like', '%'.$q.'%'))
-            ->orderBy('full_name')
-            ->limit(20)
-            ->get(['id', 'full_name', 'company_name']);
+        // Must be authenticated web user with sales role
+        if (!$user || !$user->isSales()) {
+            return response()->json([
+                'customers' => [],
+                'error' => 'Unauthorized. Sales role required.',
+            ], 401);
+        }
 
-        return response()->json([
-            'customers' => $customers->map(fn ($c) => [
-                'id' => $c->id,
-                'full_name' => $c->full_name,
-                'company_name' => $c->company_name,
-            ]),
-        ]);
+        try {
+            $q = $request->query('q', '');
+            $customers = Customer::where('sales_id', $user->id)
+                ->when($q !== '', fn ($query) => $query->where('full_name', 'like', '%'.$q.'%'))
+                ->orderBy('full_name')
+                ->limit(20)
+                ->get(['id', 'full_name', 'company_name']);
+
+            return response()->json([
+                'customers' => $customers->map(fn ($c) => [
+                    'id' => $c->id,
+                    'full_name' => $c->full_name,
+                    'company_name' => $c->company_name,
+                ]),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('myCustomers error: '.$e->getMessage(), [
+                'user_id' => $user->id,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'customers' => [],
+                'error' => 'Failed to load customers.',
+            ], 500);
+        }
     }
 
     private function buildSummary($items): array

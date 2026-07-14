@@ -22,7 +22,7 @@
             </div>
         </div>
 
-        <form method="post" action="{{ route('admin.customers.store') }}" class="p-6 space-y-8">
+        <form method="post" action="{{ route('admin.customers.store') }}" class="p-6 space-y-8" enctype="multipart/form-data">
             @csrf
 
             {{-- Section 1: Akun & Identitas --}}
@@ -107,7 +107,7 @@
                             <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
                         </svg>
                     </div>
-                    <h3 class="text-sm font-semibold text-slate-800">Informasi Alamat</h3>
+                    <h3 class="text-sm font-semibold text-slate-800">Informasi Alamat & Toko</h3>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="md:col-span-2">
@@ -134,6 +134,18 @@
                                class="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-shadow placeholder-slate-400"
                                placeholder="Kode POS">
                     </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700 mb-1.5">Link Google Maps Toko</label>
+                        <input type="url" name="google_maps_url" value="{{ old('google_maps_url') }}"
+                               class="w-full rounded-lg border border-slate-300 px-3.5 py-2.5 text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-shadow placeholder-slate-400"
+                               placeholder="https://maps.google.com/...">
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Foto Toko</label>
+                    <input type="file" name="store_photo" accept="image/*"
+                           class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100">
+                    <p class="text-xs text-slate-400 mt-1">Upload foto toko customer. Format: JPG, PNG. Maks 2MB.</p>
                 </div>
             </div>
 

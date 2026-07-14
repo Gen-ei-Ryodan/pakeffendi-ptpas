@@ -22,6 +22,8 @@ class Customer extends Authenticatable
         'province',
         'city',
         'postal_code',
+        'google_maps_url',
+        'store_photo_path',
         'phone',
         'contact_person',
         'company_name',

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Guest;
 
 use App\Http\Controllers\Controller;
+use App\Models\Customer;
 use App\Models\CustomerAddress;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -10,6 +11,9 @@ use Illuminate\Support\Facades\DB;
 
 class CustomerAddressController extends Controller
 {
+    /**
+     * Get the authenticated customer (buyer) or null.
+     */
     private function getCustomer()
     {
         if (Auth::guard('customer')->check()) {
@@ -17,6 +21,15 @@ class CustomerAddressController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Check if current user is a buyer (customer guard).
+     * Buyers can only VIEW addresses, not create/edit/delete.
+     */
+    private function isBuyer(): bool
+    {
+        return Auth::guard('customer')->check();
     }
 
     public function index()
@@ -33,6 +46,7 @@ class CustomerAddressController extends Controller
             'customer' => $customer,
             'is_sales' => false,
             'addresses' => $addresses,
+            'readonly' => $this->isBuyer(), // Buyer only views, cannot edit
         ]);
     }
 
@@ -40,6 +54,12 @@ class CustomerAddressController extends Controller
     {
         $customer = $this->getCustomer();
         abort_unless($customer, 401);
+
+        // Buyers cannot add their own address
+        if ($this->isBuyer()) {
+            return redirect()->route('guest.profile.addresses.index')
+                ->with('error', 'Anda tidak dapat menambah alamat sendiri. Silakan hubungi sales Anda.');
+        }
 
         $validated = $request->validate([
             'label' => ['nullable', 'string', 'max:60'],
@@ -106,6 +126,12 @@ class CustomerAddressController extends Controller
         abort_unless($customer, 401);
         abort_unless((int) $address->customer_id === (int) $customer->id, 404);
 
+        // Buyers cannot edit their own address
+        if ($this->isBuyer()) {
+            return redirect()->route('guest.profile.addresses.index')
+                ->with('error', 'Anda tidak dapat mengubah alamat sendiri. Silakan hubungi sales Anda.');
+        }
+
         return view('guest.profile.addresses.edit', [
             'customer' => $customer,
             'is_sales' => false,
@@ -118,6 +144,12 @@ class CustomerAddressController extends Controller
         $customer = $this->getCustomer();
         abort_unless($customer, 401);
         abort_unless((int) $address->customer_id === (int) $customer->id, 404);
+
+        // Buyers cannot update their own address
+        if ($this->isBuyer()) {
+            return redirect()->route('guest.profile.addresses.index')
+                ->with('error', 'Anda tidak dapat mengubah alamat sendiri. Silakan hubungi sales Anda.');
+        }
 
         $validated = $request->validate([
             'label' => ['nullable', 'string', 'max:60'],
@@ -181,6 +213,12 @@ class CustomerAddressController extends Controller
         abort_unless($customer, 401);
         abort_unless((int) $address->customer_id === (int) $customer->id, 404);
 
+        // Buyers cannot delete their own address
+        if ($this->isBuyer()) {
+            return redirect()->route('guest.profile.addresses.index')
+                ->with('error', 'Anda tidak dapat menghapus alamat sendiri. Silakan hubungi sales Anda.');
+        }
+
         DB::transaction(function () use ($customer, $address) {
             $wasActive = (bool) $address->is_active;
             $address->delete();
@@ -218,6 +256,12 @@ class CustomerAddressController extends Controller
         $customer = $this->getCustomer();
         abort_unless($customer, 401);
         abort_unless((int) $address->customer_id === (int) $customer->id, 404);
+
+        // Buyers cannot change active address
+        if ($this->isBuyer()) {
+            return redirect()->route('guest.profile.addresses.index')
+                ->with('error', 'Anda tidak dapat mengubah alamat aktif. Silakan hubungi sales Anda.');
+        }
 
         DB::transaction(function () use ($customer, $address) {
             $customer->addresses()->update(['is_active' => false]);

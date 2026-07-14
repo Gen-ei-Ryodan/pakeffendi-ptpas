@@ -16,9 +16,19 @@
     </div>
 
     <div class="filter-sort-bar">
-        <button class="filter-btn" type="button" data-action="comingSoon">
-            Filter <i class="fas fa-filter"></i>
-        </button>
+        <div class="d-flex align-items-center gap-2">
+            <div class="view-toggle-group" id="mobileViewToggle">
+                <button class="view-toggle-btn active" data-mob-view="grid" title="Tampilan Grid">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button class="view-toggle-btn" data-mob-view="list" title="Tampilan List">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+            <button class="filter-btn" type="button" data-action="comingSoon">
+                Filter <i class="fas fa-filter"></i>
+            </button>
+        </div>
         <div class="sort-dropdown">
             <select id="sort-select">
                 <option value="terbaru">Produk Terbaru</option>
@@ -74,3 +84,35 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+(function() {
+    var toggleGroup = document.getElementById('mobileViewToggle');
+    var productGrid = document.querySelector('[data-product-grid]');
+    if (!toggleGroup || !productGrid) return;
+
+    var savedView = localStorage.getItem('pas_mobile_product_view') || 'grid';
+    applyView(savedView);
+
+    toggleGroup.querySelectorAll('.view-toggle-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var view = this.dataset.mobView;
+            applyView(view);
+            localStorage.setItem('pas_mobile_product_view', view);
+        });
+    });
+
+    function applyView(view) {
+        toggleGroup.querySelectorAll('.view-toggle-btn').forEach(function(b) {
+            b.classList.toggle('active', b.dataset.mobView === view);
+        });
+        if (view === 'list') {
+            productGrid.classList.add('product-grid-list');
+        } else {
+            productGrid.classList.remove('product-grid-list');
+        }
+    }
+})();
+</script>
+@endpush

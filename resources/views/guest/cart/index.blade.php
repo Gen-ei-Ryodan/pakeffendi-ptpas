@@ -368,7 +368,7 @@
                 <div class="mob-cart-actions">
                     <div class="mob-qty-wrap">
                         <button class="mob-qty-btn" onclick="mobUpdateQty({{ $product?->id }}, -1)"><i class="bi bi-dash"></i></button>
-                        <input type="number" class="mob-qty-input" value="{{ $qty }}" min="1" readonly>
+                        <input type="number" class="mob-qty-input" value="{{ $qty }}" min="1" onchange="mobSetQty({{ $product?->id }}, this.value)">
                         <button class="mob-qty-btn" onclick="mobUpdateQty({{ $product?->id }}, 1)"><i class="bi bi-plus"></i></button>
                     </div>
                     <button class="mob-cart-del" onclick="mobRemoveItem({{ $product?->id }})"><i class="bi bi-trash3"></i></button>
@@ -777,6 +777,36 @@ function mobUpdateQty(productId, change) {
     if (val < 1) val = 1;
 
     input.value = val;
+
+    fetch('/cart/items/' + productId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken()
+        },
+        body: JSON.stringify({ quantity: val })
+    })
+    .then(function(res) {
+        if (!res.ok) throw new Error();
+        updateCartSummary();
+        PAS.Cart.showNotification('Keranjang diperbarui', 'success');
+    })
+    .catch(function() {
+        PAS.Cart.showNotification('Gagal memperbarui keranjang', 'danger');
+    });
+}
+
+function mobSetQty(productId, newVal) {
+    let val = parseInt(newVal);
+    if (isNaN(val) || val < 1) val = 1;
+    if (val > 9999) val = 9999;
+
+    const item = document.querySelector(`.mob-cart-item[data-product-id="${productId}"]`);
+    if (item) {
+        const input = item.querySelector('.mob-qty-input');
+        if (input) input.value = val;
+    }
 
     fetch('/cart/items/' + productId, {
         method: 'POST',

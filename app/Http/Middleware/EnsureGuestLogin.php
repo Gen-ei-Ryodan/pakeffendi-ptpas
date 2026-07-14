@@ -38,6 +38,11 @@ class EnsureGuestLogin
             }
         }
 
+        // For AJAX/JSON requests, return 401 instead of redirecting
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['message' => 'Unauthenticated.'], 401);
+        }
+
         // Not logged in (or logged in as Admin but accessing Guest area)
         // Store intended URL for redirect back after login
         if (!$request->is('logout')) {

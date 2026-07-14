@@ -16,7 +16,8 @@
         ],
         'Pengguna' => [
             ['label' => 'account', 'route' => 'admin.accounts.index', 'active' => 'admin.accounts.*', 'icon' => 'bi-people'],
-            ['label' => 'customer', 'route' => 'admin.customers.index', 'active' => 'admin.customers.*', 'icon' => 'bi-person-lines-fill'],
+            ['label' => 'customer', 'route' => 'admin.customers.index', 'active' => 'admin.customers.index*', 'icon' => 'bi-person-lines-fill'],
+            ['label' => 'perubahan customer', 'route' => 'admin.customers.change-requests.index', 'active' => 'admin.customers.change-requests.*', 'icon' => 'bi-arrow-repeat'],
         ],
         'Promosi' => [
             ['label' => 'broadcast', 'route' => 'admin.broadcasts.index', 'active' => 'admin.broadcasts.*', 'icon' => 'bi-megaphone'],
