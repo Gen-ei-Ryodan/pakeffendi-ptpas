@@ -316,6 +316,13 @@ Route::prefix('/')->group(function () {
         Route::get('/{customer}/edit', [\App\Http\Controllers\Guest\MyCustomerController::class, 'edit'])->name('edit');
         Route::put('/{customer}', [\App\Http\Controllers\Guest\MyCustomerController::class, 'update'])->name('update');
         Route::delete('/{customer}', [\App\Http\Controllers\Guest\MyCustomerController::class, 'destroy'])->name('destroy');
+
+        // Address management for sales
+        Route::get('/{customer}/addresses', [\App\Http\Controllers\Guest\MyCustomerController::class, 'addresses'])->name('addresses');
+        Route::post('/{customer}/addresses', [\App\Http\Controllers\Guest\MyCustomerController::class, 'storeAddress'])->name('addresses.store');
+        Route::put('/{customer}/addresses/{address}', [\App\Http\Controllers\Guest\MyCustomerController::class, 'updateAddress'])->name('addresses.update');
+        Route::delete('/{customer}/addresses/{address}', [\App\Http\Controllers\Guest\MyCustomerController::class, 'destroyAddress'])->name('addresses.destroy');
+        Route::post('/{customer}/addresses/{address}/active', [\App\Http\Controllers\Guest\MyCustomerController::class, 'setActiveAddress'])->name('addresses.set-active');
     });
 
     // Orders
