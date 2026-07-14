@@ -165,18 +165,20 @@
                             <span class="fw-bold h5 text-primary" id="cartGrandTotal">Rp {{ number_format((float) ($summary['grand_total'] ?? 0), 0, ',', '.') }}</span>
                         </div>
                         @if($customer)
-                            <form method="POST" action="{{ route('guest.cart.checkout') }}" id="checkoutForm" data-ajax="false">
-                                @csrf
+                            @if(isset($is_sales) && $is_sales)
+                                {{-- Sales: Simpan sebagai Draft --}}
+                                <form method="POST" action="{{ route('guest.cart.save-draft') }}" id="draftForm" data-ajax="false">
+                                    @csrf
 
-                                @if(isset($is_sales) && $is_sales)
                                     @if(!$selected_customer)
                                         <div class="alert alert-warning mb-3">
-                                            <i class="bi bi-exclamation-triangle me-2"></i>Silakan pilih customer di atas sebelum checkout.
+                                            <i class="bi bi-exclamation-triangle me-2"></i>Silakan pilih customer di atas untuk membuat draft.
                                         </div>
                                     @else
                                         <div class="mb-3">
-                                            <label class="form-label fw-bold">Buyer</label>
+                                            <label class="form-label fw-bold">Draft untuk</label>
                                             <div class="border rounded p-2 bg-light">
+                                                <i class="bi bi-person-badge me-1 text-primary"></i>
                                                 <span class="fw-semibold">{{ $selected_customer->full_name }}</span>
                                                 @if($selected_customer->company_name)
                                                     <span class="text-muted">({{ $selected_customer->company_name }})</span>
@@ -185,12 +187,26 @@
                                         </div>
                                     @endif
 
+                                    @php
+                                        $noItems = ($summary['total_items'] ?? 0) <= 0;
+                                        $salesNoCustomer = isset($is_sales) && $is_sales && !$selected_customer;
+                                        $disableDraft = $noItems || $salesNoCustomer;
+                                    @endphp
+                                    <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" @disabled($disableDraft)>
+                                        <i class="bi bi-save me-2"></i>Simpan sebagai Draft
+                                    </button>
+                                </form>
+
+                                {{-- Sales: Buat Pesanan (Checkout) --}}
+                                @php
+                                    $salesAddrList = $addresses ?? collect();
+                                    $salesActiveAddrId = $active_address_id ?? null;
+                                @endphp
+                                <form method="POST" action="{{ route('guest.cart.checkout') }}" id="salesCheckoutForm" data-ajax="false">
+                                    @csrf
+
                                     <div class="mb-3">
                                         <label for="address_id" class="form-label fw-bold">Pilih Alamat</label>
-                                        @php
-                                            $salesAddrList = $addresses ?? collect();
-                                            $salesActiveAddrId = $active_address_id ?? null;
-                                        @endphp
                                         @if($salesAddrList->isEmpty())
                                             <div class="alert alert-warning mb-2">Customer belum memiliki alamat.</div>
                                         @elseif($salesAddrList->count() === 1)
@@ -211,7 +227,22 @@
                                             </select>
                                         @endif
                                     </div>
-                                @else
+
+                                    @php
+                                        $disableSalesCheckout = $noItems || $salesNoCustomer || $salesAddrList->isEmpty();
+                                    @endphp
+                                    <button type="submit" class="btn btn-success btn-lg w-100 mb-3" @disabled($disableSalesCheckout)>
+                                        <i class="bi bi-cart-check me-2"></i>Buat Pesanan
+                                    </button>
+
+                                    @if($salesAddrList->isEmpty() && $selected_customer)
+                                        <div class="alert alert-warning mb-2 small">Pelanggan belum memiliki alamat. Silakan tambah alamat melalui menu <a href="{{ route('guest.profile.my-customers.show', $selected_customer) }}" class="alert-link">Detail Pelanggan</a>.</div>
+                                    @endif
+                                </form>
+                            @else
+                                <form method="POST" action="{{ route('guest.cart.checkout') }}" id="checkoutForm" data-ajax="false">
+                                    @csrf
+
                                     @php
                                         $addresses = $addresses ?? collect();
                                         $activeAddressId = $active_address_id ?? null;
@@ -245,18 +276,16 @@
                                             </div>
                                         @endif
                                     </div>
-                                @endif
 
-                                @php
-                                    $noItems = ($summary['total_items'] ?? 0) <= 0;
-                                    $salesNoCustomer = isset($is_sales) && $is_sales && !$selected_customer;
-                                    $customerNoAddress = (!isset($is_sales) || !$is_sales) && ($disableCheckout ?? false);
-                                    $disableBtn = $noItems || $salesNoCustomer || $customerNoAddress;
-                                @endphp
-                                <button type="button" class="btn btn-primary btn-lg w-100 mb-3" @disabled($disableBtn) onclick="confirmCheckout()">
-                                    <i class="bi bi-credit-card me-2"></i>Lanjut ke Pembayaran
-                                </button>
-                            </form>
+                                    @php
+                                        $customerNoAddress = $disableCheckout;
+                                        $disableBtn = $noItems || $customerNoAddress;
+                                    @endphp
+                                    <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" @disabled($disableBtn)>
+                                        <i class="bi bi-credit-card me-2"></i>Lanjut ke Pembayaran
+                                    </button>
+                                </form>
+                            @endif
                         @else
                             <a class="btn btn-primary btn-lg w-100 mb-3" href="{{ url('/login') }}">
                                 <i class="bi bi-box-arrow-in-right me-2"></i>Login untuk Checkout

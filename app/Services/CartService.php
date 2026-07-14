@@ -392,4 +392,120 @@ class CartService
             return $order;
         });
     }
+
+    /**
+     * Save cart as draft SalesOrder (no order_no, no address required).
+     */
+    public function saveAsDraft(Cart $cart, User $sales, Customer $customer): SalesOrder
+    {
+        return DB::transaction(function () use ($cart, $sales, $customer) {
+            $items = $cart->items()->with('product')->lockForUpdate()->get();
+
+            if ($items->isEmpty()) {
+                throw new \Exception('Keranjang belanja kosong.');
+            }
+
+            $order = SalesOrder::query()->create([
+                'order_no' => null,
+                'order_date' => now(),
+                'customer_id' => $customer->id,
+                'payment_type' => null,
+                'status' => SalesOrder::STATUS_DRAFT,
+                'sales_person_id' => $sales->id,
+                'sales_id' => $sales->id,
+                'shipping_fee' => 0,
+                'grand_total' => 0,
+                'dpp' => 0,
+                'ppn' => 0,
+                'ppn_percent' => 11,
+                'process_date' => null,
+                'process_time' => null,
+                'process_order_no' => null,
+                'notes' => null,
+                'delivery_to' => null,
+                'delivery_address' => null,
+                'delivery_phone' => null,
+            ]);
+
+            $grandTotal = 0.0;
+
+            foreach ($items as $item) {
+                $product = $item->product;
+
+                if (! $product || $product->discontinued) {
+                    abort(422, 'Ada produk yang tidak tersedia.');
+                }
+
+                if ($product->category && !$product->category->is_active) {
+                    abort(422, 'Produk "'.$product->name.'" tidak tersedia karena kategori tidak aktif.');
+                }
+
+                $qty = (int) $item->quantity;
+                $pricing = $product->pricingForQuantity($qty);
+                $unitPrice = (float) $pricing['unit_price'];
+                $discountPercent = (float) $pricing['discount_percent'];
+                $netPrice = (float) $pricing['net_price'];
+                $finalTotal = $netPrice * $qty;
+
+                SalesOrderItem::query()->create([
+                    'sales_order_id' => $order->id,
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'quantity' => $qty,
+                    'unit_price' => $unitPrice,
+                    'net_price' => $netPrice,
+                    'discount_percent' => $discountPercent,
+                    'final_total' => $finalTotal,
+                ]);
+
+                $grandTotal += $finalTotal;
+            }
+
+            $order->update([
+                'grand_total' => $grandTotal,
+                'dpp' => $grandTotal,
+            ]);
+
+            $cart->items()->delete();
+            $cart->update(['status' => 'converted']);
+
+            return $order;
+        });
+    }
+
+    /**
+     * Load a draft SalesOrder items back into the active cart.
+     */
+    public function loadDraftToCart(SalesOrder $order, Cart $cart): Cart
+    {
+        return DB::transaction(function () use ($order, $cart) {
+            $items = $order->items()->lockForUpdate()->get();
+
+            foreach ($items as $item) {
+                $existingItem = CartItem::query()
+                    ->where('cart_id', $cart->id)
+                    ->where('product_id', $item->product_id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($existingItem) {
+                    $existingItem->update([
+                        'quantity' => $existingItem->quantity + $item->quantity,
+                    ]);
+                } else {
+                    CartItem::query()->create([
+                        'cart_id' => $cart->id,
+                        'product_id' => $item->product_id,
+                        'quantity' => $item->quantity,
+                    ]);
+                }
+            }
+
+            // Delete the draft order after loading to cart
+            $order->items()->delete();
+            $order->delete();
+
+            return $cart->refresh();
+        });
+    }
 }

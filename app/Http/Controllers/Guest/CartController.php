@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\CustomerAddress;
 use App\Models\Product;
+use App\Models\SalesOrder;
 use App\Models\User;
 use App\Services\CartService;
 use Illuminate\Http\Request;
@@ -284,6 +285,62 @@ class CartController extends Controller
             : redirect()->to('/cart');
 
         return $response->cookie($resolved['cookie']);
+    }
+
+    public function saveDraft(Request $request)
+    {
+        $shopper = $this->getShopper();
+        abort_unless($shopper && $shopper instanceof User && $shopper->isSales(), 401);
+
+        $resolved = $this->resolveCart($request);
+        $cart = $resolved['cart'];
+
+        // Verify customer is selected
+        if (! $resolved['customer']) {
+            abort(422, 'Silakan pilih customer terlebih dahulu.');
+        }
+
+        $customer = $resolved['customer'];
+
+        // Save as draft SalesOrder
+        $order = $this->cartService->saveAsDraft($cart, $shopper, $customer);
+
+        return redirect()
+            ->to('/orders')
+            ->with('success', 'Draft berhasil disimpan. Anda bisa melanjutkan nanti.')
+            ->cookie($resolved['cookie']);
+    }
+
+    public function loadDraft(Request $request, SalesOrder $order)
+    {
+        $shopper = $this->getShopper();
+        abort_unless($shopper && $shopper instanceof User && $shopper->isSales(), 401);
+
+        // Verify the draft belongs to this sales user
+        abort_unless($order->status === SalesOrder::STATUS_DRAFT, 404);
+        abort_unless((int) $order->sales_id === (int) $shopper->id, 404);
+
+        // Set the customer cookie so cart page shows the right customer
+        $customer = Customer::where('id', $order->customer_id)
+            ->where('sales_id', $shopper->id)
+            ->first();
+
+        if (! $customer) {
+            abort(422, 'Customer tidak ditemukan.');
+        }
+
+        // Resolve the active cart for this customer
+        $resolved = $this->cartService->resolve($request, $customer, (int) $shopper->id);
+        $cart = $resolved['cart'];
+
+        // Load draft items into cart and delete the draft
+        $this->cartService->loadDraftToCart($order, $cart);
+
+        return redirect()
+            ->to('/cart')
+            ->with('success', 'Draft berhasil dimuat ke keranjang.')
+            ->cookie($resolved['cookie'])
+            ->cookie(cookie(CartController::SALES_CUSTOMER_COOKIE, (string) $customer->id, 60 * 24 * 30));
     }
 
     public function checkout(Request $request)
