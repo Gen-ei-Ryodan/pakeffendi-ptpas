@@ -15,7 +15,6 @@ class SalesOrder extends Model
     const STATUS_ON_PROGRESS = 'on_progress';
     const STATUS_ON_DELIVERY = 'on_delivery';
     const STATUS_FINISHED = 'finished';
-    const STATUS_DRAFT = 'draft';
 
     protected $fillable = [
         'order_no',
