@@ -29,8 +29,17 @@
             @include('guest.partials.profile-sidebar')
 
             <div class="col-lg-9">
+                @if(($readonly ?? false))
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Anda hanya dapat melihat alamat. Untuk menambah atau mengubah alamat, silakan hubungi sales Anda.
+                    </div>
+                @endif
                 @if(session('status'))
                     <div class="alert alert-success">{{ session('status') }}</div>
+                @endif
+                @if(session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
                 @endif
                 @if($errors->any())
                     <div class="alert alert-danger">
@@ -42,6 +51,7 @@
                     </div>
                 @endif
 
+                @unless($readonly ?? false)
                 <div class="card border-0 shadow-sm mb-4">
                     <div class="card-header bg-transparent">
                         <h5 class="fw-bold mb-0">Tambah Alamat</h5>
@@ -119,6 +129,7 @@
                         </form>
                     </div>
                 </div>
+                @endunless
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
@@ -145,6 +156,7 @@
                                                 </div>
                                                 <div class="mt-2">{{ $addr->full_address }}</div>
                                             </div>
+                                            @unless($readonly ?? false)
                                             <div class="d-flex gap-2">
                                                 @if(! $addr->is_active)
                                                     <form method="POST" action="{{ route('guest.profile.addresses.set-active', $addr) }}" data-ajax="false">
@@ -163,6 +175,7 @@
                                                     <button class="btn btn-outline-danger btn-sm" type="submit">Hapus</button>
                                                 </form>
                                             </div>
+                                            @endunless
                                         </div>
                                     </div>
                                 </div>
@@ -181,9 +194,11 @@
 <section class="d-lg-none" id="mobAddressSection">
     <div class="mob-addr-header">
         <h1 class="mob-addr-title">Alamat Saya</h1>
+        @unless($readonly ?? false)
         <button class="mob-addr-add-btn" id="mobAddrToggleForm">
             <i class="bi bi-plus-lg"></i>
         </button>
+        @endunless
     </div>
 
     @if(session('status'))
@@ -281,6 +296,7 @@
                 @endif
             </div>
             <div class="mob-addr-card-detail">{{ $addr->full_address }}</div>
+            @unless($readonly ?? false)
             <div class="mob-addr-card-actions">
                 @if(! $addr->is_active)
                 <form method="POST" action="{{ route('guest.profile.addresses.set-active', $addr) }}" data-ajax="false">
@@ -295,6 +311,7 @@
                     <button class="mob-addr-action delete-btn" type="submit">Hapus</button>
                 </form>
             </div>
+            @endunless
         </div>
         @empty
         <div class="mob-addr-empty">

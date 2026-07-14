@@ -98,46 +98,57 @@ class CartController extends Controller
 
     public function index(Request $request)
     {
-        $resolved = $this->resolveCart($request);
-        $cart = $resolved['cart']->load(['items.product.brand']);
-        $shopper = $this->getShopper();
+        try {
+            $resolved = $this->resolveCart($request);
+            $cart = $resolved['cart']->load(['items.product.brand']);
+            $shopper = $this->getShopper();
 
-        $summary = $this->buildSummary($cart->items);
+            $summary = $this->buildSummary($cart->items);
 
-        $isSales = ($shopper instanceof User && $shopper->isSales());
-        $myCustomers = $isSales ? Customer::where('sales_id', $shopper->id)->orderBy('full_name')->get() : collect();
-        $addresses = collect();
-        $activeAddressId = null;
-        $selectedCustomer = $resolved['customer'];
+            $isSales = ($shopper instanceof User && $shopper->isSales());
+            $myCustomers = $isSales ? Customer::where('sales_id', $shopper->id)->orderBy('full_name')->get() : collect();
+            $addresses = collect();
+            $activeAddressId = null;
+            $selectedCustomer = $resolved['customer'];
 
-        if ($shopper instanceof Customer) {
-            $addresses = CustomerAddress::query()
-                ->where('customer_id', $shopper->id)
-                ->orderByDesc('is_active')
-                ->orderByDesc('id')
-                ->get();
-            $activeAddressId = $addresses->firstWhere('is_active', true)?->id;
-        } elseif ($isSales && $selectedCustomer) {
-            $addresses = CustomerAddress::query()
-                ->where('customer_id', $selectedCustomer->id)
-                ->orderByDesc('is_active')
-                ->orderByDesc('id')
-                ->get();
-            $activeAddressId = $addresses->firstWhere('is_active', true)?->id;
+            if ($shopper instanceof Customer) {
+                $addresses = CustomerAddress::query()
+                    ->where('customer_id', $shopper->id)
+                    ->orderByDesc('is_active')
+                    ->orderByDesc('id')
+                    ->get();
+                $activeAddressId = $addresses->firstWhere('is_active', true)?->id;
+            } elseif ($isSales && $selectedCustomer) {
+                $addresses = CustomerAddress::query()
+                    ->where('customer_id', $selectedCustomer->id)
+                    ->orderByDesc('is_active')
+                    ->orderByDesc('id')
+                    ->get();
+                $activeAddressId = $addresses->firstWhere('is_active', true)?->id;
+            }
+
+            return response()
+                ->view('guest.cart.index', [
+                    'cart' => $cart,
+                    'summary' => $summary,
+                    'customer' => $shopper,
+                    'selected_customer' => $selectedCustomer,
+                    'is_sales' => $isSales,
+                    'my_customers' => $myCustomers,
+                    'addresses' => $addresses,
+                    'active_address_id' => $activeAddressId,
+                ])
+                ->cookie($resolved['cookie']);
+        } catch (\Exception $e) {
+            Log::error('Cart index error: '.$e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return redirect()->route('guest.profile.index')
+                ->with('error', 'Terjadi kesalahan saat memuat keranjang. Silakan coba lagi.');
         }
-
-        return response()
-            ->view('guest.cart.index', [
-                'cart' => $cart,
-                'summary' => $summary,
-                'customer' => $shopper,
-                'selected_customer' => $selectedCustomer,
-                'is_sales' => $isSales,
-                'my_customers' => $myCustomers,
-                'addresses' => $addresses,
-                'active_address_id' => $activeAddressId,
-            ])
-            ->cookie($resolved['cookie']);
     }
 
     public function summary(Request $request)
@@ -163,18 +174,15 @@ class CartController extends Controller
             ];
 
             $shopper = $this->getShopper();
+            if ($shopper instanceof User && $shopper->isSales()) {
+                $rules['customer_id'] = ['required', 'integer', 'exists:customers,id'];
+            }
 
             $validated = $request->validate($rules);
 
-            // For sales: resolve cart using the customer already selected on the cart page (from cookie)
-            // Sales must select a customer once on the cart page before adding items
+            // For sales: resolve cart for the selected customer
             if ($shopper instanceof User && $shopper->isSales()) {
-                $customerId = (int) $request->cookie(self::SALES_CUSTOMER_COOKIE, '0');
-                if ($customerId <= 0) {
-                    abort(422, 'Silakan pilih customer terlebih dahulu di halaman keranjang.');
-                }
-
-                $customer = Customer::where('id', $customerId)
+                $customer = Customer::where('id', $validated['customer_id'])
                     ->where('sales_id', $shopper->id)
                     ->first();
 
@@ -206,7 +214,16 @@ class CartController extends Controller
                 ? response()->json(['summary' => $summary], 201)
                 : redirect()->to('/cart');
 
-            return $response->cookie($resolved['cookie']);
+            $response = $response->cookie($resolved['cookie']);
+
+            // Set sales customer cookie so cart page auto-selects this customer
+            if ($shopper instanceof User && $shopper->isSales() && isset($validated['customer_id'])) {
+                $response = $response->cookie(
+                    cookie(self::SALES_CUSTOMER_COOKIE, (string) $validated['customer_id'], 60 * 24 * 30)
+                );
+            }
+
+            return $response;
         } catch (\Exception $e) {
             Log::error('Error adding item to cart: '.$e->getMessage());
             Log::error($e->getTraceAsString());
@@ -288,9 +305,6 @@ class CartController extends Controller
         // Save as draft SalesOrder
         $order = $this->cartService->saveAsDraft($cart, $shopper, $customer);
 
-        // Create a new active cart for the customer so they can continue shopping
-        // CartService resolve will create one automatically
-
         return redirect()
             ->to('/orders')
             ->with('success', 'Draft berhasil disimpan. Anda bisa melanjutkan nanti.')
@@ -326,7 +340,7 @@ class CartController extends Controller
             ->to('/cart')
             ->with('success', 'Draft berhasil dimuat ke keranjang.')
             ->cookie($resolved['cookie'])
-            ->cookie(cookie(self::SALES_CUSTOMER_COOKIE, (string) $customer->id, 60 * 24 * 30));
+            ->cookie(cookie(CartController::SALES_CUSTOMER_COOKIE, (string) $customer->id, 60 * 24 * 30));
     }
 
     public function checkout(Request $request)
@@ -470,22 +484,42 @@ class CartController extends Controller
      */
     public function myCustomers(Request $request)
     {
-        $shopper = $this->getShopper();
-        abort_unless($shopper && $shopper instanceof User && $shopper->isSales(), 401);
+        $user = Auth::guard('web')->user();
 
-        $q = $request->query('q', '');
-        $customers = Customer::where('sales_id', $shopper->id)
-            ->when($q !== '', fn ($query) => $query->where('full_name', 'like', '%'.$q.'%'))
-            ->orderBy('full_name')
-            ->get(['id', 'full_name', 'company_name']);
+        // Must be authenticated web user with sales role
+        if (!$user || !$user->isSales()) {
+            return response()->json([
+                'customers' => [],
+                'error' => 'Unauthorized. Sales role required.',
+            ], 401);
+        }
 
-        return response()->json([
-            'customers' => $customers->map(fn ($c) => [
-                'id' => $c->id,
-                'full_name' => $c->full_name,
-                'company_name' => $c->company_name,
-            ]),
-        ]);
+        try {
+            $q = $request->query('q', '');
+            $customers = Customer::where('sales_id', $user->id)
+                ->when($q !== '', fn ($query) => $query->where('full_name', 'like', '%'.$q.'%'))
+                ->orderBy('full_name')
+                ->limit(20)
+                ->get(['id', 'full_name', 'company_name']);
+
+            return response()->json([
+                'customers' => $customers->map(fn ($c) => [
+                    'id' => $c->id,
+                    'full_name' => $c->full_name,
+                    'company_name' => $c->company_name,
+                ]),
+            ]);
+        } catch (\Exception $e) {
+            Log::error('myCustomers error: '.$e->getMessage(), [
+                'user_id' => $user->id,
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'customers' => [],
+                'error' => 'Failed to load customers.',
+            ], 500);
+        }
     }
 
     private function buildSummary($items): array

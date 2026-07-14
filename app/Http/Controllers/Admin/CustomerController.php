@@ -4,9 +4,13 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\CustomerChangeRequest;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
@@ -66,6 +70,22 @@ class CustomerController extends Controller
         return redirect()->back()->with('status', 'Customer ditolak.');
     }
 
+    public function show(Customer $customer)
+    {
+        $customer->load(['sales:id,name', 'addresses']);
+        $pendingChanges = CustomerChangeRequest::query()
+            ->where('customer_id', $customer->id)
+            ->where('status', 'pending')
+            ->with('sales:id,name')
+            ->latest()
+            ->first();
+
+        return view('admin.customers.show', [
+            'customer' => $customer,
+            'pendingChanges' => $pendingChanges,
+        ]);
+    }
+
     public function create()
     {
         $sales = \App\Models\User::where('role', 'sales')->orderBy('name')->get();
@@ -85,12 +105,19 @@ class CustomerController extends Controller
             'province' => ['nullable', 'string', 'max:100'],
             'city' => ['nullable', 'string', 'max:100'],
             'postal_code' => ['nullable', 'string', 'max:20'],
+            'google_maps_url' => ['nullable', 'string', 'max:500'],
+            'store_photo' => ['nullable', 'image', 'max:2048'],
             'phone' => ['required', 'string', 'max:30', 'unique:customers,phone'],
             'contact_person' => ['required', 'string', 'max:255'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'internal_code' => ['nullable', 'string', 'max:100'],
             'sales_id' => ['nullable', 'exists:users,id'],
         ]);
+
+        if ($request->hasFile('store_photo')) {
+            $validated['store_photo_path'] = $request->file('store_photo')->store('customer-photos', 'public');
+        }
+        unset($validated['store_photo']);
 
         $validated['customer_code'] = $this->generateCustomerCode();
         $validated['password'] = Hash::make($validated['password']);
@@ -124,12 +151,23 @@ class CustomerController extends Controller
             'province' => ['nullable', 'string', 'max:100'],
             'city' => ['nullable', 'string', 'max:100'],
             'postal_code' => ['nullable', 'string', 'max:20'],
+            'google_maps_url' => ['nullable', 'string', 'max:500'],
+            'store_photo' => ['nullable', 'image', 'max:2048'],
             'phone' => ['required', 'string', 'max:30', Rule::unique('customers', 'phone')->ignore($customer->id)],
             'contact_person' => ['required', 'string', 'max:255'],
             'company_name' => ['nullable', 'string', 'max:255'],
             'internal_code' => ['nullable', 'string', 'max:100'],
             'sales_id' => ['nullable', 'exists:users,id'],
         ]);
+
+        if ($request->hasFile('store_photo')) {
+            // Delete old photo
+            if ($customer->store_photo_path) {
+                Storage::disk('public')->delete($customer->store_photo_path);
+            }
+            $validated['store_photo_path'] = $request->file('store_photo')->store('customer-photos', 'public');
+        }
+        unset($validated['store_photo']);
 
         if (!empty($validated['password'])) {
             $validated['password'] = Hash::make($validated['password']);
@@ -147,11 +185,91 @@ class CustomerController extends Controller
     public function destroy(Customer $customer)
     {
         $code = $customer->customer_code;
+        
+        // Clean up store photo
+        if ($customer->store_photo_path) {
+            Storage::disk('public')->delete($customer->store_photo_path);
+        }
+        
         $customer->delete();
 
         ActivityLogger::log('deleted', 'Customer - '.$code);
 
         return redirect()->route('admin.customers.index')->with('status', 'Customer berhasil dihapus.');
+    }
+
+    // ========== Customer Change Request Approval ==========
+
+    public function changeRequestIndex(Request $request)
+    {
+        $changeRequests = CustomerChangeRequest::query()
+            ->with(['customer', 'sales:id,name'])
+            ->when($request->query('status'), fn ($q, $s) => $q->where('status', $s))
+            ->latest()
+            ->paginate(20)
+            ->withQueryString();
+
+        return view('admin.customers.change-requests', [
+            'changeRequests' => $changeRequests,
+            'status' => $request->query('status'),
+        ]);
+    }
+
+    public function approveChangeRequest(CustomerChangeRequest $changeRequest)
+    {
+        if ($changeRequest->status !== 'pending') {
+            return redirect()->back()->with('error', 'Permintaan perubahan sudah diproses sebelumnya.');
+        }
+
+        $admin = auth()->guard('web')->user();
+
+        DB::transaction(function () use ($changeRequest, $admin) {
+            $customer = $changeRequest->customer;
+
+            // Apply changes to customer
+            $changes = $changeRequest->changes;
+            $customer->update($changes);
+
+            $changeRequest->update([
+                'status' => 'approved',
+                'approved_by' => $admin->id,
+                'approved_at' => now(),
+            ]);
+        });
+
+        ActivityLogger::log('approved', 'Customer change request approved for '.$changeRequest->customer->full_name);
+
+        return redirect()->back()->with('status', 'Perubahan data customer telah disetujui dan diterapkan.');
+    }
+
+    public function rejectChangeRequest(Request $request, CustomerChangeRequest $changeRequest)
+    {
+        if ($changeRequest->status !== 'pending') {
+            return redirect()->back()->with('error', 'Permintaan perubahan sudah diproses sebelumnya.');
+        }
+
+        $reason = $request->validate([
+            'rejection_reason' => ['nullable', 'string', 'max:500'],
+        ])['rejection_reason'] ?? null;
+
+        $changeRequest->update([
+            'status' => 'rejected',
+            'rejection_reason' => $reason,
+        ]);
+
+        ActivityLogger::log('rejected', 'Customer change request rejected for '.$changeRequest->customer->full_name);
+
+        return redirect()->back()->with('status', 'Permintaan perubahan data customer ditolak.');
+    }
+
+    public function showChangeRequest(CustomerChangeRequest $changeRequest)
+    {
+        $changeRequest->load(['customer', 'sales:id,name', 'approver:id,name']);
+
+        return view('admin.customers.change-request-show', [
+            'changeRequest' => $changeRequest,
+            'fieldCount' => count($changeRequest->changes ?? []),
+        ]);
     }
 
     private function generateCustomerCode(): string

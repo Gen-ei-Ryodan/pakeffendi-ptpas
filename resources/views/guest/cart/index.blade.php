@@ -51,9 +51,12 @@
                             </div>
                             {{-- Dropdown + Pilih + Batal --}}
                             <div id="custSelectRow" class="d-flex align-items-center gap-2 w-100 @if($selected_customer) d-none @endif">
-                                <div style="flex:1;max-width:300px;">
-                                    <input type="text" id="customerSearch" class="form-control form-control-sm" placeholder="Cari customer..." autocomplete="off">
-                                </div>
+                                <select id="customerSelect" class="form-select form-select-sm" style="max-width: 300px;">
+                                    <option value="" selected disabled>-- Pilih Customer --</option>
+                                    @foreach($my_customers as $c)
+                                        <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }} {{ $c->company_name ? '('.$c->company_name.')' : '' }}</option>
+                                    @endforeach
+                                </select>
                                 <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToCustomer()">Pilih</button>
                                 <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" onclick="cancelCustomerSelect()">Batal</button>
                             </div>
@@ -164,7 +167,7 @@
                         @if($customer)
                             @if(isset($is_sales) && $is_sales)
                                 {{-- Sales: Simpan sebagai Draft --}}
-                                <form method="POST" action="{{ route('guest.cart.save-draft') }}" id="checkoutForm" data-ajax="false">
+                                <form method="POST" action="{{ route('guest.cart.save-draft') }}" id="draftForm" data-ajax="false">
                                     @csrf
 
                                     @if(!$selected_customer)
@@ -187,32 +190,56 @@
                                     @php
                                         $noItems = ($summary['total_items'] ?? 0) <= 0;
                                         $salesNoCustomer = isset($is_sales) && $is_sales && !$selected_customer;
-                                        $disableBtn = $noItems || $salesNoCustomer;
+                                        $disableDraft = $noItems || $salesNoCustomer;
                                     @endphp
-                                    <button type="button" class="btn btn-primary btn-lg w-100 mb-3" @disabled($disableBtn) onclick="confirmCheckout()">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" @disabled($disableDraft)>
                                         <i class="bi bi-save me-2"></i>Simpan sebagai Draft
                                     </button>
                                 </form>
 
                                 {{-- Sales: Buat Pesanan (Checkout) --}}
                                 @php
-                                    $salesAddresses = $addresses ?? collect();
-                                    $salesHasAddresses = $salesAddresses->count() > 0;
+                                    $salesAddrList = $addresses ?? collect();
+                                    $salesActiveAddrId = $active_address_id ?? null;
                                 @endphp
                                 <form method="POST" action="{{ route('guest.cart.checkout') }}" id="salesCheckoutForm" data-ajax="false">
                                     @csrf
-                                    <input type="hidden" name="address_id" id="salesAddressId" value="">
 
-                                    <button type="button" class="btn btn-success btn-lg w-100 mb-3" @disabled($disableBtn || !$selected_customer || !$salesHasAddresses) onclick="showSalesAddressModal()">
+                                    <div class="mb-3">
+                                        <label for="address_id" class="form-label fw-bold">Pilih Alamat</label>
+                                        @if($salesAddrList->isEmpty())
+                                            <div class="alert alert-warning mb-2">Customer belum memiliki alamat.</div>
+                                        @elseif($salesAddrList->count() === 1)
+                                            <input type="hidden" name="address_id" value="{{ $salesAddrList->first()->id }}">
+                                            <div class="border rounded p-2 bg-light">
+                                                <div class="fw-semibold">{{ $salesAddrList->first()->label ?: 'Alamat' }} <span class="badge bg-success ms-2">Aktif</span></div>
+                                                <div class="small text-muted">{{ $salesAddrList->first()->recipient_name ?: $selected_customer->full_name }}{{ $salesAddrList->first()->phone ? ' · '.$salesAddrList->first()->phone : '' }}</div>
+                                                <div class="mt-1">{{ $salesAddrList->first()->full_address }}</div>
+                                            </div>
+                                        @else
+                                            <select name="address_id" id="address_id" class="form-select" required>
+                                                <option value="" disabled {{ !$salesActiveAddrId ? 'selected' : '' }}>-- Pilih Alamat --</option>
+                                                @foreach($salesAddrList as $addr)
+                                                    <option value="{{ $addr->id }}" {{ (int) $addr->id === (int) $salesActiveAddrId ? 'selected' : '' }}>
+                                                        {{ $addr->label ?: 'Alamat' }}{{ $addr->is_active ? ' (Aktif)' : '' }} - {{ $addr->full_address }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        @endif
+                                    </div>
+
+                                    @php
+                                        $disableSalesCheckout = $noItems || $salesNoCustomer || $salesAddrList->isEmpty();
+                                    @endphp
+                                    <button type="submit" class="btn btn-success btn-lg w-100 mb-3" @disabled($disableSalesCheckout)>
                                         <i class="bi bi-cart-check me-2"></i>Buat Pesanan
                                     </button>
 
-                                    @if(!$salesHasAddresses && $selected_customer)
+                                    @if($salesAddrList->isEmpty() && $selected_customer)
                                         <div class="alert alert-warning mb-2 small">Pelanggan belum memiliki alamat. Silakan tambah alamat melalui menu <a href="{{ route('guest.profile.my-customers.show', $selected_customer) }}" class="alert-link">Detail Pelanggan</a>.</div>
                                     @endif
                                 </form>
                             @else
-                                {{-- Buyer: Checkout --}}
                                 <form method="POST" action="{{ route('guest.cart.checkout') }}" id="checkoutForm" data-ajax="false">
                                     @csrf
 
@@ -251,11 +278,10 @@
                                     </div>
 
                                     @php
-                                        $noItems = ($summary['total_items'] ?? 0) <= 0;
                                         $customerNoAddress = $disableCheckout;
                                         $disableBtn = $noItems || $customerNoAddress;
                                     @endphp
-                                    <button type="button" class="btn btn-primary btn-lg w-100 mb-3" @disabled($disableBtn) onclick="confirmCheckout()">
+                                    <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" @disabled($disableBtn)>
                                         <i class="bi bi-credit-card me-2"></i>Lanjut ke Pembayaran
                                     </button>
                                 </form>
@@ -327,9 +353,12 @@
             </div>
             {{-- Dropdown + Pilih + Batal (mobile) --}}
             <div id="mobCustSelectRow" class="d-flex align-items-center gap-2 w-100 @if($selected_customer) d-none @endif">
-                <div style="flex:1;">
-                    <input type="text" id="mobCustomerSearch" class="form-control form-control-sm" placeholder="Cari customer..." autocomplete="off">
-                </div>
+                <select id="mobCustomerSelect" class="form-select form-select-sm">
+                    <option value="" selected disabled>-- Pilih Customer --</option>
+                    @foreach($my_customers as $c)
+                        <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }}</option>
+                    @endforeach
+                </select>
                 <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToMobCustomer()">Pilih</button>
                 <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 text-nowrap" style="font-size:0.75rem;" onclick="cancelMobCustomerSelect()">Batal</button>
             </div>
@@ -368,7 +397,7 @@
                 <div class="mob-cart-actions">
                     <div class="mob-qty-wrap">
                         <button class="mob-qty-btn" onclick="mobUpdateQty({{ $product?->id }}, -1)"><i class="bi bi-dash"></i></button>
-                        <input type="number" class="mob-qty-input" value="{{ $qty }}" min="1" readonly>
+                        <input type="number" class="mob-qty-input" value="{{ $qty }}" min="1" onchange="mobSetQty({{ $product?->id }}, this.value)">
                         <button class="mob-qty-btn" onclick="mobUpdateQty({{ $product?->id }}, 1)"><i class="bi bi-plus"></i></button>
                     </div>
                     <button class="mob-cart-del" onclick="mobRemoveItem({{ $product?->id }})"><i class="bi bi-trash3"></i></button>
@@ -400,14 +429,7 @@
         <span class="mob-total-label">Total</span>
         <span class="mob-total-price" id="mobTotalPrice">Rp {{ number_format((float) ($summary['grand_total'] ?? 0), 0, ',', '.') }}</span>
     </div>
-    <button class="mob-checkout-btn" id="mobCheckoutBtn">
-        {{ isset($is_sales) && $is_sales ? 'Buat Pesanan' : 'Checkout' }}
-    </button>
-    @if(isset($is_sales) && $is_sales)
-    <button class="mob-checkout-btn mob-draft-btn" id="mobDraftBtn" style="background:#6c757d;margin-left:4px;padding:0 16px;font-size:0.7rem;white-space:nowrap;">
-        Draft
-    </button>
-    @endif
+    <button class="mob-checkout-btn" id="mobCheckoutBtn">Checkout</button>
 </div>
 @endif
 
@@ -435,102 +457,35 @@
 </div>
 @endif
 
-<!-- Mobile: Hidden Checkout/Draft Form -->
-@if(isset($is_sales) && $is_sales)
-<form method="POST" action="{{ route('guest.cart.save-draft') }}" id="mobCheckoutForm" style="display:none;" data-ajax="false">
-    @csrf
-</form>
-{{-- Sales mobile: hidden checkout form --}}
-<form method="POST" action="{{ route('guest.cart.checkout') }}" id="mobSalesCheckoutForm" style="display:none;">
-    @csrf
-    <input type="hidden" name="address_id" id="mobSalesAddressId" value="">
-</form>
-@else
+<!-- Mobile: Hidden Checkout Form -->
 @php
     $mobAddrId = $active_address_id ?? (($addresses ?? collect())->first()?->id ?? '');
 @endphp
 <form method="POST" action="{{ route('guest.cart.checkout') }}" id="mobCheckoutForm" style="display:none;">
     @csrf
-    @if($customer && $mobAddrId)
-        <input type="hidden" name="address_id" value="{{ $mobAddrId }}">
+    @if(isset($is_sales) && $is_sales)
+        <input type="hidden" name="address_id" id="mobSalesAddressId" value="">
+    @else
+        @if($customer && $mobAddrId)
+            <input type="hidden" name="address_id" value="{{ $mobAddrId }}">
+        @endif
     @endif
 </form>
-@endif
 
-@php
-    $isSalesRole = isset($is_sales) && $is_sales;
-@endphp
-
-<!-- Sales: Pilih Alamat untuk Pesanan -->
-@if($isSalesRole)
-@php
-    $salesAddrList = $addresses ?? collect();
-@endphp
-<div class="modal fade" id="salesAddressModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content" style="border-radius: 14px;">
-            <div class="modal-header border-0 pb-0">
-                <h6 class="modal-title fw-bold">Pilih Alamat Pengiriman</h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                @if($salesAddrList->isEmpty())
-                    <div class="text-center py-3">
-                        <i class="bi bi-geo-alt-fill" style="font-size: 2rem; color: var(--primary-color);"></i>
-                        <p class="text-muted mt-2 mb-3">Pelanggan belum memiliki alamat.</p>
-                        <a href="{{ route('guest.profile.my-customers.show', $selected_customer) }}" class="btn btn-primary btn-sm">Tambah Alamat</a>
-                    </div>
-                @else
-                    <div class="list-group list-group-flush">
-                        @foreach($salesAddrList as $addr)
-                        <label class="list-group-item d-flex align-items-start gap-3 py-3 border-bottom sales-addr-item" style="cursor:pointer;">
-                            <input type="radio" name="sales_selected_address" value="{{ $addr->id }}" class="form-check-input mt-2 flex-shrink-0 sales-addr-radio"
-                                {{ (int) $addr->id === (int) ($active_address_id ?? 0) ? 'checked' : '' }}>
-                            <div>
-                                <div class="fw-semibold">
-                                    {{ $addr->label ?: 'Alamat' }}
-                                    @if($addr->is_active)
-                                        <span class="badge bg-success ms-1">Aktif</span>
-                                    @endif
-                                </div>
-                                <div class="small text-muted">
-                                    {{ $addr->recipient_name ?: $selected_customer?->full_name }}
-                                    @if($addr->phone)
-                                        · {{ $addr->phone }}
-                                    @endif
-                                </div>
-                                <div class="mt-1 small">{{ $addr->full_address }}</div>
-                            </div>
-                        </label>
-                        @endforeach
-                    </div>
-                @endif
-            </div>
-            @if(!$salesAddrList->isEmpty())
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border:1px solid #e5e7eb;">Batal</button>
-                <button type="button" class="btn btn-success" onclick="confirmSalesCheckout()">Pilih & Buat Pesanan</button>
-            </div>
-            @endif
-        </div>
-    </div>
-</div>
-@endif
-
-<!-- Confirm Checkout/Draft Modal -->
+<!-- Confirm Checkout Modal -->
 <div class="modal fade" id="confirmCheckoutModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content" style="border-radius: 14px;">
             <div class="modal-header border-0 pb-0">
-                <h6 class="modal-title fw-bold">{{ $isSalesRole ? 'Konfirmasi Simpan Draft' : 'Konfirmasi Checkout' }}</h6>
+                <h6 class="modal-title fw-bold">Konfirmasi Checkout</h6>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p class="mb-0">{{ $isSalesRole ? 'Draft akan disimpan dengan customer terpilih. Anda bisa melanjutkannya nanti.' : 'Apakah Anda yakin ingin melanjutkan ke pembayaran?' }}</p>
+                <p class="mb-0">Apakah Anda yakin ingin melanjutkan ke pembayaran?</p>
             </div>
             <div class="modal-footer border-0 pt-0">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border: 1px solid #e5e7eb;">Batal</button>
-                <button type="button" class="btn btn-primary" onclick="submitCheckout()">{{ $isSalesRole ? 'Simpan Draft' : 'Lanjutkan' }}</button>
+                <button type="button" class="btn btn-primary" onclick="submitCheckout()">Lanjutkan</button>
             </div>
         </div>
     </div>
@@ -540,120 +495,11 @@
 
 @push('scripts')
 <script>
-// Customer data for searchable selectors
-@php
-$salesCustomersMapped = $my_customers->map(fn($c) => [
-    'id' => $c->id,
-    'full_name' => $c->full_name,
-    'company_name' => $c->company_name,
-    'url' => route('guest.cart.select-customer', $c->id),
-]);
-@endphp
-var salesCustomers = @json($salesCustomersMapped);
-
-function initCustomerSearch(inputId) {
-    var input = document.getElementById(inputId);
-    if (!input) return;
-
-    // Create portal dropdown in document.body — immune to any parent overflow/clipping
-    var portal = document.createElement('div');
-    portal.className = 'list-group';
-    portal.style.cssText = 'position:fixed;z-index:99999;display:none;max-height:260px;overflow-y:auto;border:1px solid #dee2e6;border-radius:0.25rem;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,0.15);';
-    portal.setAttribute('data-portal-for', inputId);
-    document.body.appendChild(portal);
-
-    var isVisible = false;
-
-    var updatePosition = function() {
-        if (!isVisible) return;
-        var rect = input.getBoundingClientRect();
-        portal.style.left = rect.left + 'px';
-        portal.style.width = rect.width + 'px';
-        portal.style.top = rect.bottom + 'px';
-    };
-
-    var show = function(filter) {
-        var q = (filter || '').trim().toLowerCase();
-        var filtered = q ? salesCustomers.filter(function(c) {
-            return (c.full_name || '').toLowerCase().indexOf(q) !== -1 ||
-                   (c.company_name || '').toLowerCase().indexOf(q) !== -1;
-        }) : salesCustomers;
-
-        if (filtered.length === 0) {
-            portal.style.display = 'none';
-            isVisible = false;
-            return;
-        }
-
-        portal.innerHTML = filtered.map(function(c) {
-            var label = c.full_name;
-            if (c.company_name) label += ' (' + c.company_name + ')';
-            return '<button type="button" class="list-group-item list-group-item-action" data-url="' + c.url + '">' + label + '</button>';
-        }).join('');
-        portal.style.display = 'block';
-        isVisible = true;
-        updatePosition();
-    };
-
-    var hide = function() {
-        portal.style.display = 'none';
-        isVisible = false;
-    };
-
-    // --- Input events ---
-    input.addEventListener('input', function() {
-        show(this.value);
-    });
-
-    input.addEventListener('focus', function() {
-        if (!this.value) show('');
-    });
-
-    input.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') hide();
-    });
-
-    // --- Portal selection via mousedown (fires BEFORE blur, preventing flicker) ---
-    portal.addEventListener('mousedown', function(e) {
-        var btn = e.target.closest('[data-url]');
-        if (btn) {
-            e.preventDefault();     // Prevent blur on input so focus stays
-            input.value = btn.textContent.trim();
-            input.dataset.selectedUrl = btn.dataset.url;
-            hide();
-        }
-    });
-
-    // Fallback click handler for accessibility
-    portal.addEventListener('click', function(e) {
-        var btn = e.target.closest('[data-url]');
-        if (btn) {
-            input.value = btn.textContent.trim();
-            input.dataset.selectedUrl = btn.dataset.url;
-            hide();
-        }
-    });
-
-    // --- Outside click: mousedown fires BEFORE blur, so no flicker ---
-    var outsideHandler = function(e) {
-        if (!isVisible) return;
-        if (portal.contains(e.target) || input.contains(e.target)) return;
-        hide();
-    };
-    document.addEventListener('mousedown', outsideHandler);
-
-    // --- Update position on scroll/resize ---
-    window.addEventListener('scroll', updatePosition, true);
-    window.addEventListener('resize', updatePosition);
-}
-
 function showCustomerSelect() {
     var badge = document.getElementById('custBadgeRow');
     var select = document.getElementById('custSelectRow');
     if (badge) badge.classList.add('d-none');
     if (select) select.classList.remove('d-none');
-    var input = document.getElementById('customerSearch');
-    if (input) { input.value = ''; delete input.dataset.selectedUrl; input.focus(); }
 }
 
 function cancelCustomerSelect() {
@@ -668,8 +514,6 @@ function showMobCustomerSelect() {
     var select = document.getElementById('mobCustSelectRow');
     if (badge) badge.classList.add('d-none');
     if (select) select.classList.remove('d-none');
-    var input = document.getElementById('mobCustomerSearch');
-    if (input) { input.value = ''; delete input.dataset.selectedUrl; input.focus(); }
 }
 
 function cancelMobCustomerSelect() {
@@ -680,16 +524,16 @@ function cancelMobCustomerSelect() {
 }
 
 function goToCustomer() {
-    var input = document.getElementById('customerSearch');
-    if (input && input.dataset.selectedUrl) {
-        window.location.href = input.dataset.selectedUrl;
+    var sel = document.getElementById('customerSelect');
+    if (sel && sel.value) {
+        window.location.href = sel.value;
     }
 }
 
 function goToMobCustomer() {
-    var input = document.getElementById('mobCustomerSearch');
-    if (input && input.dataset.selectedUrl) {
-        window.location.href = input.dataset.selectedUrl;
+    var sel = document.getElementById('mobCustomerSelect');
+    if (sel && sel.value) {
+        window.location.href = sel.value;
     }
 }
 
@@ -701,17 +545,24 @@ function confirmCheckout() {
             alert('Silakan pilih customer terlebih dahulu.');
             return;
         }
-    } else {
-        // Buyer: check address_id
-        var addressInput = document.querySelector('#checkoutForm select[name="address_id"], #checkoutForm input[name="address_id"]');
-        if (addressInput && !addressInput.value) {
-            alert('Silakan pilih alamat terlebih dahulu.');
-            return;
-        }
+    }
+
+    // Check address_id (both select and hidden input)
+    var addressInput = document.querySelector('#checkoutForm select[name="address_id"], #checkoutForm input[name="address_id"]');
+    if (addressInput && !addressInput.value) {
+        alert('Silakan pilih alamat terlebih dahulu.');
+        return;
     }
 
     var form = document.getElementById('checkoutForm') || document.getElementById('mobCheckoutForm');
     if (!form) return;
+
+    // For sales on mobile: sync address_id
+    if (isSales) {
+        var deskAddr = document.querySelector('#checkoutForm select[name="address_id"], #checkoutForm input[name="address_id"]');
+        var mobAddr = document.getElementById('mobSalesAddressId');
+        if (deskAddr && mobAddr) mobAddr.value = deskAddr.value;
+    }
 
     var modalEl = document.getElementById('confirmCheckoutModal');
     if (modalEl) {
@@ -727,6 +578,14 @@ function submitCheckout() {
     }
     if (!form) return;
 
+    // For sales on mobile: sync address_id
+    var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
+    if (isSales) {
+        var deskAddr = document.querySelector('#checkoutForm select[name="address_id"]');
+        var mobAddr = document.getElementById('mobSalesAddressId');
+        if (deskAddr && mobAddr) mobAddr.value = deskAddr.value;
+    }
+
     if (typeof form.requestSubmit === 'function') {
         form.requestSubmit();
         return;
@@ -738,18 +597,30 @@ function submitCheckout() {
 document.addEventListener('DOMContentLoaded', function() {
     updateCartSummary();
 
-    // Auto-select first address option for buyers (if present)
     const addressSelect = document.getElementById('address_id');
     if (addressSelect && !addressSelect.value) {
+        // Auto-select first option if available
         var firstOpt = addressSelect.querySelector('option:not([disabled])');
         if (firstOpt) firstOpt.selected = true;
     }
 
-    // Initialize searchable customer selectors for sales
+    // Initialize mobile sales address ID
     var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
     if (isSales) {
-        initCustomerSearch('customerSearch');
-        initCustomerSearch('mobCustomerSearch');
+        var deskAddr = document.querySelector('#checkoutForm select[name="address_id"], #checkoutForm input[name="address_id"]');
+        var mobAddr = document.getElementById('mobSalesAddressId');
+        if (deskAddr && mobAddr) {
+            mobAddr.value = deskAddr.value;
+        }
+
+        // Update mobile address ID when desktop address changes
+        if (addressSelect) {
+            addressSelect.addEventListener('change', function() {
+                if (mobAddr) {
+                    mobAddr.value = this.value;
+                }
+            });
+        }
     }
 });
 
@@ -955,6 +826,36 @@ function mobUpdateQty(productId, change) {
     });
 }
 
+function mobSetQty(productId, newVal) {
+    let val = parseInt(newVal);
+    if (isNaN(val) || val < 1) val = 1;
+    if (val > 9999) val = 9999;
+
+    const item = document.querySelector(`.mob-cart-item[data-product-id="${productId}"]`);
+    if (item) {
+        const input = item.querySelector('.mob-qty-input');
+        if (input) input.value = val;
+    }
+
+    fetch('/cart/items/' + productId, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken()
+        },
+        body: JSON.stringify({ quantity: val })
+    })
+    .then(function(res) {
+        if (!res.ok) throw new Error();
+        updateCartSummary();
+        PAS.Cart.showNotification('Keranjang diperbarui', 'success');
+    })
+    .catch(function() {
+        PAS.Cart.showNotification('Gagal memperbarui keranjang', 'danger');
+    });
+}
+
 function mobRemoveItem(productId) {
     if (!confirm('Yakin ingin menghapus item ini dari keranjang?')) return;
 
@@ -1032,12 +933,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Checkout button (buyer only — sales handled by separate handler below)
+    // Checkout button
     var checkoutBtn = document.getElementById('mobCheckoutBtn');
     var checkoutBar = document.getElementById('mobCheckoutBar');
     var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
     
-    if (checkoutBtn && !isSales) {
+    if (checkoutBtn) {
         checkoutBtn.addEventListener('click', function() {
             // Check login
             var isLoggedIn = checkoutBar ? parseInt(checkoutBar.dataset.isLoggedIn) : 0;
@@ -1046,17 +947,40 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Buyer: check address
-            var hasAddress = checkoutBar ? parseInt(checkoutBar.dataset.hasAddress) : 0;
-            if (!hasAddress) {
-                var addrModalEl = document.getElementById('mobAddressPrompt');
-                if (addrModalEl) {
-                    var addrModal = new bootstrap.Modal(addrModalEl);
-                    addrModal.show();
+            if (isSales) {
+                // For sales: check customer and address
+                var selectedCustomer = {{ $selected_customer ? 'true' : 'false' }};
+                if (!selectedCustomer) {
+                    alert('Silakan pilih customer terlebih dahulu.');
+                    return;
                 }
-                return;
+
+                // Sync address_id from desktop to mobile
+                var deskAddr = document.querySelector('#checkoutForm select[name="address_id"]');
+                var mobAddr = document.getElementById('mobSalesAddressId');
+                if (deskAddr && mobAddr) {
+                    mobAddr.value = deskAddr.value;
+                }
+
+                // Check if address_id is set
+                if (!mobAddr || !mobAddr.value) {
+                    alert('Silakan pilih alamat terlebih dahulu.');
+                    return;
+                }
+            } else {
+                // For regular customers: check address
+                var hasAddress = checkoutBar ? parseInt(checkoutBar.dataset.hasAddress) : 0;
+                if (!hasAddress) {
+                    var addrModalEl = document.getElementById('mobAddressPrompt');
+                    if (addrModalEl) {
+                        var addrModal = new bootstrap.Modal(addrModalEl);
+                        addrModal.show();
+                    }
+                    return;
+                }
             }
 
+            // Direct submit (skip confirmation modal on mobile)
             var form = document.getElementById('mobCheckoutForm');
             if (form) {
                 form.submit();
@@ -1098,84 +1022,5 @@ function mobUpdateCheckoutState() {
         checkoutBtn.style.opacity = checked.length > 0 ? '1' : '0.4';
     }
 }
-
-// ==================== SALES ADDRESS SELECTION ====================
-
-function showSalesAddressModal() {
-    var modal = new bootstrap.Modal(document.getElementById('salesAddressModal'));
-    modal.show();
-}
-
-function confirmSalesCheckout() {
-    var checked = document.querySelector('.sales-addr-radio:checked');
-    if (!checked) {
-        alert('Silakan pilih alamat pengiriman.');
-        return;
-    }
-
-    // Desktop form
-    var desktopForm = document.getElementById('salesCheckoutForm');
-    var desktopAddrInput = document.getElementById('salesAddressId');
-    if (desktopAddrInput && desktopForm) {
-        desktopAddrInput.value = checked.value;
-        desktopForm.submit();
-        return;
-    }
-
-    // Mobile form
-    var mobForm = document.getElementById('mobSalesCheckoutForm');
-    var mobAddrInput = document.getElementById('mobSalesAddressId');
-    if (mobAddrInput && mobForm) {
-        mobAddrInput.value = checked.value;
-        mobForm.submit();
-    }
-}
-
-// Update mobile handler for sales
-document.addEventListener('DOMContentLoaded', function() {
-    var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
-
-    // Mobile: Draft button
-    var mobDraftBtn = document.getElementById('mobDraftBtn');
-    if (mobDraftBtn) {
-        mobDraftBtn.addEventListener('click', function() {
-            var checkoutBar = document.getElementById('mobCheckoutBar');
-            var isLoggedIn = checkoutBar ? parseInt(checkoutBar.dataset.isLoggedIn) : 0;
-            if (!isLoggedIn) {
-                window.location.href = '{{ url('/login') }}?redirect={{ url('/cart') }}';
-                return;
-            }
-            var selectedCustomer = {{ $selected_customer ? 'true' : 'false' }};
-            if (!selectedCustomer) {
-                alert('Silakan pilih customer terlebih dahulu.');
-                return;
-            }
-            var form = document.getElementById('mobCheckoutForm');
-            if (form) form.submit();
-        });
-    }
-
-    // Mobile: Buat Pesanan (new handler overrides old one)
-    var mobCheckoutBtn = document.getElementById('mobCheckoutBtn');
-    var checkoutBar = document.getElementById('mobCheckoutBar');
-    if (mobCheckoutBtn && isSales) {
-        mobCheckoutBtn.addEventListener('click', function() {
-            var selectedCustomer = {{ $selected_customer ? 'true' : 'false' }};
-            if (!selectedCustomer) {
-                alert('Silakan pilih customer terlebih dahulu.');
-                return;
-            }
-
-            // Check if customer has addresses
-            var hasAddress = {{ (($addresses ?? collect())->count() > 0) ? 'true' : 'false' }};
-            if (!hasAddress) {
-                alert('Pelanggan belum memiliki alamat. Silakan tambah alamat terlebih dahulu.');
-                return;
-            }
-
-            showSalesAddressModal();
-        });
-    }
-});
 </script>
 @endpush

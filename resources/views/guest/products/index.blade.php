@@ -4,10 +4,18 @@
 
 @section('mobile-topbar-inner')
 <div class="mobile-prod-topbar-inner">
-    <form action="{{ url('/products') }}" method="GET" class="search-wrap" id="mobileProdSearchForm">
+    <div class="view-toggle-group" id="mobileViewToggle">
+        <button class="view-toggle-btn active" data-mob-view="grid" title="Grid">
+            <i class="bi bi-grid-3x3-gap-fill"></i>
+        </button>
+        <button class="view-toggle-btn" data-mob-view="list" title="List">
+            <i class="bi bi-list-ul"></i>
+        </button>
+    </div>
+    <div class="search-wrap">
         <i class="bi bi-search search-ico"></i>
-        <input type="search" name="q" placeholder="Cari produk..." id="mobileProdSearch" value="{{ request('q') }}" autocomplete="off">
-    </form>
+        <input type="text" placeholder="Cari produk..." id="mobileProdSearch">
+    </div>
     <button class="topbar-btn" type="button" id="mobileSortBtn"><i class="bi bi-arrow-up-short"></i></button>
     <button class="topbar-btn" type="button" id="mobileFilterBtn"><i class="bi bi-sliders"></i></button>
 </div>
@@ -26,7 +34,15 @@
         
         <div class="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mt-3 gap-2 mobile-hide">
             <h1 class="h3 fw-bold text-secondary mb-0 products-page-title">Semua Produk</h1>
-            <div class="d-flex gap-2 products-header-actions d-none d-lg-flex">
+            <div class="d-flex gap-2 products-header-actions">
+                <div class="btn-group btn-group-sm" role="group" id="viewToggleGroup">
+                    <button type="button" class="btn btn-outline-secondary active" data-view="grid" id="btnGridView" title="Tampilan Grid">
+                        <i class="bi bi-grid-3x3-gap-fill"></i>
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary" data-view="list" id="btnListView" title="Tampilan List">
+                        <i class="bi bi-list-ul"></i>
+                    </button>
+                </div>
                 <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#filterSidebar">
                     <i class="bi bi-funnel"></i> Filter
                 </button>
@@ -193,12 +209,83 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const productsGrid = document.getElementById('productsGrid');
+
+    // Mobile view toggle
+    const mobileToggle = document.getElementById('mobileViewToggle');
+    if (mobileToggle && productsGrid) {
+        const savedView = localStorage.getItem('pas_product_view') || 'grid';
+        applyMobileView(savedView);
+
+        mobileToggle.querySelectorAll('button').forEach(function(b) {
+            b.addEventListener('click', function() {
+                const view = this.dataset.mobView;
+                applyMobileView(view);
+                localStorage.setItem('pas_product_view', view);
+
+                // Also sync desktop toggle
+                const vtg = document.getElementById('viewToggleGroup');
+                if (vtg) {
+                    vtg.querySelectorAll('button').forEach(function(d) {
+                        d.classList.toggle('active', d.dataset.view === view);
+                    });
+                }
+            });
+        });
+    }
+
+    function applyMobileView(view) {
+        if (mobileToggle) {
+            mobileToggle.querySelectorAll('button').forEach(function(b) {
+                b.classList.toggle('active', b.dataset.mobView === view);
+            });
+        }
+        if (productsGrid) {
+            productsGrid.classList.toggle('products-grid-list', view === 'list');
+        }
+    }
+
+    // View toggle (desktop)
+    const viewToggleGroup = document.getElementById('viewToggleGroup');
+    const savedView = localStorage.getItem('pas_product_view') || 'grid';
+
+    if (viewToggleGroup && productsGrid) {
+        // Apply saved view
+        applyView(savedView);
+
+        viewToggleGroup.querySelectorAll('button').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const view = this.dataset.view;
+                applyView(view);
+                localStorage.setItem('pas_product_view', view);
+            });
+        });
+    }
+
+    function applyView(view) {
+        // Update buttons
+        if (viewToggleGroup) {
+            viewToggleGroup.querySelectorAll('button').forEach(function(b) {
+                b.classList.toggle('active', b.dataset.view === view);
+            });
+        }
+
+        // Update grid class
+        if (productsGrid) {
+            if (view === 'list') {
+                productsGrid.classList.add('products-grid-list');
+            } else {
+                productsGrid.classList.remove('products-grid-list');
+            }
+        }
+    }
+
     const filterForms = document.querySelectorAll('form[method="GET"][action$="/products"]');
     filterForms.forEach(form => {
         form.addEventListener('change', function(e) {
             const target = e.target;
             if (!(target instanceof HTMLElement)) return;
-            if (target.matches('select[name="category_id"], select[name="brand_id"]')) {
+            if (target.matches('input[name="q"], select[name="category_id"], select[name="brand_id"]')) {
                 form.submit();
             }
         });
@@ -217,41 +304,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Mobile: search (type="search" fires search event natively on Enter)
-    const mobileProdSearch = document.getElementById('mobileProdSearch');
-    const doSearch = function() {
-        const params = new URLSearchParams(window.location.search);
-        if (mobileProdSearch.value.trim()) {
-            params.set('q', mobileProdSearch.value.trim());
-        } else {
-            params.delete('q');
-        }
-        window.location.search = params.toString();
-    };
-    if (mobileProdSearch) {
-        // Native search event handles Enter and clear (X) button
-        mobileProdSearch.addEventListener('search', function(e) {
-            if (this.value.trim()) {
-                doSearch();
-            }
-        });
-    }
-    // Prevent form submit (gunakan JS navigation)
-    const mobileProdSearchForm = document.getElementById('mobileProdSearchForm');
-    if (mobileProdSearchForm) {
-        mobileProdSearchForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-        });
-        // Click on search icon
-        const searchIcon = mobileProdSearchForm.querySelector('.search-ico');
-        if (searchIcon) {
-            searchIcon.addEventListener('click', function(e) {
-                e.preventDefault();
-                if (mobileProdSearch.value.trim()) {
-                    doSearch();
+    // Mobile: search input enter/submit
+    const mobileSearch = document.getElementById('mobileProdSearch');
+    if (mobileSearch) {
+        let searchTimer;
+        mobileSearch.addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            searchTimer = setTimeout(() => {
+                const params = new URLSearchParams(window.location.search);
+                if (this.value.trim()) {
+                    params.set('q', this.value.trim());
+                } else {
+                    params.delete('q');
                 }
-            });
-        }
+                window.location.search = params.toString();
+            }, 500);
+        });
     }
 
     // Mobile: sort sheet
@@ -346,6 +414,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 loading = false;
+
+                // Re-apply list view for new items
+                const savedView = localStorage.getItem('pas_product_view') || 'grid';
+                if (savedView === 'list') {
+                    grid.classList.add('products-grid-list');
+                }
             })
             .catch(function() {
                 if (spinner) spinner.style.display = 'none';
@@ -365,7 +439,6 @@ document.addEventListener('DOMContentLoaded', function() {
         };
 
         window.addEventListener('scroll', onScroll, { passive: true });
-        // Initial check
         setTimeout(onScroll, 300);
     }
 });

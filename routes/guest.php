@@ -263,7 +263,7 @@ Route::prefix('/')->group(function () {
     Route::get('/cart/customers/{customer}/addresses', [CartController::class, 'customerAddresses'])->middleware(['auth:web', 'sales'])->name('guest.cart.customer-addresses');
     Route::get('/cart/select-customer/{customerId}', [CartController::class, 'setActiveCustomer'])->middleware(['auth:web', 'sales'])->name('guest.cart.select-customer');
     Route::get('/cart/clear-customer', [CartController::class, 'clearActiveCustomer'])->middleware(['auth:web', 'sales'])->name('guest.cart.clear-customer');
-    Route::get('/cart/my-customers', [CartController::class, 'myCustomers'])->middleware(['auth:web', 'sales'])->name('guest.cart.my-customers');
+    Route::get('/cart/my-customers', [CartController::class, 'myCustomers'])->middleware('guest.auth')->name('guest.cart.my-customers');
 
     // Auth
     Route::middleware('guest:customer')->group(function () {
@@ -316,6 +316,8 @@ Route::prefix('/')->group(function () {
     Route::middleware(['auth:web', 'sales'])->prefix('profile/my-customers')->name('guest.profile.my-customers.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Guest\MyCustomerController::class, 'index'])->name('index');
         Route::get('/{customer}', [\App\Http\Controllers\Guest\MyCustomerController::class, 'show'])->name('show');
+        Route::get('/{customer}/edit', [\App\Http\Controllers\Guest\MyCustomerController::class, 'edit'])->name('edit');
+        Route::put('/{customer}', [\App\Http\Controllers\Guest\MyCustomerController::class, 'update'])->name('update');
         Route::delete('/{customer}', [\App\Http\Controllers\Guest\MyCustomerController::class, 'destroy'])->name('destroy');
 
         // Address management for sales

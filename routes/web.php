@@ -33,10 +33,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         Route::resource('accounts', AccountController::class)->except(['show']);
         Route::resource('customers', CustomerController::class)->except(['show']);
+        Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::patch('customers/{customer}/approve', [CustomerController::class, 'approve'])->name('customers.approve');
         Route::patch('customers/{customer}/reject', [CustomerController::class, 'reject'])->name('customers.reject');
         Route::resource('customers.addresses', CustomerAddressController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::post('customers/{customer}/addresses/{address}/active', [CustomerAddressController::class, 'setActive'])->name('customers.addresses.set-active');
+
+        // Customer Change Requests
+        Route::get('change-requests', [CustomerController::class, 'changeRequestIndex'])->name('customers.change-requests.index');
+        Route::get('change-requests/{changeRequest}', [CustomerController::class, 'showChangeRequest'])->name('customers.change-requests.show');
+        Route::patch('change-requests/{changeRequest}/approve', [CustomerController::class, 'approveChangeRequest'])->name('customers.change-requests.approve');
+        Route::patch('change-requests/{changeRequest}/reject', [CustomerController::class, 'rejectChangeRequest'])->name('customers.change-requests.reject');
         Route::resource('categories', ProductCategoryController::class)->except(['show']);
         Route::resource('brands', ProductBrandController::class)->except(['show']);
         Route::resource('products', ProductController::class)->except(['show']);
