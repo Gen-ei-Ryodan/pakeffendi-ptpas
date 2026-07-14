@@ -1995,6 +1995,39 @@ body {
         font-size: 0.75rem;
     }
 
+    /* List view: qty + add-to-cart inline (not stacked) */
+    .products-grid-manual.products-grid-list .product-card .product-card-actions {
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        margin-top: 4px;
+        padding-top: 2px;
+    }
+
+    .products-grid-manual.products-grid-list .product-card .product-card-actions .qty-selector {
+        margin: 0;
+        height: 28px;
+    }
+
+    .products-grid-manual.products-grid-list .product-card .product-card-actions .qty-selector .qty-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 0.75rem;
+    }
+
+    .products-grid-manual.products-grid-list .product-card .product-card-actions .qty-selector .qty-input {
+        width: 30px;
+        height: 26px;
+        font-size: 0.72rem;
+    }
+
+    .products-grid-manual.products-grid-list .product-card .product-card-actions .product-cart-btn {
+        flex: 1;
+        font-size: 0.65rem;
+        padding: 4px 8px !important;
+        white-space: nowrap;
+    }
+
     /* ----- HERO BANNER ----- */
     .hero-banner {
         padding: 0.5rem 0;
