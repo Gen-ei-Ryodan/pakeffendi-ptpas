@@ -175,19 +175,26 @@ class CartController extends Controller
 
             $shopper = $this->getShopper();
             if ($shopper instanceof User && $shopper->isSales()) {
-                $rules['customer_id'] = ['required', 'integer', 'exists:customers,id'];
+                // customer_id is optional in body; fallback to cookie if not provided
+                $rules['customer_id'] = ['nullable', 'integer', 'exists:customers,id'];
             }
 
             $validated = $request->validate($rules);
 
             // For sales: resolve cart for the selected customer
             if ($shopper instanceof User && $shopper->isSales()) {
+                // If customer_id not in body, try reading from cookie
+                if (empty($validated['customer_id'])) {
+                    $cookieCid = (int) $request->cookie(self::SALES_CUSTOMER_COOKIE, '0');
+                    $validated['customer_id'] = $cookieCid > 0 ? $cookieCid : null;
+                }
+
                 $customer = Customer::where('id', $validated['customer_id'])
                     ->where('sales_id', $shopper->id)
                     ->first();
 
                 if (! $customer) {
-                    abort(422, 'Customer tidak ditemukan atau bukan milik Anda.');
+                    abort(422, 'Silakan pilih customer terlebih dahulu di halaman Keranjang.');
                 }
 
                 $resolved = $this->cartService->resolve($request, $customer, (int) $shopper->id);
