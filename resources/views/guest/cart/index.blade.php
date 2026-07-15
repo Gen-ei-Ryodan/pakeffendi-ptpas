@@ -326,8 +326,13 @@
         <div class="row d-none" id="emptyCart">
             <div class="col-12 text-center py-5">
                 <i class="bi bi-cart-x display-1 text-muted mb-4"></i>
-                <h4 class="text-muted mb-3">Keranjang Belanja Kosong</h4>
-                <p class="text-muted mb-4">Yuk, mulai belanja dan temukan produk favoritmu!</p>
+                @if(isset($is_sales) && $is_sales && !$selected_customer)
+                    <h4 class="text-muted mb-3">Pilih Customer Terlebih Dahulu</h4>
+                    <p class="text-muted mb-4">Silakan pilih customer di atas untuk mulai berbelanja.</p>
+                @else
+                    <h4 class="text-muted mb-3">Keranjang Belanja Kosong</h4>
+                    <p class="text-muted mb-4">Yuk, mulai belanja dan temukan produk favoritmu!</p>
+                @endif
                 <a href="{{ url('/products') }}" class="btn btn-primary btn-lg">
                     <i class="bi bi-shop me-2"></i>Mulai Belanja
                 </a>
@@ -407,7 +412,11 @@
         @empty
         <div class="mob-cart-empty">
             <i class="bi bi-cart-x"></i>
-            <p>Keranjang masih kosong</p>
+            @if(isset($is_sales) && $is_sales && !$selected_customer)
+                <p>Pilih customer terlebih dahulu</p>
+            @else
+                <p>Keranjang masih kosong</p>
+            @endif
             <a href="{{ url('/products') }}" class="mob-cart-shop-btn">Mulai Belanja</a>
         </div>
         @endforelse
@@ -728,6 +737,7 @@ async function clearCart() {
 async function updateCartSummary() {
     const items = document.querySelectorAll('.cart-item');
     const cartItemsDiv = document.querySelector('.cart-items');
+    const cartItemsCard = cartItemsDiv?.closest('.card');
     const emptyCartDiv = document.getElementById('emptyCart');
     
     if (items.length === 0) {
@@ -735,14 +745,12 @@ async function updateCartSummary() {
         if (cartItemsDiv) cartItemsDiv.style.display = 'none';
         if (emptyCartDiv) emptyCartDiv.classList.remove('d-none');
         
-        // Hide cart sections
-        document.querySelector('.col-lg-8').style.display = 'none';
+        // Hide only the order summary sidebar, keep customer selector visible
         document.querySelector('.col-lg-4').style.display = 'none';
         return;
     } else {
         if (cartItemsDiv) cartItemsDiv.style.display = '';
         if (emptyCartDiv) emptyCartDiv.classList.add('d-none');
-        document.querySelector('.col-lg-8').style.display = '';
         document.querySelector('.col-lg-4').style.display = '';
     }
 
