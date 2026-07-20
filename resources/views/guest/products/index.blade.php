@@ -12,10 +12,10 @@
             <i class="bi bi-list-ul"></i>
         </button>
     </div>
-    <div class="search-wrap">
+    <form action="{{ url('/products') }}" method="GET" class="search-wrap" id="mobileProdSearchForm">
         <i class="bi bi-search search-ico"></i>
-        <input type="text" placeholder="Cari produk..." id="mobileProdSearch">
-    </div>
+        <input type="search" placeholder="Cari produk..." id="mobileProdSearch" name="q" autocomplete="off">
+    </form>
     <button class="topbar-btn" type="button" id="mobileSortBtn"><i class="bi bi-arrow-up-short"></i></button>
     <button class="topbar-btn" type="button" id="mobileFilterBtn"><i class="bi bi-sliders"></i></button>
 </div>
@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    const filterForms = document.querySelectorAll('form[method="GET"][action$="/products"]');
+    const filterForms = document.querySelectorAll('form[method="GET"][action$="/products"]:not(#mobileProdSearchForm)');
     filterForms.forEach(form => {
         form.addEventListener('change', function(e) {
             const target = e.target;
@@ -301,24 +301,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 params.delete('sort');
             }
             window.location.search = params.toString();
-        });
-    }
-
-    // Mobile: search input enter/submit
-    const mobileSearch = document.getElementById('mobileProdSearch');
-    if (mobileSearch) {
-        let searchTimer;
-        mobileSearch.addEventListener('input', function() {
-            clearTimeout(searchTimer);
-            searchTimer = setTimeout(() => {
-                const params = new URLSearchParams(window.location.search);
-                if (this.value.trim()) {
-                    params.set('q', this.value.trim());
-                } else {
-                    params.delete('q');
-                }
-                window.location.search = params.toString();
-            }, 500);
         });
     }
 

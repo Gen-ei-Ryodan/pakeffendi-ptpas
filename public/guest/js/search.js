@@ -31,25 +31,32 @@
         },
         
         setupSearchFunctionality() {
-            // Gunakan event search (native dari <input type="search"> untuk Enter/X button)
-            const searchInputs = document.querySelectorAll('#searchInput, #searchInputMobile');
+            // Setup search inputs
+            const searchInputs = document.querySelectorAll('#searchInput, #searchInputMobile, #mobileProdSearch');
+            const searchButtons = document.querySelectorAll('#searchBtn, #searchBtnMobile');
             
             searchInputs.forEach(input => {
-                input.addEventListener('search', (e) => {
-                    if (input.value.trim()) {
-                        this.performSearch(input.value, input);
+                // Handle Enter key
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (input.value.trim()) {
+                            this.performSearch(input.value, input);
+                        }
                     }
                 });
             });
             
             // Handle search button clicks
-            document.getElementById('searchBtn')?.addEventListener('click', (e) => {
-                const input = document.getElementById('searchInput');
-                if (input && input.value.trim()) this.performSearch(input.value, input);
-            });
-            document.getElementById('searchBtnMobile')?.addEventListener('click', (e) => {
-                const input = document.getElementById('searchInputMobile');
-                if (input && input.value.trim()) this.performSearch(input.value, input);
+            searchButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const form = btn.closest('form');
+                    const input = form ? form.querySelector('input[type="search"], input[type="text"]') : null;
+                    if (input && input.value.trim()) {
+                        e.preventDefault();
+                        this.performSearch(input.value, input);
+                    }
+                });
             });
         },
         
