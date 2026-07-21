@@ -31,7 +31,7 @@
                     <div class="card-header bg-transparent d-flex justify-content-between align-items-center">
                         <h5 class="fw-bold mb-0">Daftar Pelanggan</h5>
                         
-                        <form method="get" class="d-flex">
+                        <form method="get" class="d-flex" data-ajax="false">
                             <input type="text" name="q" value="{{ $q }}" class="form-control form-control-sm me-2" placeholder="Cari pelanggan...">
                             <button type="submit" class="btn btn-primary btn-sm">Cari</button>
                         </form>
