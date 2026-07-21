@@ -3,12 +3,19 @@
 @section('title', 'Keranjang Belanja - PAS Market')
 
 @section('mobile-topbar-inner')
-<div class="cart-mob-header">
-    <span class="cart-mob-title">Keranjang</span>
-    <div class="cart-mob-actions">
-        <a href="{{ url('/products') }}" class="cart-mob-icon"><i class="bi bi-search"></i></a>
-        <a href="{{ url('/cart') }}" class="cart-mob-icon"><i class="bi bi-cart3"></i></a>
-    </div>
+<a class="mobile-logo" href="{{ url('/') }}">
+    <span class="pas-brand-text">PAS</span><span class="pas-brand-sub">Market</span>
+</a>
+<div class="mobile-topbar-actions">
+    <a href="{{ url('/orders') }}" class="mobile-topbar-btn" title="Riwayat Order"><i class="bi bi-clock-history"></i></a>
+    @if(isset($is_sales) && $is_sales)
+    <a href="{{ url('/profile/my-customers') }}" class="mobile-topbar-btn" title="Customer List"><i class="bi bi-people"></i></a>
+    @endif
+    <a href="{{ url('/products') }}" class="mobile-topbar-btn" title="Cari Produk"><i class="bi bi-search"></i></a>
+    <a href="{{ url('/cart') }}" class="mobile-cart-link" id="cartBtnMobile" aria-label="Keranjang">
+        <i class="bi bi-cart3"></i>
+        <span class="cart-badge-mobile" id="cartCountMobile" style="display: none;">0</span>
+    </a>
 </div>
 @endsection
 
@@ -34,36 +41,41 @@
             <div class="col-lg-8">
                 {{-- Sales Customer Selector --}}
                 @if(isset($is_sales) && $is_sales)
+                @if($my_customers->isNotEmpty())
                 <div class="card border-0 shadow-sm mb-3">
                     <div class="card-body py-3">
-                        @if($my_customers->isEmpty())
-                            <div class="d-flex align-items-center gap-3">
-                                <span class="fw-bold text-nowrap"><i class="bi bi-person-badge me-1"></i>Keranjang Untuk:</span>
-                                <span class="text-muted small">Belum ada customer. Silakan tambahkan melalui menu Profile.</span>
-                            </div>
-                        @else
                         <div class="d-flex align-items-center gap-3" id="custBar">
                             <span class="fw-bold text-nowrap"><i class="bi bi-person-badge me-1"></i>Keranjang Untuk:</span>
-                            {{-- Badge + Ganti Button --}}
                             <div id="custBadgeRow" class="d-flex align-items-center gap-3 w-100 @if(!$selected_customer) d-none @endif">
                                 <span class="badge bg-primary fs-6 px-3 py-2">{{ $selected_customer?->full_name }}</span>
                                 <button type="button" class="btn btn-outline-secondary btn-sm ms-auto" onclick="showCustomerSelect()">Ganti Customer</button>
                             </div>
-                            {{-- Dropdown + Pilih + Batal --}}
-                            <div id="custSelectRow" class="d-flex align-items-center gap-2 w-100 @if($selected_customer) d-none @endif">
-                                <select id="customerSelect" class="form-select form-select-sm" style="max-width: 300px;">
-                                    <option value="" selected disabled>-- Pilih Customer --</option>
-                                    @foreach($my_customers as $c)
-                                        <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }} {{ $c->company_name ? '('.$c->company_name.')' : '' }}</option>
-                                    @endforeach
-                                </select>
-                                <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToCustomer()">Pilih</button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" onclick="cancelCustomerSelect()">Batal</button>
-                            </div>
                         </div>
-                        @endif
                     </div>
                 </div>
+                {{-- Searchable customer selector (outside card) --}}
+                <div id="custSelectRow" class="mb-3 @if($selected_customer) d-none @endif" style="background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:10px 14px;">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="fw-bold small text-nowrap"><i class="bi bi-person-badge me-1"></i>Pilih Customer:</span>
+                        <div class="position-relative" style="min-width:220px;flex:1;">
+                            <input type="text" id="customerSearchInput" class="form-control form-control-sm" placeholder="Cari customer..." autocomplete="off" oninput="debouncedSearchCustomer(this.value)">
+                            <div id="customerSearchResults" class="customer-search-dropdown"></div>
+                            <input type="hidden" id="customerSelectedId" value="">
+                        </div>
+                        <button type="button" class="btn btn-primary btn-sm text-nowrap" id="customerSelectBtn" disabled>Pilih</button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm text-nowrap" id="customerCancelBtn">Batal</button>
+                    </div>
+                </div>
+                @else
+                <div class="card border-0 shadow-sm mb-3">
+                    <div class="card-body py-3">
+                        <div class="d-flex align-items-center gap-3">
+                            <span class="fw-bold text-nowrap"><i class="bi bi-person-badge me-1"></i>Keranjang Untuk:</span>
+                            <span class="text-muted small">Belum ada customer. Silakan tambahkan melalui menu Profile.</span>
+                        </div>
+                    </div>
+                </div>
+                @endif
                 @endif
 
                 <div class="card border-0 shadow-sm">
@@ -93,6 +105,7 @@
                                             <p class="text-muted small mb-1">{{ $product?->variant }}</p>
                                         @endif
                                         <p class="text-muted small mb-1">Brand: {{ $product?->brand?->brand_name ?? '-' }}</p>
+                                        <input type="text" class="form-control form-control-sm mt-1 item-notes-input" placeholder="Catatan item..." value="{{ $item->notes }}" data-product-id="{{ $product?->id }}" style="max-width:260px;font-size:0.78rem;" onchange="updateItemNotes({{ $product?->id }}, this.value)">
                                     </div>
                                     <div class="col-md-2">
                                         <div class="input-group input-group-sm" style="min-width: 120px;">
@@ -301,6 +314,22 @@
                 </div>
                 
                 <div class="card border-0 shadow-sm mt-3">
+                    <div class="card-body">
+                        <h6 class="fw-bold mb-3"><i class="bi bi-link-45deg me-1"></i>Menu Cepat</h6>
+                        <div class="d-grid gap-2">
+                            <a href="{{ url('/orders') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-clock-history me-1"></i>Riwayat Order
+                            </a>
+                            @if(isset($is_sales) && $is_sales)
+                            <a href="{{ url('/profile/my-customers') }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-people me-1"></i>Customer List
+                            </a>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm mt-3">
                     <div class="card-body text-center">
                         <h6 class="fw-bold mb-3">Keamanan Transaksi</h6>
                         <div class="row g-3">
@@ -349,16 +378,15 @@
                 <span class="badge bg-primary">{{ $selected_customer?->full_name }}</span>
                 <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 ms-auto" style="font-size:0.75rem;" onclick="showMobCustomerSelect()">Ganti</button>
             </div>
-            {{-- Dropdown + Pilih + Batal (mobile) --}}
+            {{-- Searchable customer selector (mobile) --}}
             <div id="mobCustSelectRow" class="d-flex align-items-center gap-2 w-100 @if($selected_customer) d-none @endif">
-                <select id="mobCustomerSelect" class="form-select form-select-sm">
-                    <option value="" selected disabled>-- Pilih Customer --</option>
-                    @foreach($my_customers as $c)
-                        <option value="{{ route('guest.cart.select-customer', $c->id) }}">{{ $c->full_name }}</option>
-                    @endforeach
-                </select>
-                <button type="button" class="btn btn-primary btn-sm text-nowrap" onclick="goToMobCustomer()">Pilih</button>
-                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 text-nowrap" style="font-size:0.75rem;" onclick="cancelMobCustomerSelect()">Batal</button>
+                <div class="position-relative flex-grow-1">
+                    <input type="text" id="mobCustomerSearchInput" class="form-control form-control-sm" placeholder="Cari customer..." autocomplete="off" oninput="debouncedSearchMobCustomer(this.value)">
+                    <div id="mobCustomerSearchResults" class="customer-search-dropdown"></div>
+                    <input type="hidden" id="mobCustomerSelectedId" value="">
+                </div>
+                <button type="button" class="btn btn-primary btn-sm text-nowrap" id="mobCustomerSelectBtn" disabled>Pilih</button>
+                <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 text-nowrap" style="font-size:0.75rem;" id="mobCustomerCancelBtn">Batal</button>
             </div>
             @endif
         </div>
@@ -392,6 +420,7 @@
                     <div class="mob-cart-variant">{{ $product?->variant }}</div>
                 @endif
                 <div class="mob-cart-price" data-line-total>Rp {{ number_format($lineTotal, 0, ',', '.') }}</div>
+                <input type="text" class="mob-cart-notes" placeholder="Catatan item..." value="{{ $item->notes }}" data-product-id="{{ $product?->id }}" onchange="updateItemNotes({{ $product?->id }}, this.value)">
                 <div class="mob-cart-actions">
                     <div class="mob-qty-wrap">
                         <button class="mob-qty-btn" onclick="mobUpdateQty({{ $product?->id }}, -1)"><i class="bi bi-dash"></i></button>
@@ -413,6 +442,13 @@
 
 <!-- ====================== MOBILE STICKY BOTTOM BAR ====================== -->
 @if(($cart?->items ?? collect())->count() > 0)
+@php
+    $mobNoItems = ($summary['total_items'] ?? 0) <= 0;
+    $mobSalesNoCustomer = isset($is_sales) && $is_sales && !$selected_customer;
+    $mobDisableDraft = $mobNoItems || $mobSalesNoCustomer;
+    $mobSalesAddrList = $addresses ?? collect();
+    $mobHasAddresses = $mobSalesAddrList->count() > 0;
+@endphp
 <div class="mob-checkout-bar d-lg-none" id="mobCheckoutBar"
      data-has-address="{{ (int) (($addresses ?? collect())->count() > 0) }}"
      data-is-logged-in="{{ (int) ($customer ? true : false) }}">
@@ -426,8 +462,76 @@
         <span class="mob-total-label">Total</span>
         <span class="mob-total-price" id="mobTotalPrice">Rp {{ number_format((float) ($summary['grand_total'] ?? 0), 0, ',', '.') }}</span>
     </div>
-    <button class="mob-checkout-btn" id="mobCheckoutBtn">Checkout</button>
+
+    @if($customer)
+        @if(isset($is_sales) && $is_sales)
+            {{-- Sales: Expandable actions --}}
+            <button class="mob-checkout-btn" id="mobSalesActionsToggle" style="background:#6b7280;padding:10px 14px;font-size:0.75rem;">
+                <i class="bi bi-three-dots-vertical"></i>
+            </button>
+        @else
+            <button class="mob-checkout-btn" id="mobCheckoutBtn">Checkout</button>
+        @endif
+    @else
+        <button class="mob-checkout-btn" onclick="window.location.href='{{ url('/login') }}?redirect={{ url('/cart') }}'">Login</button>
+    @endif
 </div>
+
+{{-- Mobile Sales Action Sheet (expanded below bar) --}}
+@if(isset($is_sales) && $is_sales && $customer)
+<div class="d-lg-none" id="mobSalesActionsPanel" style="display:none; position:fixed; bottom:108px; left:0; right:0; z-index:1034; background:#fff; border-top:1px solid #e5e7eb; box-shadow:0 -4px 12px rgba(0,0,0,0.08); padding:12px 14px; border-radius:12px 12px 0 0;">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="fw-bold" style="font-size:0.85rem;">Aksi Keranjang</span>
+        <button type="button" id="mobSalesActionsClose" style="border:none;background:none;font-size:1.2rem;color:#999;padding:0;line-height:1;">&times;</button>
+    </div>
+
+    @if(!$selected_customer)
+        <div class="alert alert-warning py-2 mb-2" style="font-size:0.78rem;">
+            <i class="bi bi-exclamation-triangle me-1"></i>Pilih customer untuk melanjutkan.
+        </div>
+    @endif
+
+    {{-- Save Draft --}}
+    <form method="POST" action="{{ route('guest.cart.save-draft') }}" data-ajax="false" class="mb-2">
+        @csrf
+        <button type="submit" class="btn btn-primary w-100 py-2" style="font-size:0.82rem;font-weight:600;" @disabled($mobDisableDraft)>
+            <i class="bi bi-save me-1"></i>Simpan Draft
+        </button>
+    </form>
+
+    {{-- Address Selection --}}
+    @if($mobSalesAddrList->isEmpty())
+        <div class="alert alert-warning py-2 mb-2" style="font-size:0.78rem;">Customer belum memiliki alamat.</div>
+    @else
+        <div class="mb-2">
+            <select id="mobSalesAddressSelect" class="form-select form-select-sm" style="font-size:0.82rem;">
+                <option value="" disabled {{ !$active_address_id ? 'selected' : '' }}>-- Pilih Alamat --</option>
+                @foreach($mobSalesAddrList as $addr)
+                    <option value="{{ $addr->id }}" {{ (int) $addr->id === (int) $active_address_id ? 'selected' : '' }}>
+                        {{ $addr->label ?: 'Alamat' }}{{ $addr->is_active ? ' (Aktif)' : '' }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+    @endif
+
+    {{-- Create Order --}}
+    @php
+        $mobDisableSalesCheckout = $mobNoItems || $mobSalesNoCustomer || $mobSalesAddrList->isEmpty();
+    @endphp
+    <form method="POST" action="{{ route('guest.cart.checkout') }}" id="mobSalesCheckoutForm" data-ajax="false">
+        @csrf
+        <input type="hidden" name="address_id" id="mobSalesAddressHidden" value="{{ $active_address_id ?? '' }}">
+        <button type="submit" class="btn btn-success w-100 py-2" style="font-size:0.82rem;font-weight:600;" @disabled($mobDisableSalesCheckout)>
+            <i class="bi bi-cart-check me-1"></i>Buat Pesanan
+        </button>
+    </form>
+</div>
+@endif
+
+@if(!$customer)
+    {{-- Guest: Login prompt is shown above --}}
+@endif
 @endif
 
 <!-- Mobile: Alamat Prompt -->
@@ -492,47 +596,213 @@
 
 @push('scripts')
 <script>
+// ==================== CUSTOMER SEARCH (client-side) ====================
+var searchCustomerTimeout;
+var allCustomers = {};
+
+// Preload customers from Blade
+@if(isset($is_sales) && $is_sales && $my_customers->isNotEmpty())
+allCustomers = {
+    @foreach($my_customers as $c)
+        {{ $c->id }}: { id: {{ $c->id }}, name: '{{ str_replace("'", "\\'", $c->full_name) }}', company: '{{ str_replace("'", "\\'", $c->company_name ?? '') }}' },
+    @endforeach
+};
+@endif
+
 function showCustomerSelect() {
-    var badge = document.getElementById('custBadgeRow');
-    var select = document.getElementById('custSelectRow');
-    if (badge) badge.classList.add('d-none');
-    if (select) select.classList.remove('d-none');
+    document.getElementById('custBadgeRow')?.classList.add('d-none');
+    document.getElementById('custSelectRow')?.classList.remove('d-none');
+    renderResults(Object.values(allCustomers), false);
+    setTimeout(function() {
+        document.getElementById('customerSearchInput')?.focus();
+        document.getElementById('customerSearchInput')?.select();
+    }, 100);
 }
 
 function cancelCustomerSelect() {
-    var badge = document.getElementById('custBadgeRow');
-    var select = document.getElementById('custSelectRow');
-    if (badge) badge.classList.remove('d-none');
-    if (select) select.classList.add('d-none');
+    document.getElementById('custBadgeRow')?.classList.remove('d-none');
+    document.getElementById('custSelectRow')?.classList.add('d-none');
+    clearSearch('customer');
 }
 
 function showMobCustomerSelect() {
-    var badge = document.getElementById('mobCustBadgeRow');
-    var select = document.getElementById('mobCustSelectRow');
-    if (badge) badge.classList.add('d-none');
-    if (select) select.classList.remove('d-none');
+    document.getElementById('mobCustBadgeRow')?.classList.add('d-none');
+    document.getElementById('mobCustSelectRow')?.classList.remove('d-none');
+    renderResults(Object.values(allCustomers), true);
+    setTimeout(function() {
+        document.getElementById('mobCustomerSearchInput')?.focus();
+        document.getElementById('mobCustomerSearchInput')?.select();
+    }, 100);
 }
 
 function cancelMobCustomerSelect() {
-    var badge = document.getElementById('mobCustBadgeRow');
-    var select = document.getElementById('mobCustSelectRow');
-    if (badge) badge.classList.remove('d-none');
-    if (select) select.classList.add('d-none');
+    document.getElementById('mobCustBadgeRow')?.classList.remove('d-none');
+    document.getElementById('mobCustSelectRow')?.classList.add('d-none');
+    clearSearch('mobCustomer');
+}
+
+function clearSearch(prefix) {
+    var el = document.getElementById(prefix + 'SearchInput');
+    if (el) el.value = '';
+    var dd = document.getElementById(prefix === 'customer' ? 'customerSearchResults' : 'mobCustomerSearchResults');
+    if (dd) dd.innerHTML = '';
+    document.getElementById(prefix === 'customer' ? 'customerSelectedId' : 'mobCustomerSelectedId').value = '';
+    document.getElementById(prefix === 'customer' ? 'customerSelectBtn' : 'mobCustomerSelectBtn').disabled = true;
+}
+
+function renderResults(customers, isMobile) {
+    var resultsId = isMobile ? 'mobCustomerSearchResults' : 'customerSearchResults';
+    var resultsEl = document.getElementById(resultsId);
+    if (!resultsEl) return;
+
+    resultsEl.innerHTML = '';
+
+    if (customers.length === 0) {
+        return;
+    }
+
+    customers.forEach(function(c) {
+        var item = document.createElement('div');
+        item.className = 'cs-dropdown-item';
+        var label = c.name;
+        if (c.company) label += ' (' + c.company + ')';
+        item.textContent = label;
+        item.addEventListener('click', function(e) {
+            e.stopPropagation();
+            selectCustomerResult(c.id, c.name, isMobile);
+        });
+        resultsEl.appendChild(item);
+    });
+}
+
+function filterCustomers(query, isMobile) {
+    var resultsId = isMobile ? 'mobCustomerSearchResults' : 'customerSearchResults';
+    var hiddenId = isMobile ? 'mobCustomerSelectedId' : 'customerSelectedId';
+    var btnId = isMobile ? 'mobCustomerSelectBtn' : 'customerSelectBtn';
+
+    document.getElementById(hiddenId).value = '';
+    document.getElementById(btnId).disabled = true;
+
+    if (!query || query.length < 1) {
+        renderResults(Object.values(allCustomers), isMobile);
+        return;
+    }
+
+    var q = query.toLowerCase();
+    var filtered = Object.values(allCustomers).filter(function(c) {
+        return c.name.toLowerCase().indexOf(q) !== -1 ||
+               (c.company && c.company.toLowerCase().indexOf(q) !== -1);
+    });
+
+    renderResults(filtered, isMobile);
+}
+
+function selectCustomerResult(id, name, isMobile) {
+    var inputId = isMobile ? 'mobCustomerSearchInput' : 'customerSearchInput';
+    var hiddenId = isMobile ? 'mobCustomerSelectedId' : 'customerSelectedId';
+    var btnId = isMobile ? 'mobCustomerSelectBtn' : 'customerSelectBtn';
+    var resultsId = isMobile ? 'mobCustomerSearchResults' : 'customerSearchResults';
+
+    document.getElementById(inputId).value = name;
+    document.getElementById(hiddenId).value = id;
+    document.getElementById(resultsId).innerHTML = '';
+    document.getElementById(btnId).disabled = false;
+}
+
+function debouncedSearchCustomer(query) {
+    clearTimeout(searchCustomerTimeout);
+    searchCustomerTimeout = setTimeout(function() {
+        filterCustomers(query, false);
+    }, 200);
+}
+
+function debouncedSearchMobCustomer(query) {
+    clearTimeout(searchCustomerTimeout);
+    searchCustomerTimeout = setTimeout(function() {
+        filterCustomers(query, true);
+    }, 200);
 }
 
 function goToCustomer() {
-    var sel = document.getElementById('customerSelect');
-    if (sel && sel.value) {
-        window.location.href = sel.value;
+    var id = document.getElementById('customerSelectedId').value;
+    if (id) {
+        window.location.href = '{{ url('/cart/select-customer') }}/' + id;
     }
 }
 
 function goToMobCustomer() {
-    var sel = document.getElementById('mobCustomerSelect');
-    if (sel && sel.value) {
-        window.location.href = sel.value;
+    var id = document.getElementById('mobCustomerSelectedId').value;
+    if (id) {
+        window.location.href = '{{ url('/cart/select-customer') }}/' + id;
     }
 }
+
+// Close search dropdowns on click outside
+document.addEventListener('click', function(e) {
+    ['customerSearchResults', 'mobCustomerSearchResults'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        var input = document.getElementById(id === 'customerSearchResults' ? 'customerSearchInput' : 'mobCustomerSearchInput');
+        if (el !== e.target && !el.contains(e.target) && input !== e.target && !input?.contains(e.target)) {
+            el.innerHTML = '';
+        }
+    });
+});
+
+// Wire up buttons after DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('customerSelectBtn')?.addEventListener('click', goToCustomer);
+    document.getElementById('customerCancelBtn')?.addEventListener('click', cancelCustomerSelect);
+    document.getElementById('mobCustomerSelectBtn')?.addEventListener('click', goToMobCustomer);
+    document.getElementById('mobCustomerCancelBtn')?.addEventListener('click', cancelMobCustomerSelect);
+});
+
+// ==================== ITEM NOTES ====================
+function updateItemNotes(productId, notes) {
+    fetch('/cart/items/' + productId + '/notes', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrfToken()
+        },
+        body: JSON.stringify({ notes: notes })
+    })
+    .then(function(r) {
+        if (!r.ok) throw new Error();
+        PAS.Cart.showNotification('Catatan disimpan', 'success');
+    })
+    .catch(function() {
+        PAS.Cart.showNotification('Gagal menyimpan catatan', 'danger');
+    });
+}
+
+// ==================== MOBILE SALES ACTIONS ====================
+document.addEventListener('DOMContentLoaded', function() {
+    var toggleBtn = document.getElementById('mobSalesActionsToggle');
+    var panel = document.getElementById('mobSalesActionsPanel');
+    var closeBtn = document.getElementById('mobSalesActionsClose');
+    var salesAddrSelect = document.getElementById('mobSalesAddressSelect');
+    var salesAddrHidden = document.getElementById('mobSalesAddressHidden');
+
+    if (toggleBtn && panel) {
+        toggleBtn.addEventListener('click', function() {
+            var isHidden = panel.style.display === 'none' || panel.style.display === '';
+            panel.style.display = isHidden ? 'block' : 'none';
+        });
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                panel.style.display = 'none';
+            });
+        }
+    }
+
+    if (salesAddrSelect && salesAddrHidden) {
+        salesAddrSelect.addEventListener('change', function() {
+            salesAddrHidden.value = this.value;
+        });
+    }
+});
 
 function confirmCheckout() {
     var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
@@ -544,7 +814,6 @@ function confirmCheckout() {
         }
     }
 
-    // Check address_id (both select and hidden input)
     var addressInput = document.querySelector('#checkoutForm select[name="address_id"], #checkoutForm input[name="address_id"]');
     if (addressInput && !addressInput.value) {
         alert('Silakan pilih alamat terlebih dahulu.');
@@ -554,7 +823,6 @@ function confirmCheckout() {
     var form = document.getElementById('checkoutForm') || document.getElementById('mobCheckoutForm');
     if (!form) return;
 
-    // For sales on mobile: sync address_id
     if (isSales) {
         var deskAddr = document.querySelector('#checkoutForm select[name="address_id"], #checkoutForm input[name="address_id"]');
         var mobAddr = document.getElementById('mobSalesAddressId');
@@ -575,7 +843,6 @@ function submitCheckout() {
     }
     if (!form) return;
 
-    // For sales on mobile: sync address_id
     var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
     if (isSales) {
         var deskAddr = document.querySelector('#checkoutForm select[name="address_id"]');
@@ -590,18 +857,16 @@ function submitCheckout() {
     form.submit();
 }
 
-// Cart functionality
+// ==================== CART FUNCTIONALITY ====================
 document.addEventListener('DOMContentLoaded', function() {
     updateCartSummary();
 
     const addressSelect = document.getElementById('address_id');
     if (addressSelect && !addressSelect.value) {
-        // Auto-select first option if available
         var firstOpt = addressSelect.querySelector('option:not([disabled])');
         if (firstOpt) firstOpt.selected = true;
     }
 
-    // Initialize mobile sales address ID
     var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
     if (isSales) {
         var deskAddr = document.querySelector('#checkoutForm select[name="address_id"], #checkoutForm input[name="address_id"]');
@@ -610,7 +875,6 @@ document.addEventListener('DOMContentLoaded', function() {
             mobAddr.value = deskAddr.value;
         }
 
-        // Update mobile address ID when desktop address changes
         if (addressSelect) {
             addressSelect.addEventListener('change', function() {
                 if (mobAddr) {
@@ -728,7 +992,6 @@ async function updateCartSummary() {
     const emptyCartDiv = document.getElementById('emptyCart');
     
     if (items.length === 0) {
-        // Show empty cart state
         if (cartItemsDiv) cartItemsDiv.style.display = 'none';
         if (emptyCartDiv) emptyCartDiv.classList.remove('d-none');
         return;
@@ -898,13 +1161,11 @@ function mobCheckEmpty() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Auto-check all items on mobile
     document.querySelectorAll('.mob-cart-check').forEach(function(btn) {
         btn.classList.add('checked');
     });
     mobUpdateCheckoutState();
 
-    // Mobile checkbox toggle
     document.querySelectorAll('.mob-cart-check').forEach(function(btn) {
         btn.addEventListener('click', function() {
             this.classList.toggle('checked');
@@ -912,7 +1173,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // Select all
     var checkAllBtn = document.getElementById('mobCheckAll');
     if (checkAllBtn) {
         checkAllBtn.addEventListener('click', function() {
@@ -924,14 +1184,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Checkout button
     var checkoutBtn = document.getElementById('mobCheckoutBtn');
     var checkoutBar = document.getElementById('mobCheckoutBar');
     var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
     
     if (checkoutBtn) {
         checkoutBtn.addEventListener('click', function() {
-            // Check login
             var isLoggedIn = checkoutBar ? parseInt(checkoutBar.dataset.isLoggedIn) : 0;
             if (!isLoggedIn) {
                 window.location.href = '{{ url('/login') }}?redirect={{ url('/cart') }}';
@@ -939,27 +1197,23 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             if (isSales) {
-                // For sales: check customer and address
                 var selectedCustomer = {{ $selected_customer ? 'true' : 'false' }};
                 if (!selectedCustomer) {
                     alert('Silakan pilih customer terlebih dahulu.');
                     return;
                 }
 
-                // Sync address_id from desktop to mobile
                 var deskAddr = document.querySelector('#checkoutForm select[name="address_id"]');
                 var mobAddr = document.getElementById('mobSalesAddressId');
                 if (deskAddr && mobAddr) {
                     mobAddr.value = deskAddr.value;
                 }
 
-                // Check if address_id is set
                 if (!mobAddr || !mobAddr.value) {
                     alert('Silakan pilih alamat terlebih dahulu.');
                     return;
                 }
             } else {
-                // For regular customers: check address
                 var hasAddress = checkoutBar ? parseInt(checkoutBar.dataset.hasAddress) : 0;
                 if (!hasAddress) {
                     var addrModalEl = document.getElementById('mobAddressPrompt');
@@ -971,7 +1225,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Direct submit (skip confirmation modal on mobile)
             var form = document.getElementById('mobCheckoutForm');
             if (form) {
                 form.submit();
@@ -986,12 +1239,10 @@ function mobUpdateCheckoutState() {
     var checkAllBtn = document.getElementById('mobCheckAll');
     var totalPrice = 0;
 
-    // Determine if all checked
     if (checkAllBtn) {
         checkAllBtn.classList.toggle('checked', checked.length === all.length && all.length > 0);
     }
 
-    // Calculate total price from checked items
     checked.forEach(function(btn) {
         var item = btn.closest('.mob-cart-item');
         if (item) {

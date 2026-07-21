@@ -264,6 +264,7 @@ Route::prefix('/')->group(function () {
     Route::get('/cart/select-customer/{customerId}', [CartController::class, 'setActiveCustomer'])->middleware(['auth:web', 'sales'])->name('guest.cart.select-customer');
     Route::get('/cart/clear-customer', [CartController::class, 'clearActiveCustomer'])->middleware(['auth:web', 'sales'])->name('guest.cart.clear-customer');
     Route::get('/cart/my-customers', [CartController::class, 'myCustomers'])->middleware('guest.auth')->name('guest.cart.my-customers');
+    Route::post('/cart/items/{product}/notes', [CartController::class, 'updateItemNotes'])->middleware('guest.auth')->name('guest.cart.items.notes');
 
     // Auth
     Route::middleware('guest:customer')->group(function () {

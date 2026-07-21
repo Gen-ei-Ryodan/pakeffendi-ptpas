@@ -11,10 +11,12 @@ class CartItem extends Model
         'cart_id',
         'product_id',
         'quantity',
+        'notes',
     ];
 
     protected $casts = [
         'quantity' => 'integer',
+        'notes' => 'string',
     ];
 
     public function cart(): BelongsTo

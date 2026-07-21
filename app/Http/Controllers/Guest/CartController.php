@@ -458,6 +458,27 @@ class CartController extends Controller
         ]);
     }
 
+    public function updateItemNotes(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'notes' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        abort_if($product->discontinued, 404);
+
+        $resolved = $this->resolveCart($request);
+        $cart = $resolved['cart'];
+
+        $item = $cart->items()->where('product_id', $product->id)->first();
+        if (! $item) {
+            abort(404, 'Item tidak ditemukan di keranjang.');
+        }
+
+        $item->update(['notes' => $validated['notes'] ?? null]);
+
+        return response()->json(['success' => true]);
+    }
+
     public function setActiveCustomer(int $customerId)
     {
         $shopper = $this->getShopper();
@@ -554,6 +575,7 @@ class CartController extends Controller
                     'discount_percent' => $discountPercent,
                     'net_price' => $netPrice,
                     'line_total' => $lineTotal,
+                    'notes' => $item->notes,
                 ];
             }
         }
