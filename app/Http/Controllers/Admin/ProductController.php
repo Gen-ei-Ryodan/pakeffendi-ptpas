@@ -32,12 +32,15 @@ class ProductController extends Controller
         $products = Product::query()
             ->with(['brand', 'category'])
             ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($query) use ($q) {
-                    $query
-                        ->where('sku', 'like', "%{$q}%")
-                        ->orWhere('name', 'like', "%{$q}%")
-                        ->orWhere('variant', 'like', "%{$q}%");
-                });
+                $words = preg_split('/\s+/', trim($q));
+                foreach ($words as $word) {
+                    if ($word === '') continue;
+                    $query->where(function ($sub) use ($word) {
+                        $sub->where('sku', 'like', "%{$word}%")
+                            ->orWhere('name', 'like', "%{$word}%")
+                            ->orWhere('variant', 'like', "%{$word}%");
+                    });
+                }
             })
             ->when($brand !== '', function ($query) use ($brand) {
                 $query->where('product_brand_code', $brand);
