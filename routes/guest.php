@@ -92,10 +92,14 @@ Route::prefix('/')->group(function () {
 
         if (! empty($validated['q'])) {
             $q = trim((string) $validated['q']);
-            $query->where(function ($qBuilder) use ($q) {
-                $qBuilder->where('name', 'like', "%{$q}%")
-                    ->orWhere('sku', 'like', "%{$q}%");
-            });
+            $words = preg_split('/\s+/', $q);
+            foreach ($words as $word) {
+                if ($word === '') continue;
+                $query->where(function ($qBuilder) use ($word) {
+                    $qBuilder->where('name', 'like', "%{$word}%")
+                        ->orWhere('sku', 'like', "%{$word}%");
+                });
+            }
         }
 
         if (! empty($validated['category_id'])) {
@@ -167,10 +171,14 @@ Route::prefix('/')->group(function () {
 
         if (! empty($validated['q'])) {
             $q = trim((string) $validated['q']);
-            $query->where(function ($qBuilder) use ($q) {
-                $qBuilder->where('name', 'like', "%{$q}%")
-                    ->orWhere('sku', 'like', "%{$q}%");
-            });
+            $words = preg_split('/\s+/', $q);
+            foreach ($words as $word) {
+                if ($word === '') continue;
+                $query->where(function ($qBuilder) use ($word) {
+                    $qBuilder->where('name', 'like', "%{$word}%")
+                        ->orWhere('sku', 'like', "%{$word}%");
+                });
+            }
         }
 
         if (! empty($validated['category_id'])) {
