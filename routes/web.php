@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FavoriteBrandController;
 use App\Http\Controllers\Admin\LogbookController;
+use App\Http\Controllers\Admin\SalesLogController;
 use App\Http\Controllers\Admin\ProductBrandController;
 use App\Http\Controllers\Admin\ProductCategoryController;
 use App\Http\Controllers\Admin\ProductController;
@@ -56,6 +57,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('broadcasts', BroadcastController::class)->except(['show']);
         Route::resource('favorite-brands', FavoriteBrandController::class)->only(['index', 'create', 'store', 'destroy']);
         Route::get('logs', [LogbookController::class, 'index'])->name('logs.index');
+        Route::get('sales-logs', [SalesLogController::class, 'index'])->name('sales-logs.index');
         Route::get('about', [AboutController::class, 'edit'])->name('about.edit');
         Route::post('about', [AboutController::class, 'update'])->name('about.update');
     });

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Mail\BuyerVerificationMail;
 use App\Mail\ChangePasswordMail;
 use App\Models\Customer;
+use App\Services\ActivityLogger;
 use App\Services\CartService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -216,6 +217,19 @@ class AuthController extends Controller
 
             session()->forget('pending_buyer');
 
+            ActivityLogger::log(
+                'Sales mendaftarkan customer baru ' . $customer->full_name,
+                json_encode([
+                    'customer_id' => (string) $customer->id,
+                    'customer_name' => $customer->full_name,
+                    'customer_code' => $customer->customer_code,
+                    'email' => $customer->email,
+                    'sales_id' => (string) $pending['sales_id'],
+                    'action' => 'create_customer',
+                ]),
+                $pending['sales_id']
+            );
+
             return redirect()->route('guest.profile.my-customers.index')
                 ->with('success', 'Akun buyer '.$customer->full_name.' berhasil dibuat dan email sudah diverifikasi! Menunggu persetujuan Admin.');
         }
@@ -269,6 +283,19 @@ class AuthController extends Controller
             ]);
 
             session()->forget('pending_buyer');
+
+            ActivityLogger::log(
+                'Sales mendaftarkan customer baru ' . $customer->full_name,
+                json_encode([
+                    'customer_id' => (string) $customer->id,
+                    'customer_name' => $customer->full_name,
+                    'customer_code' => $customer->customer_code,
+                    'email' => $customer->email,
+                    'sales_id' => (string) $pending['sales_id'],
+                    'action' => 'create_customer',
+                ]),
+                $pending['sales_id']
+            );
 
             return redirect()->route('guest.profile.my-customers.index')
                 ->with('success', 'Akun buyer '.$customer->full_name.' berhasil dibuat dan email sudah diverifikasi! Menunggu persetujuan Admin.');

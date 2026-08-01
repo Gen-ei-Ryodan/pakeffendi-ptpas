@@ -386,6 +386,17 @@ class MyCustomerController extends Controller
             }
         });
 
+        ActivityLogger::log(
+            'Sales ' . $sales->name . ' mengubah alamat untuk customer ' . $customer->full_name,
+            json_encode([
+                'customer_id' => (string) $customer->id,
+                'customer_name' => $customer->full_name,
+                'address_id' => (string) $address->id,
+                'action' => 'update_address',
+            ]),
+            $sales->id
+        );
+
         return redirect()
             ->route('guest.profile.my-customers.show', $customer)
             ->with('status', 'Alamat berhasil diperbarui.');
@@ -403,7 +414,7 @@ class MyCustomerController extends Controller
 
     public function setActiveAddress(Customer $customer, CustomerAddress $address)
     {
-        $this->verifyOwnership($customer);
+        $sales = $this->verifyOwnership($customer);
         abort_unless((int) $address->customer_id === (int) $customer->id, 404);
 
         DB::transaction(function () use ($customer, $address) {
@@ -417,8 +428,19 @@ class MyCustomerController extends Controller
             ]);
         });
 
+        ActivityLogger::log(
+            'Sales ' . $sales->name . ' mengubah alamat aktif untuk customer ' . $customer->full_name,
+            json_encode([
+                'customer_id' => (string) $customer->id,
+                'customer_name' => $customer->full_name,
+                'address_id' => (string) $address->id,
+                'action' => 'set_active_address',
+            ]),
+            $sales->id
+        );
+
         return redirect()
             ->route('guest.profile.my-customers.show', $customer)
-            ->with('status', 'Alamat aktif berhasil diubah.');
+            ->with('status', 'Alamat aktif berubah.');
     }
 }

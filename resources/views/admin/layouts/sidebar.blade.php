@@ -25,6 +25,7 @@
         ],
         'Lainnya' => [
             ['label' => 'logbook', 'route' => 'admin.logs.index', 'active' => 'admin.logs.*', 'icon' => 'bi-journal-text'],
+            ['label' => 'sales log', 'route' => 'admin.sales-logs.index', 'active' => 'admin.sales-logs.*', 'icon' => 'bi-activity'],
             ['label' => 'about us', 'route' => 'admin.about.edit', 'active' => 'admin.about.*', 'icon' => 'bi-info-circle'],
         ],
     ];
