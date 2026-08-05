@@ -93,6 +93,16 @@ Route::prefix('/')->group(function () {
         if (! empty($validated['q'])) {
             $q = trim((string) $validated['q']);
             $words = preg_split('/\s+/', $q);
+            
+            // Exact match gets highest priority
+            $query->orderByRaw("CASE 
+                WHEN LOWER(name) = LOWER(?) THEN 1
+                WHEN LOWER(sku) = LOWER(?) THEN 2
+                WHEN LOWER(name) LIKE LOWER(?) THEN 3
+                ELSE 4
+            END", [$q, $q, $q . '%']);
+            
+            // Search logic - all words must be present
             foreach ($words as $word) {
                 if ($word === '') continue;
                 $query->where(function ($qBuilder) use ($word) {
@@ -260,6 +270,7 @@ Route::prefix('/')->group(function () {
 
     // Cart
     Route::get('/cart', [CartController::class, 'index'])->middleware('guest.auth')->name('guest.cart.index');
+    Route::get('/cart/count', [CartController::class, 'count'])->name('guest.cart.count');
     Route::get('/cart/summary', [CartController::class, 'summary'])->name('guest.cart.summary');
     Route::post('/cart/items', [CartController::class, 'addItem'])->middleware('guest.auth')->name('guest.cart.items.store');
     Route::post('/cart/items/{product}', [CartController::class, 'setItemQuantity'])->middleware('guest.auth')->name('guest.cart.items.set');

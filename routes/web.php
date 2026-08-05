@@ -8,7 +8,9 @@ use App\Http\Controllers\Admin\CustomerAddressController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\FavoriteBrandController;
+use App\Http\Controllers\Admin\FeaturedProductController;
 use App\Http\Controllers\Admin\LogbookController;
+use App\Http\Controllers\Admin\NewProductController;
 use App\Http\Controllers\Admin\SalesLogController;
 use App\Http\Controllers\Admin\ProductBrandController;
 use App\Http\Controllers\Admin\ProductCategoryController;
@@ -37,6 +39,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
         Route::patch('customers/{customer}/approve', [CustomerController::class, 'approve'])->name('customers.approve');
         Route::patch('customers/{customer}/reject', [CustomerController::class, 'reject'])->name('customers.reject');
+        Route::patch('customers/{customer}/blacklist', [CustomerController::class, 'blacklist'])->name('customers.blacklist');
+        Route::patch('customers/{customer}/unblacklist', [CustomerController::class, 'unblacklist'])->name('customers.unblacklist');
         Route::resource('customers.addresses', CustomerAddressController::class)->only(['index', 'store', 'update', 'destroy']);
         Route::post('customers/{customer}/addresses/{address}/active', [CustomerAddressController::class, 'setActive'])->name('customers.addresses.set-active');
 
@@ -56,6 +60,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('sales-orders', SalesOrderController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);
         Route::resource('broadcasts', BroadcastController::class)->except(['show']);
         Route::resource('favorite-brands', FavoriteBrandController::class)->only(['index', 'create', 'store', 'destroy']);
+        Route::resource('featured-products', FeaturedProductController::class)->except(['show']);
+        Route::resource('new-products', NewProductController::class)->only(['index', 'edit', 'update', 'destroy']);
         Route::get('logs', [LogbookController::class, 'index'])->name('logs.index');
         Route::get('sales-logs', [SalesLogController::class, 'index'])->name('sales-logs.index');
         Route::get('about', [AboutController::class, 'edit'])->name('about.edit');

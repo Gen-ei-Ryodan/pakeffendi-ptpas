@@ -48,7 +48,7 @@ class AuthController extends Controller
         if (Auth::guard('customer')->attempt($credentials, $remember)) {
             $customer = Auth::guard('customer')->user();
 
-            if ($customer->status !== 'active') {
+            if ($customer->status !== Customer::STATUS_ACTIVE) {
                 Auth::guard('customer')->logout();
 
                 return back()->withErrors(['login' => 'Akun Anda belum aktif atau ditolak. Silakan hubungi Admin.']);
@@ -207,7 +207,7 @@ class AuthController extends Controller
                 'postal_code' => $pending['postal_code'] ?? null,
                 'company_name' => $pending['company_name'],
                 'password' => $pending['password'],
-                'status' => 'pending',
+                'status' => Customer::STATUS_NEW,
                 'sales_id' => $pending['sales_id'],
                 'account_type' => 'personal',
                 'ktp_number' => '-',
@@ -274,7 +274,7 @@ class AuthController extends Controller
                 'postal_code' => $pending['postal_code'] ?? null,
                 'company_name' => $pending['company_name'],
                 'password' => $pending['password'],
-                'status' => 'pending',
+                'status' => Customer::STATUS_NEW,
                 'sales_id' => $pending['sales_id'],
                 'account_type' => 'personal',
                 'ktp_number' => '-',

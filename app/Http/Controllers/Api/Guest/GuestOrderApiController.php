@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Guest;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SalesOrderCreatedMail;
 use App\Models\Customer;
 use App\Models\Product;
 use App\Models\SalesOrder;
@@ -10,6 +11,8 @@ use App\Models\SalesOrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class GuestOrderApiController extends Controller
@@ -115,6 +118,9 @@ class GuestOrderApiController extends Controller
                 'dpp' => $grandTotal,
             ]);
 
+            // Send order email
+            $this->sendOrderEmail($order);
+
             return response()->json([
                 'order_id' => $order->id,
                 'order_no' => $order->order_no,
@@ -122,6 +128,23 @@ class GuestOrderApiController extends Controller
                 'grand_total' => (float) $order->grand_total,
             ], 201);
         });
+    }
+
+    private function sendOrderEmail(SalesOrder $order): void
+    {
+        try {
+            // Load relations needed for email
+            $order->load(['customer', 'salesPerson', 'items.product']);
+
+            // Only send email if customer exists and has email
+            if ($order->customer && $order->customer->email) {
+                Mail::to($order->customer->email)
+                    ->send(new SalesOrderCreatedMail($order));
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the order creation
+            Log::error('Failed to send order email for order #' . $order->order_no . ': ' . $e->getMessage());
+        }
     }
 
     private function generateCustomerCode(): string

@@ -47,14 +47,24 @@ class CustomerController extends Controller
         ]);
     }
     
-    public function approve(Customer $customer)
+    public function approve(Request $request, Customer $customer)
     {
-        $customer->update(['status' => 'active']);
-        
+        // Validate Internal Customer ID
+        $validated = $request->validate([
+            'internal_code' => ['required', 'string', 'max:100'],
+        ], [
+            'internal_code.required' => 'Internal Customer ID wajib diisi.',
+            'internal_code.max' => 'Internal Customer ID maksimal 100 karakter.',
+        ]);
+
         // Generate customer code if missing
         if (empty($customer->customer_code)) {
-            $customer->update(['customer_code' => $this->generateCustomerCode()]);
+            $validated['customer_code'] = $this->generateCustomerCode();
         }
+
+        // Update status to active and save internal_code
+        $validated['status'] = Customer::STATUS_ACTIVE;
+        $customer->update($validated);
 
         ActivityLogger::log('approved', 'Customer Approved - '.$customer->full_name);
 
@@ -63,11 +73,38 @@ class CustomerController extends Controller
 
     public function reject(Customer $customer)
     {
-        $customer->update(['status' => 'rejected']);
+        $customer->update(['status' => 'new']);
         
         ActivityLogger::log('rejected', 'Customer Rejected - '.$customer->full_name);
 
         return redirect()->back()->with('status', 'Customer ditolak.');
+    }
+
+    public function blacklist(Customer $customer)
+    {
+        // Only active customers can be blacklisted
+        if ($customer->status !== Customer::STATUS_ACTIVE) {
+            return redirect()->back()->with('error', 'Hanya customer dengan status Active yang bisa di-blacklist.');
+        }
+
+        $customer->update(['status' => Customer::STATUS_BLACKLIST]);
+        
+        ActivityLogger::log('blacklisted', 'Customer Blacklisted - '.$customer->full_name);
+
+        return redirect()->back()->with('status', 'Customer berhasil di-blacklist.');
+    }
+
+    public function unblacklist(Customer $customer)
+    {
+        if ($customer->status !== Customer::STATUS_BLACKLIST) {
+            return redirect()->back()->with('error', 'Customer tidak dalam status blacklist.');
+        }
+
+        $customer->update(['status' => Customer::STATUS_ACTIVE]);
+        
+        ActivityLogger::log('unblacklisted', 'Customer Removed from Blacklist - '.$customer->full_name);
+
+        return redirect()->back()->with('status', 'Customer berhasil dihapus dari blacklist.');
     }
 
     public function show(Customer $customer)

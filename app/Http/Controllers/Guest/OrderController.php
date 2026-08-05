@@ -55,7 +55,8 @@ class OrderController extends Controller
         $customerName = trim((string) ($validated['customer'] ?? ''));
         $q = trim((string) ($validated['q'] ?? ''));
 
-        $query = SalesOrder::query()->with('customer');
+        $query = SalesOrder::query()
+            ->with(['customer:id,full_name,customer_code,email,phone']);
 
         if ($shopper instanceof Customer) {
             $query->where('customer_id', $shopper->id);
@@ -133,7 +134,10 @@ class OrderController extends Controller
             abort_unless((int) $order->sales_id === (int) $shopper->id, 404);
         }
 
-        $order->load(['items.product', 'customer']);
+        $order->load([
+            'items.product:id,name,sku,photo_path',
+            'customer:id,full_name,customer_code,email,phone,address,city,province,postal_code',
+        ]);
 
         $skus = $order->items->pluck('product.sku')->filter()->values()->toArray();
         $stockMap = $remoteStock->getStockBatch($skus);

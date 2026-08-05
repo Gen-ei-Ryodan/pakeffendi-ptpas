@@ -115,4 +115,15 @@ return [
         'name' => env('MAIL_FROM_NAME', 'Example'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Admin Email
+    |--------------------------------------------------------------------------
+    |
+    | Email address for admin that will be BCC-ed in all sales order emails.
+    |
+    */
+
+    'admin_email' => env('ADMIN_EMAIL', null),
+
 ];

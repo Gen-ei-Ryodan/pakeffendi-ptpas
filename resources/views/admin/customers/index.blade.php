@@ -8,8 +8,9 @@
 {{-- Stats Cards --}}
 @php
     $totalCount = $customers->total();
-    $pendingCount = \App\Models\Customer::where('status', 'pending')->count();
+    $newCount = \App\Models\Customer::where('status', 'new')->count();
     $activeCount = \App\Models\Customer::where('status', 'active')->count();
+    $blacklistCount = \App\Models\Customer::where('status', 'blacklist')->count();
 @endphp
 <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center gap-4">
@@ -30,8 +31,8 @@
             </svg>
         </div>
         <div>
-            <div class="text-2xl font-bold text-amber-700">{{ $pendingCount }}</div>
-            <div class="text-xs text-slate-500">Pending</div>
+            <div class="text-2xl font-bold text-amber-700">{{ $newCount }}</div>
+            <div class="text-xs text-slate-500">New</div>
         </div>
     </div>
     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center gap-4">
@@ -46,15 +47,14 @@
         </div>
     </div>
     <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm flex items-center gap-4">
-        <div class="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center flex-shrink-0">
-            <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
-                <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
+        <div class="w-12 h-12 rounded-xl bg-rose-100 flex items-center justify-center flex-shrink-0">
+            <svg class="w-6 h-6 text-rose-600" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clip-rule="evenodd"/>
             </svg>
         </div>
         <div>
-            <div class="text-2xl font-bold text-purple-700">{{ $totalCount - $pendingCount - $activeCount }}</div>
-            <div class="text-xs text-slate-500">Lainnya</div>
+            <div class="text-2xl font-bold text-rose-700">{{ $blacklistCount }}</div>
+            <div class="text-xs text-slate-500">Blacklist</div>
         </div>
     </div>
 </div>
@@ -99,12 +99,12 @@
                         All
                     </span>
                 </a>
-                <a href="{{ route('admin.customers.index', ['status' => 'pending']) }}"
+                <a href="{{ route('admin.customers.index', ['status' => 'new']) }}"
                    class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all
-                   {{ $status === 'pending' ? 'bg-amber-100 text-amber-700 shadow-sm' : 'text-slate-500 hover:bg-slate-100' }}">
+                   {{ $status === 'new' ? 'bg-amber-100 text-amber-700 shadow-sm' : 'text-slate-500 hover:bg-slate-100' }}">
                     <span class="flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                        Pending
+                        New
                     </span>
                 </a>
                 <a href="{{ route('admin.customers.index', ['status' => 'active']) }}"
@@ -113,6 +113,14 @@
                     <span class="flex items-center gap-1.5">
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                         Active
+                    </span>
+                </a>
+                <a href="{{ route('admin.customers.index', ['status' => 'blacklist']) }}"
+                   class="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all
+                   {{ $status === 'blacklist' ? 'bg-rose-100 text-rose-700 shadow-sm' : 'text-slate-500 hover:bg-slate-100' }}">
+                    <span class="flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                        Blacklist
                     </span>
                 </a>
             </div>
@@ -185,9 +193,11 @@
                     <td class="py-3.5 px-4">
                         @php
                             $badge = match($customer->status) {
-                                'pending' => ['bg-amber-100', 'text-amber-700', 'bg-amber-500'],
+                                'new' => ['bg-amber-100', 'text-amber-700', 'bg-amber-500'],
                                 'active' => ['bg-emerald-100', 'text-emerald-700', 'bg-emerald-500'],
-                                'rejected' => ['bg-rose-100', 'text-rose-700', 'bg-rose-500'],
+                                'blacklist' => ['bg-rose-100', 'text-rose-700', 'bg-rose-500'],
+                                'pending' => ['bg-amber-100', 'text-amber-700', 'bg-amber-500'],
+                                'rejected' => ['bg-slate-100', 'text-slate-700', 'bg-slate-500'],
                                 default => ['bg-slate-100', 'text-slate-700', 'bg-slate-500'],
                             };
                         @endphp
@@ -198,17 +208,30 @@
                     </td>
                     <td class="py-3.5 px-4">
                         <div class="flex items-center justify-center gap-1.5">
-                            @if($customer->status === 'pending')
-                                <form method="post" action="{{ route('admin.customers.approve', $customer) }}" class="inline" onsubmit="return confirm('Setujui customer {{ $customer->full_name }}?')">
-                                    @csrf @method('PATCH')
-                                    <button type="submit" class="p-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 transition-colors" title="Approve">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                    </button>
-                                </form>
+                            @if($customer->status === 'new' || $customer->status === 'pending')
+                                <button type="button" onclick="openApproveModal({{ $customer->id }}, '{{ $customer->full_name }}')" class="p-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 transition-colors" title="Approve">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                </button>
                                 <form method="post" action="{{ route('admin.customers.reject', $customer) }}" class="inline" onsubmit="return confirm('Tolak customer {{ $customer->full_name }}?')">
                                     @csrf @method('PATCH')
                                     <button type="submit" class="p-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition-colors" title="Reject">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    </button>
+                                </form>
+                            @endif
+                            @if($customer->status === 'active')
+                                <form method="post" action="{{ route('admin.customers.blacklist', $customer) }}" class="inline" onsubmit="return confirm('Blacklist customer {{ $customer->full_name }}? Customer tidak akan bisa melakukan order.')">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="p-1.5 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 hover:bg-rose-100 transition-colors" title="Blacklist">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+                                    </button>
+                                </form>
+                            @endif
+                            @if($customer->status === 'blacklist')
+                                <form method="post" action="{{ route('admin.customers.unblacklist', $customer) }}" class="inline" onsubmit="return confirm('Hapus blacklist untuk customer {{ $customer->full_name }}?')">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="p-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 hover:bg-emerald-100 transition-colors" title="Remove Blacklist">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     </button>
                                 </form>
                             @endif
@@ -261,4 +284,65 @@
         <div>{{ $customers->links() }}</div>
     </div>
 </div>
+
+{{-- Modal Approve Customer --}}
+<div id="approveModal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4">
+        <div class="px-6 py-4 border-b border-slate-200">
+            <h3 class="text-lg font-semibold text-slate-800">Approve Customer</h3>
+        </div>
+        <form id="approveForm" method="POST" action="">
+            @csrf
+            @method('PATCH')
+            <div class="px-6 py-4">
+                <p class="text-sm text-slate-600 mb-4">
+                    Anda akan menyetujui customer: <strong id="customerName"></strong>
+                </p>
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
+                        Internal Customer ID <span class="text-rose-500">*</span>
+                    </label>
+                    <input type="text" name="internal_code" required
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 transition-shadow"
+                           placeholder="Masukkan Internal Customer ID">
+                    <p class="text-xs text-slate-500 mt-1">Wajib diisi untuk mengaktifkan customer</p>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-200 flex items-center justify-end gap-2">
+                <button type="button" onclick="closeApproveModal()"
+                        class="px-4 py-2 rounded-lg border border-slate-300 text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors">
+                    Batal
+                </button>
+                <button type="submit"
+                        class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-colors">
+                    Approve
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openApproveModal(customerId, customerName) {
+    const modal = document.getElementById('approveModal');
+    const form = document.getElementById('approveForm');
+    const nameElement = document.getElementById('customerName');
+    
+    form.action = '/admin/customers/' + customerId + '/approve';
+    nameElement.textContent = customerName;
+    modal.classList.remove('hidden');
+}
+
+function closeApproveModal() {
+    const modal = document.getElementById('approveModal');
+    modal.classList.add('hidden');
+}
+
+// Close modal when clicking outside
+document.getElementById('approveModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeApproveModal();
+    }
+});
+</script>
 @endsection

@@ -587,4 +587,20 @@ class CartController extends Controller
             'items' => $itemDetails,
         ];
     }
+
+    public function count(Request $request)
+    {
+        try {
+            $resolved = $this->resolveCart($request);
+            $cart = $resolved['cart'];
+            
+            $totalItems = $cart->items()->sum('quantity');
+            
+            return response()->json([
+                'count' => $totalItems,
+            ])->cookie($resolved['cookie']);
+        } catch (\Exception $e) {
+            return response()->json(['count' => 0]);
+        }
+    }
 }

@@ -10,9 +10,12 @@ use App\Models\Product;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
 use App\Models\User;
+use App\Mail\SalesOrderCreatedMail;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class CartService
@@ -257,6 +260,15 @@ class CartService
                 $customerId = $shopper->id;
                 $salesId = $shopper->sales_id;
 
+                // Validate customer status - only active customers can order
+                if ($shopper->status === Customer::STATUS_BLACKLIST) {
+                    abort(403, 'Customer dengan status Blacklist tidak dapat melakukan order. Silakan hubungi Admin.');
+                }
+
+                if ($shopper->status !== Customer::STATUS_ACTIVE) {
+                    abort(403, 'Hanya customer dengan status Active yang dapat melakukan order.');
+                }
+
                 $selectedAddressId = isset($payload['address_id']) ? (int) $payload['address_id'] : null;
                 $activeAddress = null;
 
@@ -288,6 +300,15 @@ class CartService
 
                 if (! $targetCustomer) {
                     abort(422, 'Customer tidak ditemukan atau bukan milik Anda.');
+                }
+
+                // Validate customer status
+                if ($targetCustomer->status === Customer::STATUS_BLACKLIST) {
+                    abort(403, 'Customer dengan status Blacklist tidak dapat melakukan order. Silakan hubungi Admin.');
+                }
+
+                if ($targetCustomer->status !== Customer::STATUS_ACTIVE) {
+                    abort(403, 'Hanya customer dengan status Active yang dapat melakukan order.');
                 }
 
                 $salesId = $shopper->id;
@@ -368,6 +389,7 @@ class CartService
                     'net_price' => $netPrice,
                     'discount_percent' => $discountPercent,
                     'final_total' => $finalTotal,
+                    'notes' => $item->notes ?? null,
                 ]);
 
                 $grandTotal += $finalTotal;
@@ -388,6 +410,9 @@ class CartService
                     'status' => 'active',
                 ]);
             }
+
+            // Send email notification
+            $this->sendOrderEmail($order);
 
             return $order;
         });
@@ -456,6 +481,7 @@ class CartService
                     'net_price' => $netPrice,
                     'discount_percent' => $discountPercent,
                     'final_total' => $finalTotal,
+                    'notes' => $item->notes ?? null,
                 ]);
 
                 $grandTotal += $finalTotal;
@@ -507,5 +533,25 @@ class CartService
 
             return $cart->refresh();
         });
+    }
+
+    /**
+     * Send order confirmation email to customer, sales, and admin.
+     */
+    private function sendOrderEmail(SalesOrder $order): void
+    {
+        try {
+            // Load relations needed for email
+            $order->load(['customer', 'salesPerson', 'items.product']);
+
+            // Only send email if customer exists and has email
+            if ($order->customer && $order->customer->email) {
+                Mail::to($order->customer->email)
+                    ->send(new SalesOrderCreatedMail($order));
+            }
+        } catch (\Exception $e) {
+            // Log error but don't fail the order creation
+            Log::error('Failed to send order email for order #' . $order->order_no . ': ' . $e->getMessage());
+        }
     }
 }

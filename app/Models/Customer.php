@@ -38,20 +38,51 @@ class Customer extends Authenticatable
         'remember_token',
     ];
 
+    // Status constants
+    public const STATUS_NEW = 'new';
+    public const STATUS_ACTIVE = 'active';
+    public const STATUS_BLACKLIST = 'blacklist';
+
     // Scopes
-    public function scopePending($query)
+    public function scopeNew($query)
     {
-        return $query->where('status', 'pending');
+        return $query->where('status', self::STATUS_NEW);
     }
 
     public function scopeActive($query)
     {
-        return $query->where('status', 'active');
+        return $query->where('status', self::STATUS_ACTIVE);
     }
 
-    public function isActive()
+    public function scopeBlacklist($query)
     {
-        return $this->status === 'active';
+        return $query->where('status', self::STATUS_BLACKLIST);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('status', 'pending'); // Backward compatibility
+    }
+
+    // Status check methods
+    public function isActive(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
+    }
+
+    public function isNew(): bool
+    {
+        return $this->status === self::STATUS_NEW;
+    }
+
+    public function isBlacklist(): bool
+    {
+        return $this->status === self::STATUS_BLACKLIST;
+    }
+
+    public function canOrder(): bool
+    {
+        return $this->status === self::STATUS_ACTIVE;
     }
 
     public function sales()

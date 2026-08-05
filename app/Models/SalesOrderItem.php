@@ -16,6 +16,7 @@ class SalesOrderItem extends Model
         'net_price',
         'discount_percent',
         'final_total',
+        'notes',
     ];
 
     protected $casts = [
