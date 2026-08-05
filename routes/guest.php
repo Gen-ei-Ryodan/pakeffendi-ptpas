@@ -8,6 +8,8 @@ use App\Http\Controllers\Guest\ProfileController;
 use App\Http\Controllers\Guest\RegionController;
 use App\Http\Controllers\Guest\RemoteStockController;
 use App\Models\Broadcast;
+use App\Models\FeaturedProduct;
+use App\Models\NewProduct;
 use App\Models\Product;
 use App\Models\ProductBrand;
 use App\Models\ProductCategory;
@@ -23,14 +25,23 @@ Route::prefix('/')->group(function () {
             ->orderBy('name')
             ->get();
 
-        $featuredProducts = Product::query()
-            ->with(['brand:brand_code,brand_name'])
-            ->active()
-            ->activeCategory()
-            ->hasPhoto()
-            ->orderBy('name')
+        $featuredProducts = FeaturedProduct::query()
+            ->with(['product.brand', 'product.category'])
+            ->orderBy('sort_order')
             ->limit(8)
-            ->get();
+            ->get()
+            ->pluck('product')
+            ->filter(fn (Product $product) => ! $product->discontinued && $product->category?->is_active && $product->has_photo)
+            ->values();
+
+        $newProducts = NewProduct::query()
+            ->with(['product.brand', 'product.category'])
+            ->orderBy('sort_order')
+            ->limit(8)
+            ->get()
+            ->pluck('product')
+            ->filter(fn (Product $product) => ! $product->discontinued && $product->category?->is_active && $product->has_photo)
+            ->values();
 
         $statuses = ProductStatus::query()->orderBy('sort_order')->get();
         $statusProducts = collect();
@@ -59,6 +70,7 @@ Route::prefix('/')->group(function () {
         return view('guest.home', [
             'categories' => $categories,
             'featuredProducts' => $featuredProducts,
+            'newProducts' => $newProducts,
             'statusProducts' => $statusProducts,
             'broadcasts' => $broadcasts,
         ]);

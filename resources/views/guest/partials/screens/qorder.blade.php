@@ -7,7 +7,7 @@
         </div>
         <div class="icon-badge text-accent" role="button" tabindex="0" data-action="openCart">
             <i class="fas fa-shopping-cart"></i>
-            <span class="badge-dot" data-cart-badge style="display: none;"></span>
+            <span class="badge-dot" data-cart-badge style="display: none;">0</span>
         </div>
     </div>
 

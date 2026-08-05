@@ -10,7 +10,7 @@
         <div class="header-actions compact">
             <div class="icon-badge" role="button" tabindex="0" data-action="openNotif"><i class="fas fa-bell"></i></div>
             <div class="icon-badge" role="button" tabindex="0" data-action="openCart">
-                <i class="fas fa-shopping-cart"></i><span class="badge-dot" data-cart-badge style="display: none;"></span>
+                <i class="fas fa-shopping-cart"></i><span class="badge-dot" data-cart-badge style="display: none;">0</span>
             </div>
         </div>
     </div>

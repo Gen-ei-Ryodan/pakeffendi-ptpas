@@ -20,8 +20,10 @@
             ['label' => 'perubahan customer', 'route' => 'admin.customers.change-requests.index', 'active' => 'admin.customers.change-requests.*', 'icon' => 'bi-arrow-repeat'],
         ],
         'Promosi' => [
-            ['label' => 'broadcast', 'route' => 'admin.broadcasts.index', 'active' => 'admin.broadcasts.*', 'icon' => 'bi-megaphone'],
+            ['label' => 'CMS banner home', 'route' => 'admin.broadcasts.index', 'active' => 'admin.broadcasts.*', 'icon' => 'bi-megaphone'],
             ['label' => 'favorite brand', 'route' => 'admin.favorite-brands.index', 'active' => 'admin.favorite-brands.*', 'icon' => 'bi-heart'],
+            ['label' => 'produk terlaris', 'route' => 'admin.featured-products.index', 'active' => 'admin.featured-products.*', 'icon' => 'bi-star'],
+            ['label' => 'produk terbaru', 'route' => 'admin.new-products.index', 'active' => 'admin.new-products.*', 'icon' => 'bi-clock-history'],
         ],
         'Lainnya' => [
             ['label' => 'logbook', 'route' => 'admin.logs.index', 'active' => 'admin.logs.*', 'icon' => 'bi-journal-text'],

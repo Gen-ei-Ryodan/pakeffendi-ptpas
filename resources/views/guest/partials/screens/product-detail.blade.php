@@ -5,7 +5,7 @@
         </button>
         <div class="header-actions">
             <div class="icon-badge" role="button" tabindex="0" data-action="openCart">
-                <i class="fas fa-shopping-cart"></i><span class="badge-dot" data-cart-badge style="display: none;"></span>
+                <i class="fas fa-shopping-cart"></i><span class="badge-dot" data-cart-badge style="display: none;">0</span>
             </div>
         </div>
     </div>

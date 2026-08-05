@@ -7,7 +7,7 @@
                     <p>Update dari admin langsung tampil di sini</p>
                     <button class="btn-banner" type="button" data-action="openProductList">Lihat Produk</button>
                 </div>
-                <img src="{{ $broadcasts->first()?->image_path ?: 'https://placehold.co/600x300/1a1a1a/white?text=PAS+Banner' }}" alt="Banner Promo" class="banner-img"
+                     <img src="{{ $broadcasts->first()?->image_url ?: asset('guest/img/placeholder-banner.svg') }}" alt="Banner Promo" class="banner-img"
                      onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-banner.svg') }}'">
             </div>
         </div>

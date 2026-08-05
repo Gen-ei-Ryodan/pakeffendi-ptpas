@@ -155,17 +155,12 @@
         },
         
         updateUI() {
-            const cartCount = document.getElementById('cartCount');
             const totalItems = parseInt(this.summary?.total_items || 0);
-            
-            if (cartCount) {
-                if (totalItems > 0) {
-                    cartCount.textContent = totalItems;
-                    cartCount.style.display = 'block';
-                } else {
-                    cartCount.style.display = 'none';
-                }
-            }
+            document.querySelectorAll('[data-cart-badge], #cartCount, #cartCountDesktop, #cartCountMobile, #cartCountBottom')
+                .forEach((badge) => {
+                    badge.textContent = totalItems;
+                    badge.style.display = totalItems > 0 ? 'inline-flex' : 'none';
+                });
         },
         
         showNotification(message, type = 'info') {

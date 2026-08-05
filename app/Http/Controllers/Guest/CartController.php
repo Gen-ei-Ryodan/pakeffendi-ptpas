@@ -408,6 +408,10 @@ class CartController extends Controller
             }
         }
 
+        if ($cart->items()->doesntExist()) {
+            abort(422, 'Keranjang belanja kosong.');
+        }
+
         $order = $this->cartService->checkout($cart, $shopper, $validated);
 
         return redirect()

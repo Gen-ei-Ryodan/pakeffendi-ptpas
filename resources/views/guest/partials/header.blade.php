@@ -35,7 +35,7 @@
             <button class="nav-action" id="cart-btn" type="button">
                 <div class="icon-wrapper">
                     <i class="fas fa-shopping-cart"></i>
-                    <span class="badge-dot" data-cart-badge style="display: none;"></span>
+                    <span class="badge-dot" data-cart-badge style="display: none;">0</span>
                 </div>
                 <span class="desktop-only">Keranjang</span>
             </button>

@@ -22,6 +22,42 @@
     </div>
 </section>
 
+@if(($featuredProducts ?? collect())->isNotEmpty())
+<section class="py-5">
+    <div class="container">
+        <div class="section-container">
+            <div class="section-header">
+                <h3 class="section-title">Produk Terlaris</h3>
+                <a href="{{ url('/products') }}" class="see-all">Lihat semua <i class="bi bi-chevron-right"></i></a>
+            </div>
+            <div class="products-scroll">
+                @foreach($featuredProducts as $product)
+                    @include('guest.partials.product-card-item')
+                @endforeach
+            </div>
+        </div>
+    </div>
+</section>
+@endif
+
+@if(($newProducts ?? collect())->isNotEmpty())
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="section-container">
+            <div class="section-header">
+                <h3 class="section-title">Produk Terbaru</h3>
+                <a href="{{ url('/products') }}" class="see-all">Lihat semua <i class="bi bi-chevron-right"></i></a>
+            </div>
+            <div class="products-scroll">
+                @foreach($newProducts as $product)
+                    @include('guest.partials.product-card-item')
+                @endforeach
+            </div>
+        </div>
+    </div>
+</section>
+@endif
+
 <!-- Categories Section -->
 <section class="py-5">
     <div class="container">
