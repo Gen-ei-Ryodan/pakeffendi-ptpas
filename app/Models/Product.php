@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -61,6 +62,11 @@ class Product extends Model
     {
         return $this->belongsToMany(Product::class, 'related_products', 'product_id', 'related_product_id')
             ->withPivot('relation_type');
+    }
+
+    public function newProduct(): HasOne
+    {
+        return $this->hasOne(NewProduct::class);
     }
 
     public function scopeActive($query)

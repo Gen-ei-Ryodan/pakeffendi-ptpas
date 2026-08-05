@@ -61,7 +61,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('broadcasts', BroadcastController::class)->except(['show']);
         Route::resource('favorite-brands', FavoriteBrandController::class)->only(['index', 'create', 'store', 'destroy']);
         Route::resource('featured-products', FeaturedProductController::class)->except(['show']);
-        Route::resource('new-products', NewProductController::class)->only(['index', 'edit', 'update', 'destroy']);
+        Route::get('new-products', [NewProductController::class, 'index'])->name('new-products.index');
+        Route::get('new-products/{product}/edit', [NewProductController::class, 'edit'])->name('new-products.edit');
+        Route::put('new-products/{product}', [NewProductController::class, 'update'])->name('new-products.update');
+        Route::delete('new-products/{product}', [NewProductController::class, 'destroy'])->name('new-products.destroy');
         Route::get('logs', [LogbookController::class, 'index'])->name('logs.index');
         Route::get('sales-logs', [SalesLogController::class, 'index'])->name('sales-logs.index');
         Route::get('about', [AboutController::class, 'edit'])->name('about.edit');

@@ -35,16 +35,16 @@
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
-            @forelse ($newProducts as $newProduct)
+             @forelse ($products as $product)
                 <tr class="hover:bg-slate-50">
                     <td class="py-3.5 px-4">
-                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 font-bold text-sm">
-                            {{ $newProduct->sort_order }}
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full {{ $product->newProduct ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }} font-bold text-sm">
+                            {{ $product->newProduct?->sort_order ?? '-' }}
                         </span>
                     </td>
                     <td class="py-3.5 px-4">
-                        @if($newProduct->product->photo_path)
-                            <img src="{{ asset('storage/'.$newProduct->product->photo_path) }}" class="w-14 h-14 rounded-lg object-cover border border-slate-200">
+                        @if($product->photo_path)
+                            <img src="{{ asset('storage/'.$product->photo_path) }}" class="w-14 h-14 rounded-lg object-cover border border-slate-200">
                         @else
                             <div class="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center">
                                 <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -54,18 +54,18 @@
                         @endif
                     </td>
                     <td class="py-3.5 px-4">
-                        <div class="font-semibold text-slate-800">{{ $newProduct->product->name }}</div>
+                        <div class="font-semibold text-slate-800">{{ $product->name }}</div>
                     </td>
-                    <td class="py-3.5 px-4 text-slate-600">{{ $newProduct->product->sku }}</td>
-                    <td class="py-3.5 px-4 text-slate-600">{{ $newProduct->product->created_at->format('d M Y') }}</td>
+                    <td class="py-3.5 px-4 text-slate-600">{{ $product->sku }}</td>
+                    <td class="py-3.5 px-4 text-slate-600">{{ $product->created_at->format('d M Y') }}</td>
                     <td class="py-3.5 px-4">
                         <div class="flex items-center justify-center gap-1.5">
-                            <a href="{{ route('admin.new-products.edit', $newProduct) }}" class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-sky-50 hover:text-sky-600" title="Edit">
+                            <a href="{{ route('admin.new-products.edit', $product) }}" class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-sky-50 hover:text-sky-600" title="Edit">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                 </svg>
                             </a>
-                            <form method="post" action="{{ route('admin.new-products.destroy', $newProduct) }}" class="inline" onsubmit="return confirm('Hapus produk ini dari daftar produk terbaru?')">
+                            <form method="post" action="{{ route('admin.new-products.destroy', $product) }}" class="inline" onsubmit="return confirm('Hapus produk ini dari daftar produk terbaru?')">
                                 @csrf @method('DELETE')
                                 <button type="submit" class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-rose-50 hover:text-rose-600" title="Hapus">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
@@ -85,7 +85,7 @@
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
                                 </svg>
                             </div>
-                            <div class="text-sm font-medium text-slate-500">Belum ada produk terbaru yang diatur</div>
+                             <div class="text-sm font-medium text-slate-500">Belum ada produk</div>
                         </div>
                     </td>
                 </tr>
@@ -96,11 +96,11 @@
 
     <div class="px-6 py-4 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-3">
         <div class="text-sm text-slate-500">
-            Menampilkan <span class="font-medium">{{ $newProducts->firstItem() ?? 0 }}</span> - 
-            <span class="font-medium">{{ $newProducts->lastItem() ?? 0 }}</span> dari 
-            <span class="font-medium">{{ $newProducts->total() }}</span>
+            Menampilkan <span class="font-medium">{{ $products->firstItem() ?? 0 }}</span> -
+            <span class="font-medium">{{ $products->lastItem() ?? 0 }}</span> dari
+            <span class="font-medium">{{ $products->total() }}</span>
         </div>
-        <div>{{ $newProducts->links() }}</div>
+        <div>{{ $products->links() }}</div>
     </div>
 </div>
 
@@ -111,7 +111,7 @@
         </svg>
         <div class="text-sm text-blue-800">
             <p class="font-medium mb-1">Informasi:</p>
-            <p>Data produk terbaru diatur secara otomatis berdasarkan tanggal pembuatan produk. Anda dapat mengubah urutan tampilan atau menghapus produk dari daftar.</p>
+             <p>Seluruh produk ditampilkan di sini berdasarkan tanggal dibuat. Gunakan tombol edit untuk mengatur urutan produk terbaru, atau tombol hapus untuk mengeluarkannya dari daftar produk terbaru.</p>
         </div>
     </div>
 </div>

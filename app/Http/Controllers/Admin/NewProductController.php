@@ -15,24 +15,25 @@ class NewProductController extends Controller
      */
     public function index()
     {
-        $newProducts = NewProduct::query()
-            ->with('product:id,name,sku,photo_path,created_at')
-            ->orderBy('sort_order')
+        $products = Product::query()
+            ->with('newProduct')
+            ->orderByDesc('created_at')
             ->paginate(20);
 
         return view('admin.new-products.index', [
-            'newProducts' => $newProducts,
+            'products' => $products,
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(NewProduct $newProduct)
+    public function edit(Product $product)
     {
-        $newProduct->load('product:id,name,sku,created_at');
+        $newProduct = $product->newProduct;
 
         return view('admin.new-products.edit', [
+            'product' => $product,
             'newProduct' => $newProduct,
         ]);
     }
@@ -40,7 +41,7 @@ class NewProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, NewProduct $newProduct)
+    public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
             'sort_order' => ['required', 'integer', 'min:0', 'max:999999'],
@@ -49,9 +50,12 @@ class NewProductController extends Controller
             'sort_order.integer' => 'Urutan harus berupa angka.',
         ]);
 
-        $newProduct->update($validated);
+        $newProduct = NewProduct::query()->updateOrCreate(
+            ['product_id' => $product->id],
+            $validated
+        );
 
-        ActivityLogger::log('updated', 'New Product - ' . $newProduct->product->name);
+        ActivityLogger::log('updated', 'New Product - ' . $product->name);
 
         return redirect()->route('admin.new-products.index')
             ->with('status', 'Urutan produk terbaru berhasil diupdate.');
@@ -60,12 +64,11 @@ class NewProductController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(NewProduct $newProduct)
+    public function destroy(Product $product)
     {
-        $productName = $newProduct->product->name;
-        $newProduct->delete();
+        NewProduct::query()->where('product_id', $product->id)->delete();
 
-        ActivityLogger::log('deleted', 'New Product - ' . $productName);
+        ActivityLogger::log('deleted', 'New Product - ' . $product->name);
 
         return redirect()->route('admin.new-products.index')
             ->with('status', 'Produk terbaru berhasil dihapus.');
