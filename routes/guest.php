@@ -130,7 +130,7 @@ Route::prefix('/')->group(function () {
             // 6. All other matches
             $caseConditions .= "ELSE " . (++$rankAdded) . " END";
             
-            $query->orderByRaw($caseConditions, $caseBindings);
+            $query->reorder()->orderByRaw($caseConditions, $caseBindings)->orderBy('name');
             
             // Search logic - all words must be present
             foreach ($words as $word) {
