@@ -94,13 +94,43 @@ Route::prefix('/')->group(function () {
             $q = trim((string) $validated['q']);
             $words = preg_split('/\s+/', $q);
             
-            // Exact match gets highest priority
-            $query->orderByRaw("CASE 
-                WHEN LOWER(name) = LOWER(?) THEN 1
-                WHEN LOWER(sku) = LOWER(?) THEN 2
-                WHEN LOWER(name) LIKE LOWER(?) THEN 3
-                ELSE 4
-            END", [$q, $q, $q . '%']);
+            // Build ranking with word boundary matching using LIKE patterns
+            $caseConditions = "CASE ";
+            $caseBindings = [];
+            
+            // 1. Exact match name (highest priority)
+            $caseConditions .= "WHEN LOWER(name) = LOWER(?) THEN 1 ";
+            $caseBindings[] = $q;
+            
+            // 2. Exact match SKU
+            $caseConditions .= "WHEN LOWER(sku) = LOWER(?) THEN 2 ";
+            $caseBindings[] = $q;
+            
+            // 3. Name starts with keyword (space after ensures word boundary)
+            $caseConditions .= "WHEN LOWER(name) LIKE LOWER(?) THEN 3 ";
+            $caseBindings[] = $q . ' %';
+            
+            // 4. Name starts with keyword (no space - covers single word products)
+            $caseConditions .= "WHEN LOWER(name) LIKE LOWER(?) THEN 4 ";
+            $caseBindings[] = $q . '%';
+            
+            // 5. Each word starts its own word in the name (e.g., "TANG KOMBINASI" not "SARUNG TANGAN")
+            // Check if first word appears at start or after a space
+            $rankAdded = 4;
+            if (count($words) >= 2) {
+                // Pattern: starts with first word followed by space
+                $caseConditions .= "WHEN LOWER(name) LIKE LOWER(?) THEN " . (++$rankAdded) . " ";
+                $caseBindings[] = $words[0] . ' %';
+                
+                // Pattern: space + first word + space (first word is a complete word in middle)
+                $caseConditions .= "WHEN LOWER(name) LIKE LOWER(?) THEN " . (++$rankAdded) . " ";
+                $caseBindings[] = '% ' . $words[0] . ' %';
+            }
+            
+            // 6. All other matches
+            $caseConditions .= "ELSE " . (++$rankAdded) . " END";
+            
+            $query->orderByRaw($caseConditions, $caseBindings);
             
             // Search logic - all words must be present
             foreach ($words as $word) {
