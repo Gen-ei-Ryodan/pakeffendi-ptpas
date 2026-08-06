@@ -44,12 +44,12 @@
                 <tr class="hover:bg-slate-50">
                     <td class="py-3.5 px-4">
                         <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-sky-100 text-sky-700 font-bold text-sm">
-                            {{ $featured->sort_order }}
+                            {{ $featured->no_urut_status }}
                         </span>
                     </td>
                     <td class="py-3.5 px-4">
-                        @if($featured->product->photo_path)
-                            <img src="{{ asset('storage/'.$featured->product->photo_path) }}" class="w-14 h-14 rounded-lg object-cover border border-slate-200">
+                        @if($featured->photo_path)
+                            <img src="{{ asset('storage/'.$featured->photo_path) }}" class="w-14 h-14 rounded-lg object-cover border border-slate-200">
                         @else
                             <div class="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center">
                                 <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -59,9 +59,9 @@
                         @endif
                     </td>
                     <td class="py-3.5 px-4">
-                        <div class="font-semibold text-slate-800">{{ $featured->product->name }}</div>
+                        <div class="font-semibold text-slate-800">{{ $featured->name }}</div>
                     </td>
-                    <td class="py-3.5 px-4 text-slate-600">{{ $featured->product->sku }}</td>
+                    <td class="py-3.5 px-4 text-slate-600">{{ $featured->sku }}</td>
                     <td class="py-3.5 px-4">
                         <div class="flex items-center justify-center gap-1.5">
                             <a href="{{ route('admin.featured-products.edit', $featured) }}" class="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-sky-50 hover:text-sky-600" title="Edit">

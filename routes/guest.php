@@ -25,27 +25,35 @@ Route::prefix('/')->group(function () {
             ->orderBy('name')
             ->get();
 
-        $featuredProducts = FeaturedProduct::query()
-            ->with(['product.brand', 'product.category'])
-            ->orderBy('sort_order')
+        $featuredProducts = Product::query()
+            ->with(['brand:brand_code,brand_name', 'category'])
+            ->whereRaw('LOWER(status_product) LIKE ?', ['%terlaris%'])
+            ->active()
+            ->activeCategory()
+            ->hasPhoto()
+            ->orderBy('no_urut_status')
+            ->orderBy('name')
             ->limit(8)
-            ->get()
-            ->pluck('product')
-            ->filter(fn (Product $product) => ! $product->discontinued && $product->category?->is_active && $product->has_photo)
-            ->values();
+            ->get();
 
-        $newProducts = NewProduct::query()
-            ->with(['product.brand', 'product.category'])
-            ->orderBy('sort_order')
+        $newProducts = Product::query()
+            ->with(['brand:brand_code,brand_name', 'category'])
+            ->whereRaw('LOWER(status_product) LIKE ?', ['%terbaru%'])
+            ->active()
+            ->activeCategory()
+            ->hasPhoto()
+            ->orderBy('no_urut_status')
+            ->orderBy('name')
             ->limit(8)
-            ->get()
-            ->pluck('product')
-            ->filter(fn (Product $product) => ! $product->discontinued && $product->category?->is_active && $product->has_photo)
-            ->values();
+            ->get();
 
         $statuses = ProductStatus::query()->orderBy('sort_order')->get();
         $statusProducts = collect();
         foreach ($statuses as $status) {
+            $label = strtolower($status->code.' '.$status->name);
+            if (str_contains($label, 'terlaris') || str_contains($label, 'terbaru')) {
+                continue;
+            }
             $products = Product::query()
                 ->with(['brand:brand_code,brand_name'])
                 ->active()

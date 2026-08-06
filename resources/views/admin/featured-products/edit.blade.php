@@ -29,8 +29,8 @@
                     Produk
                 </label>
                 <div class="px-4 py-3 bg-slate-50 border border-slate-200 rounded-lg">
-                    <div class="font-medium text-slate-800">{{ $featuredProduct->product->name }}</div>
-                    <div class="text-xs text-slate-500 mt-1">SKU: {{ $featuredProduct->product->sku }}</div>
+                    <div class="font-medium text-slate-800">{{ $featuredProduct->name }}</div>
+                    <div class="text-xs text-slate-500 mt-1">SKU: {{ $featuredProduct->sku }}</div>
                 </div>
                 <p class="text-xs text-slate-500 mt-1">Produk tidak dapat diubah. Hapus dan tambahkan lagi jika ingin mengganti produk.</p>
             </div>
@@ -39,7 +39,7 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">
                     Urutan <span class="text-rose-500">*</span>
                 </label>
-                <input type="number" name="sort_order" value="{{ old('sort_order', $featuredProduct->sort_order) }}" required min="0"
+                <input type="number" name="sort_order" value="{{ old('sort_order', $featuredProduct->no_urut_status ?? 0) }}" required min="0"
                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 @error('sort_order') border-rose-500 @enderror"
                        placeholder="Masukkan urutan (angka)">
                 <p class="text-xs text-slate-500 mt-1">Produk akan ditampilkan berdasarkan urutan dari kecil ke besar</p>

@@ -38,8 +38,9 @@
              @forelse ($products as $product)
                 <tr class="hover:bg-slate-50">
                     <td class="py-3.5 px-4">
-                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full {{ $product->newProduct ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }} font-bold text-sm">
-                            {{ $product->newProduct?->sort_order ?? '-' }}
+                        @php $isNew = $product->status_product && str_contains(strtolower($product->status_product), 'terbaru'); @endphp
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full {{ $isNew ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }} font-bold text-sm">
+                            {{ $isNew ? ($product->no_urut_status ?? '-') : '-' }}
                         </span>
                     </td>
                     <td class="py-3.5 px-4">

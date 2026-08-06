@@ -3,22 +3,23 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\FeaturedProduct;
 use App\Models\Product;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class FeaturedProductController extends Controller
 {
+    private const STATUS = 'TERLARIS';
+
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $featuredProducts = FeaturedProduct::query()
-            ->with('product:id,name,sku,photo_path')
-            ->orderBy('sort_order')
+        $featuredProducts = Product::query()
+            ->whereRaw('LOWER(status_product) LIKE ?', ['%terlaris%'])
+            ->orderBy('no_urut_status')
+            ->orderBy('name')
             ->paginate(20);
 
         return view('admin.featured-products.index', [
@@ -32,7 +33,7 @@ class FeaturedProductController extends Controller
     public function create()
     {
         $products = Product::query()
-            ->whereNotIn('id', FeaturedProduct::pluck('product_id'))
+            ->whereRaw("status_product IS NULL OR status_product = '' OR LOWER(status_product) NOT LIKE ?", ['%terlaris%'])
             ->where('discontinued', false)
             ->orderBy('name')
             ->get(['id', 'name', 'sku']);
@@ -48,18 +49,26 @@ class FeaturedProductController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'product_id' => ['required', 'integer', 'exists:products,id', 'unique:featured_products,product_id'],
+            'product_id' => ['required', 'integer', 'exists:products,id'],
             'sort_order' => ['required', 'integer', 'min:0', 'max:999999'],
         ], [
             'product_id.required' => 'Produk wajib dipilih.',
-            'product_id.unique' => 'Produk sudah ada di daftar produk terlaris.',
             'sort_order.required' => 'Urutan wajib diisi.',
             'sort_order.integer' => 'Urutan harus berupa angka.',
         ]);
 
-        $featuredProduct = FeaturedProduct::create($validated);
+        $product = Product::findOrFail($validated['product_id']);
 
-        ActivityLogger::log('created', 'Featured Product - ' . $featuredProduct->product->name);
+        if ($product->status_product && str_contains(strtolower($product->status_product), 'terlaris')) {
+            return back()->withErrors(['product_id' => 'Produk sudah ada di daftar produk terlaris.'])->withInput();
+        }
+
+        $product->update([
+            'status_product' => self::STATUS,
+            'no_urut_status' => (int) $validated['sort_order'],
+        ]);
+
+        ActivityLogger::log('created', 'Featured Product (Terlaris) - ' . $product->name);
 
         return redirect()->route('admin.featured-products.index')
             ->with('status', 'Produk terlaris berhasil ditambahkan.');
@@ -68,10 +77,8 @@ class FeaturedProductController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(FeaturedProduct $featuredProduct)
+    public function edit(Product $featuredProduct)
     {
-        $featuredProduct->load('product:id,name,sku');
-
         return view('admin.featured-products.edit', [
             'featuredProduct' => $featuredProduct,
         ]);
@@ -80,7 +87,7 @@ class FeaturedProductController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, FeaturedProduct $featuredProduct)
+    public function update(Request $request, Product $featuredProduct)
     {
         $validated = $request->validate([
             'sort_order' => ['required', 'integer', 'min:0', 'max:999999'],
@@ -89,9 +96,12 @@ class FeaturedProductController extends Controller
             'sort_order.integer' => 'Urutan harus berupa angka.',
         ]);
 
-        $featuredProduct->update($validated);
+        $featuredProduct->update([
+            'status_product' => self::STATUS,
+            'no_urut_status' => (int) $validated['sort_order'],
+        ]);
 
-        ActivityLogger::log('updated', 'Featured Product - ' . $featuredProduct->product->name);
+        ActivityLogger::log('updated', 'Featured Product (Terlaris) - ' . $featuredProduct->name);
 
         return redirect()->route('admin.featured-products.index')
             ->with('status', 'Urutan produk terlaris berhasil diupdate.');
@@ -100,12 +110,15 @@ class FeaturedProductController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(FeaturedProduct $featuredProduct)
+    public function destroy(Product $featuredProduct)
     {
-        $productName = $featuredProduct->product->name;
-        $featuredProduct->delete();
+        $productName = $featuredProduct->name;
+        $featuredProduct->update([
+            'status_product' => null,
+            'no_urut_status' => 0,
+        ]);
 
-        ActivityLogger::log('deleted', 'Featured Product - ' . $productName);
+        ActivityLogger::log('deleted', 'Featured Product (Terlaris) - ' . $productName);
 
         return redirect()->route('admin.featured-products.index')
             ->with('status', 'Produk terlaris berhasil dihapus.');

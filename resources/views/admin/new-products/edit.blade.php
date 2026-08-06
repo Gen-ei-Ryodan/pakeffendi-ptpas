@@ -39,7 +39,7 @@
                 <label class="block text-sm font-medium text-slate-700 mb-2">
                     Urutan <span class="text-rose-500">*</span>
                 </label>
-                 <input type="number" name="sort_order" value="{{ old('sort_order', $newProduct?->sort_order ?? 0) }}" required min="0"
+                 <input type="number" name="sort_order" value="{{ old('sort_order', $product->no_urut_status ?? 0) }}" required min="0"
                        class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:border-sky-500 focus:ring-2 focus:ring-sky-500/20 @error('sort_order') border-rose-500 @enderror"
                        placeholder="Masukkan urutan (angka)">
                 <p class="text-xs text-slate-500 mt-1">Produk akan ditampilkan berdasarkan urutan dari kecil ke besar</p>
