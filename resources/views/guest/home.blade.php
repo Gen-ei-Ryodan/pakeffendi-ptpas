@@ -4,10 +4,8 @@
 
 @section('content')
 @php
-    $heroImagePath = $broadcasts?->first()?->image_path;
-    $heroImageUrl = $heroImagePath
-        ? (\Illuminate\Support\Str::startsWith($heroImagePath, ['http://', 'https://']) ? $heroImagePath : asset('storage/' . $heroImagePath))
-        : asset('guest/img/placeholder-banner.svg');
+    $heroImages = $broadcasts ?? collect();
+
     $categoryIcons = ['laptop', 'bag', 'house', 'bicycle', 'heart', 'car', 'phone', 'watch', 'camera', 'speaker', 'tools', 'tags'];
     $categoryColors = ['blue', 'orange', 'purple', 'yellow', 'cyan', 'grey'];
 @endphp
@@ -16,7 +14,37 @@
     <div class="container">
         <div class="hero-banner-frame">
             <div class="hero-banner-media">
-                <img src="{{ $heroImageUrl }}" alt="PAS Market" class="hero-banner-image" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-banner.svg') }}'">
+                <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+
+                    <div class="carousel-inner">
+                        @forelse($heroImages as $index => $broadcast)
+                            @php
+                                $heroImageUrl = \Illuminate\Support\Str::startsWith($broadcast->image_path, ['http://', 'https://'])
+                                    ? $broadcast->image_path
+                                    : asset('storage/' . $broadcast->image_path);
+                            @endphp
+
+                            <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
+                                <img 
+                                    src="{{ $heroImageUrl }}" 
+                                    alt="PAS Market"
+                                    class="hero-banner-image"
+                                    onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-banner.svg') }}'"
+                                >
+                            </div>
+
+                        @empty
+                            <div class="carousel-item active">
+                                <img 
+                                    src="{{ asset('guest/img/placeholder-banner.svg') }}"
+                                    class="hero-banner-image"
+                                    alt="Placeholder"
+                                >
+                            </div>
+                        @endforelse
+                    </div>
+
+                </div>
             </div>
         </div>
     </div>
