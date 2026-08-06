@@ -20,7 +20,7 @@
         </div>
     </div>
 
-    <form method="POST" action="{{ route('admin.new-products.update', $newProduct) }}">
+    <form method="POST" action="{{ route('admin.new-products.update', $product) }}">
         @csrf
         @method('PUT')
         <div class="p-6 space-y-6">
