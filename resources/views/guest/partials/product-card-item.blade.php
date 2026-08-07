@@ -44,7 +44,7 @@
                 <button class="qty-btn" type="button" data-action="decrease">
                     <i class="bi bi-dash"></i>
                 </button>
-                <input type="number" class="qty-input" value="1" min="1" max="9999">
+                <input type="number" class="qty-input" value="1" min="1" max="999999">
                 <button class="qty-btn" type="button" data-action="increase">
                     <i class="bi bi-plus"></i>
                 </button>

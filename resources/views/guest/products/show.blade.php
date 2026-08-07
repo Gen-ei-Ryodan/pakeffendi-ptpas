@@ -129,7 +129,7 @@
                                     <button class="btn btn-secondary btn-sm btn-quantity flex-shrink-0" type="button" data-action="decrease">
                                         <i class="bi bi-dash"></i>
                                     </button>
-                                    <input type="number" class="form-control text-center" id="quantity" value="1" min="1" max="999">
+                                    <input type="number" class="form-control text-center" id="quantity" value="1" min="1" max="999999">
                                     <button class="btn btn-secondary btn-sm btn-quantity flex-shrink-0" type="button" data-action="increase">
                                         <i class="bi bi-plus"></i>
                                     </button>

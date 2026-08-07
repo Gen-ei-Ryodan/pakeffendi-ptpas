@@ -52,7 +52,7 @@
                 const rawQty = product?.quantity;
                 let quantity = typeof rawQty === 'number' ? rawQty : parseInt(rawQty, 10);
                 if (!Number.isFinite(quantity)) quantity = 1;
-                quantity = Math.max(1, Math.min(9999, quantity));
+                quantity = Math.max(1, Math.min(999999, quantity));
 
                 const now = Date.now();
                 const lastAt = this._lastAddAt.get(String(productId)) || 0;
@@ -82,7 +82,7 @@
             const rawQty = product?.quantity;
             let quantity = typeof rawQty === 'number' ? rawQty : parseInt(rawQty, 10);
             if (!Number.isFinite(quantity)) quantity = 1;
-            quantity = Math.max(1, Math.min(9999, quantity));
+            quantity = Math.max(1, Math.min(999999, quantity));
 
             const now = Date.now();
             const lastAt = this._lastAddAt.get(String(productId)) || 0;
@@ -277,7 +277,7 @@
                     if (!input) return;
                     const current = parseInt(input.value, 10) || 1;
                     const min = parseInt(input.min, 10) || 1;
-                    const max = parseInt(input.max, 10) || 9999;
+                    const max = parseInt(input.max, 10) || 999999;
                     const action = qtyBtn.dataset.action;
                     let newVal = current;
                     if (action === 'increase') {
@@ -306,7 +306,7 @@
             if (qtyInput) {
                 const raw = parseInt(qtyInput.value, 10);
                 const min = parseInt(qtyInput.min, 10) || 1;
-                const max = parseInt(qtyInput.max, 10) || 9999;
+                const max = parseInt(qtyInput.max, 10) || 999999;
                 quantity = Number.isFinite(raw) ? Math.max(min, Math.min(max, raw)) : 1;
             }
             return {

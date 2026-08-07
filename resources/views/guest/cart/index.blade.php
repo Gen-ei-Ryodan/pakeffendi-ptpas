@@ -113,7 +113,7 @@
                                                 <i class="bi bi-dash"></i>
                                             </button>
                                             <input type="number" class="form-control text-center" 
-                                                   value="{{ (int) $item->quantity }}" min="1" max="9999"
+                                                   value="{{ (int) $item->quantity }}" min="1" max="999999"
                                                    onchange="updateQuantityDirect({{ $product?->id }}, this.value)">
                                             <button class="btn btn-secondary btn-sm flex-shrink-0" type="button" onclick="updateQuantity({{ $product?->id }}, 1)">
                                                 <i class="bi bi-plus"></i>
@@ -169,7 +169,7 @@
                         <h5 class="fw-bold mb-4">Ringkasan Pesanan</h5>
                         
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted">Subtotal ({{ (int) ($summary['total_items'] ?? 0) }} item)</span>
+                            <span class="text-muted" id="cartItemCountLabel">Subtotal ({{ (int) ($summary['total_items'] ?? 0) }} item)</span>
                             <span id="cartSubtotal">Rp {{ number_format((float) ($summary['subtotal'] ?? 0), 0, ',', '.') }}</span>
                         </div>
                         <hr>
@@ -890,7 +890,7 @@ function updateQuantity(productId, change) {
     if (input) {
         let currentValue = parseInt(input.value) || 1;
         let newValue = currentValue + change;
-        let maxValue = parseInt(input.max) || 9999;
+        let maxValue = parseInt(input.max) || 999999;
         
         if (newValue >= 1 && newValue <= maxValue) {
             input.value = newValue;
@@ -901,7 +901,7 @@ function updateQuantity(productId, change) {
 
 function updateQuantityDirect(productId, newValue) {
     let value = parseInt(newValue) || 1;
-    let maxValue = 9999;
+    let maxValue = 999999;
     
     if (value < 1) value = 1;
     if (value > maxValue) value = maxValue;
@@ -1025,6 +1025,17 @@ async function updateCartSummary() {
     if (subtotalEl) subtotalEl.textContent = `Rp ${Math.round(Number(summary.subtotal || 0)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
     if (grandTotalEl) grandTotalEl.textContent = `Rp ${Math.round(Number(summary.grand_total || 0)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}`;
 
+    const itemCountLabel = document.getElementById('cartItemCountLabel');
+    if (itemCountLabel) {
+        itemCountLabel.textContent = `Subtotal (${totalItems} item)`;
+    }
+
+    if (PAS?.Cart) {
+        PAS.Cart.summary = summary;
+        PAS.Cart.updateUI();
+    }
+    updateMobCartSummary(summary);
+
     const byProductId = new Map();
     (summary.items || []).forEach((it) => {
         byProductId.set(String(it.product_id), it);
@@ -1083,7 +1094,7 @@ function mobUpdateQty(productId, change) {
 function mobSetQty(productId, newVal) {
     let val = parseInt(newVal);
     if (isNaN(val) || val < 1) val = 1;
-    if (val > 9999) val = 9999;
+    if (val > 999999) val = 999999;
 
     const item = document.querySelector(`.mob-cart-item[data-product-id="${productId}"]`);
     if (item) {

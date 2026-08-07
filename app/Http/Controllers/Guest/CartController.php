@@ -170,7 +170,7 @@ class CartController extends Controller
         try {
             $rules = [
                 'product_id' => ['required', 'integer', 'exists:products,id'],
-                'quantity' => ['nullable', 'integer', 'min:1', 'max:9999'],
+                'quantity' => ['nullable', 'integer', 'min:1', 'max:999999'],
             ];
 
             $shopper = $this->getShopper();
@@ -241,7 +241,7 @@ class CartController extends Controller
     public function setItemQuantity(Request $request, Product $product)
     {
         $validated = $request->validate([
-            'quantity' => ['required', 'integer', 'min:0', 'max:9999'],
+            'quantity' => ['required', 'integer', 'min:0', 'max:999999'],
         ]);
 
         abort_if($product->discontinued, 404);

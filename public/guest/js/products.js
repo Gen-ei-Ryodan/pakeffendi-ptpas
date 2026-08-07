@@ -207,7 +207,7 @@
                 const min = parseInt(qtyInput.min, 10);
                 const max = parseInt(qtyInput.max, 10);
                 const safeMin = Number.isFinite(min) ? min : 1;
-                const safeMax = Number.isFinite(max) ? max : 9999;
+                const safeMax = Number.isFinite(max) ? max : 999999;
                 quantity = Number.isFinite(raw) ? Math.max(safeMin, Math.min(safeMax, raw)) : safeMin;
                 qtyInput.value = quantity;
             }
