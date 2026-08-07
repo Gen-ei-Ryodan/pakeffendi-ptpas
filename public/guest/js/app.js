@@ -155,7 +155,7 @@
         },
         
         updateUI() {
-            const totalItems = parseInt(this.summary?.total_items || 0);
+            const totalItems = parseInt(this.summary?.line_count ?? 0);
             document.querySelectorAll('[data-cart-badge], #cartCount, #cartCountDesktop, #cartCountMobile, #cartCountBottom')
                 .forEach((badge) => {
                     badge.textContent = totalItems;

@@ -586,6 +586,7 @@ class CartController extends Controller
 
         return [
             'total_items' => $totalItems,
+            'line_count' => count($itemDetails),
             'subtotal' => $subtotal,
             'grand_total' => $subtotal,
             'items' => $itemDetails,

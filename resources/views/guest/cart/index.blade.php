@@ -80,7 +80,7 @@
 
                 <div class="card border-0 shadow-sm">
                     <div class="card-body p-4">
-                        <h5 class="fw-bold mb-4" id="cartItemsHeader">Daftar Belanja ({{ (int) ($summary['total_items'] ?? 0) }} item)</h5>
+                        <h5 class="fw-bold mb-4" id="cartItemsHeader">Daftar Belanja ({{ (int) ($summary['line_count'] ?? 0) }} item)</h5>
                         
                         <div class="cart-items">
                             @forelse(($cart?->items ?? collect()) as $item)
@@ -169,7 +169,7 @@
                         <h5 class="fw-bold mb-4">Ringkasan Pesanan</h5>
                         
                         <div class="d-flex justify-content-between mb-2">
-                            <span class="text-muted" id="cartItemCountLabel">Subtotal ({{ (int) ($summary['total_items'] ?? 0) }} item)</span>
+                            <span class="text-muted" id="cartItemCountLabel">Subtotal ({{ (int) ($summary['line_count'] ?? 0) }} item)</span>
                             <span id="cartSubtotal">Rp {{ number_format((float) ($summary['subtotal'] ?? 0), 0, ',', '.') }}</span>
                         </div>
                         <hr>
@@ -1013,7 +1013,7 @@ async function updateCartSummary() {
 
     const data = await res.json();
     const summary = data?.summary || {};
-    const totalItems = parseInt(summary.total_items || 0);
+    const totalItems = parseInt(summary.line_count || 0);
 
     const header = document.getElementById('cartItemsHeader');
     if (header) {
