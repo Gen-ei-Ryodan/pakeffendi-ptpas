@@ -96,6 +96,9 @@
                                                             <div>
                                                                 <h6 class="fw-semibold mb-1">{{ $item->product_name }}</h6>
                                                                 <small class="text-muted">{{ $item->product?->brand?->brand_name ?? '' }}</small>
+                                                                @if(!empty($item->notes))
+                                                                    <div class="text-muted small mt-1"><i class="bi bi-sticky me-1"></i>Catatan: {{ $item->notes }}</div>
+                                                                @endif
                                                             </div>
                                                         </div>
                                                     </td>

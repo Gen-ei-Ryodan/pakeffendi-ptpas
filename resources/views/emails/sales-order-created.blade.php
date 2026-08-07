@@ -61,7 +61,7 @@
                                 <tbody>
                                     @foreach($order->items as $item)
                                     <tr>
-                                        <td style="color:#333;font-size:13px;padding:12px;border-bottom:1px solid #f1f5f9;">{{ $item->product_name }}</td>
+                                        <td style="color:#333;font-size:13px;padding:12px;border-bottom:1px solid #f1f5f9;">{{ $item->product_name }}@if(!empty($item->notes))<div style="color:#92400e;font-style:italic;margin-top:4px;">Catatan: {{ $item->notes }}</div>@endif</td>
                                         <td style="color:#333;font-size:13px;text-align:center;padding:12px;border-bottom:1px solid #f1f5f9;">{{ $item->quantity }}</td>
                                         <td style="color:#333;font-size:13px;text-align:right;padding:12px;border-bottom:1px solid #f1f5f9;">Rp {{ number_format($item->net_price, 0, ',', '.') }}</td>
                                         <td style="color:#333;font-size:13px;text-align:right;padding:12px;border-bottom:1px solid #f1f5f9;">Rp {{ number_format($item->final_total, 0, ',', '.') }}</td>

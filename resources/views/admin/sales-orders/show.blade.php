@@ -57,22 +57,12 @@
                     <dt class="text-slate-500">PPN</dt>
                     <dd class="font-medium">{{ number_format((float) $order->ppn, 2) }} ({{ number_format((float) $order->ppn_percent, 2) }}%)</dd>
                 </div>
-                <div>
-                    <dt class="text-slate-500">Process Date</dt>
-                    <dd class="font-medium">{{ optional($order->process_date)->format('d-m-Y') }}</dd>
-                </div>
-                <div>
-                    <dt class="text-slate-500">Process Time</dt>
-                    <dd class="font-medium">{{ $order->process_time }}</dd>
-                </div>
-                <div>
-                    <dt class="text-slate-500">Process Order No</dt>
-                    <dd class="font-medium">{{ $order->process_order_no }}</dd>
-                </div>
+                @if(!empty($order->notes))
                 <div class="md:col-span-2">
                     <dt class="text-slate-500">Notes</dt>
                     <dd class="font-medium">{{ $order->notes }}</dd>
                 </div>
+                @endif
             </dl>
         </div>
 
@@ -120,7 +110,12 @@
                         @endphp
                         <tr class="border-b">
                             <td class="py-3 pr-4">{{ $i + 1 }}</td>
-                            <td class="py-3 pr-4">{{ $item->product_name }}</td>
+                            <td class="py-3 pr-4">
+                                {{ $item->product_name }}
+                                @if(!empty($item->notes))
+                                    <div class="text-xs text-slate-500 italic mt-0.5">Catatan: {{ $item->notes }}</div>
+                                @endif
+                            </td>
                             <td class="py-3 pr-4">{{ $item->quantity }} x {{ number_format((float) $item->unit_price, 2) }}</td>
                             <td class="py-3 pr-4">{{ number_format((float) $item->net_price, 2) }}</td>
                             <td class="py-3 pr-4">{{ number_format((float) $item->discount_percent, 2) }}%</td>
