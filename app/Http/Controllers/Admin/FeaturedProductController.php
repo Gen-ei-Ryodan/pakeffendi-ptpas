@@ -18,8 +18,9 @@ class FeaturedProductController extends Controller
     {
         $featuredProducts = Product::query()
             ->whereRaw('LOWER(status_product) LIKE ?', ['%terlaris%'])
+            ->orderByRaw('CASE WHEN no_urut_status IS NOT NULL AND no_urut_status > 0 THEN 0 ELSE 1 END')
             ->orderBy('no_urut_status')
-            ->orderBy('name')
+            ->orderByDesc('created_at')
             ->paginate(20);
 
         return view('admin.featured-products.index', [

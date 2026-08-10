@@ -43,8 +43,9 @@
             @forelse ($featuredProducts as $featured)
                 <tr class="hover:bg-slate-50">
                     <td class="py-3.5 px-4">
-                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-sky-100 text-sky-700 font-bold text-sm">
-                            {{ $featured->no_urut_status }}
+                        @php $inList = (int) $featured->no_urut_status > 0; @endphp
+                        <span class="inline-flex items-center justify-center w-8 h-8 rounded-full {{ $inList ? 'bg-sky-100 text-sky-700' : 'bg-slate-100 text-slate-500' }} font-bold text-sm">
+                            {{ $featured->no_urut_status ?? 0 }}
                         </span>
                     </td>
                     <td class="py-3.5 px-4">
@@ -106,6 +107,18 @@
             <span class="font-medium">{{ $featuredProducts->total() }}</span>
         </div>
         <div>{{ $featuredProducts->links() }}</div>
+    </div>
+</div>
+
+<div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
+    <div class="flex gap-3">
+        <svg class="w-5 h-5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+        <div class="text-sm text-blue-800">
+            <p class="font-medium mb-1">Informasi:</p>
+            <p class="mt-1">Atur urutan mulai dari angka <strong>1</strong>. Produk dengan urutan <strong>0</strong> tidak akan ditampilkan di halaman Home.</p>
+        </div>
     </div>
 </div>
 @endsection

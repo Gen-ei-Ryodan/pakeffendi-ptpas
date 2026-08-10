@@ -49,6 +49,14 @@
                 </select>
             </div>
             <div>
+                <label class="text-xs text-slate-500 font-medium block mb-1">Status</label>
+                <select name="status" onchange="this.form.submit()" class="rounded-lg border-slate-300 text-sm min-w-[140px] py-2 px-3">
+                    <option value="">Semua Status</option>
+                    @foreach($statuses as $st)<option value="{{ $st->code }}" @selected(strtolower($status) === strtolower($st->code))>{{ $st->name }}</option>@endforeach
+                    <option value="__none" @selected($status === '__none')>Tanpa Status</option>
+                </select>
+            </div>
+            <div>
                 <label class="text-xs text-slate-500 font-medium block mb-1">Urutkan</label>
                 <select name="sort_by" onchange="this.form.submit()" class="rounded-lg border-slate-300 text-sm min-w-[140px] py-2 px-3">
                     <option value="name" data-dir="asc" @selected($sortBy === 'name' && $sortDir === 'asc')>Nama A → Z</option>
@@ -59,7 +67,7 @@
                 <input type="hidden" name="sort_dir" value="{{ $sortDir }}">
             </div>
             <input type="hidden" name="q" value="{{ $q }}">
-            @if($brand !== '' || $category !== '' || $sortBy !== 'name' || $sortDir !== 'asc')
+            @if($brand !== '' || $category !== '' || $status !== '' || $sortBy !== 'name' || $sortDir !== 'asc')
                 <a href="{{ route('admin.products.index') }}" class="px-3 py-2 rounded-lg border border-slate-300 text-sm text-slate-600 hover:bg-slate-100">Reset</a>
             @endif
         </form>
@@ -82,7 +90,7 @@
                         @if($product->status_product)
                             <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
                                 <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                                {{ $product->status_product }}
+                                {{ $product->status_product }}@if($product->no_urut_status !== null)&nbsp;({{ $product->no_urut_status }})@endif
                             </span>
                         @else
                             <span class="text-xs text-slate-400">-</span>

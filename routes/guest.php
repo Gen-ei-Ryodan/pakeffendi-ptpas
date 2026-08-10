@@ -31,6 +31,7 @@ Route::prefix('/')->group(function () {
             ->active()
             ->activeCategory()
             ->hasPhoto()
+            ->where('no_urut_status', '>', 0)
             ->orderBy('no_urut_status')
             ->orderBy('name')
             ->limit(8)
@@ -42,6 +43,7 @@ Route::prefix('/')->group(function () {
             ->active()
             ->activeCategory()
             ->hasPhoto()
+            ->where('no_urut_status', '>', 0)
             ->orderBy('no_urut_status')
             ->orderBy('name')
             ->limit(8)
@@ -59,6 +61,7 @@ Route::prefix('/')->group(function () {
                 ->active()
                 ->activeCategory()
                 ->hasPhoto()
+                ->where('no_urut_status', '>', 0)
                 ->byStatus($status->code)
                 ->limit(8)
                 ->get();

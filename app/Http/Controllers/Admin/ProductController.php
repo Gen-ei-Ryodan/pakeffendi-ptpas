@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductBrand;
 use App\Models\ProductCategory;
+use App\Models\ProductStatus;
 use App\Services\ActivityLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,7 @@ class ProductController extends Controller
         $q = (string) $request->query('q', '');
         $brand = (string) $request->query('brand', '');
         $category = (string) $request->query('category', '');
+        $status = (string) $request->query('status', '');
         $sortBy = (string) $request->query('sort_by', 'name');
         $sortDir = (string) $request->query('sort_dir', 'asc');
 
@@ -48,6 +50,12 @@ class ProductController extends Controller
             ->when($category !== '', function ($query) use ($category) {
                 $query->where('product_category_code', $category);
             })
+            ->when($status === '__none', function ($query) {
+                $query->where(fn ($q) => $q->whereNull('status_product')->orWhere('status_product', '')->orWhere('status_product', '0'));
+            })
+            ->when($status !== '' && $status !== '__none', function ($query) use ($status) {
+                $query->whereRaw('LOWER(status_product) LIKE ?', ['%'.strtolower($status).'%']);
+            })
             ->orderBy($sortBy, $sortDir)
             ->paginate(10)
             ->withQueryString();
@@ -57,10 +65,12 @@ class ProductController extends Controller
             'q' => $q,
             'brand' => $brand,
             'category' => $category,
+            'status' => $status,
             'sortBy' => $sortBy,
             'sortDir' => $sortDir,
             'brands' => ProductBrand::query()->orderBy('brand_name')->get(),
             'categories' => ProductCategory::query()->where('is_active', true)->orderBy('name')->get(),
+            'statuses' => ProductStatus::query()->orderBy('sort_order')->get(),
         ]);
     }
 

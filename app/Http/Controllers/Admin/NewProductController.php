@@ -17,6 +17,18 @@ class NewProductController extends Controller
     public function index()
     {
         $products = Product::query()
+            ->orderByRaw(
+                "CASE
+                    WHEN LOWER(status_product) LIKE ? AND (no_urut_status IS NOT NULL AND no_urut_status > 0) THEN 0
+                    WHEN LOWER(status_product) LIKE ? THEN 1
+                    ELSE 2
+                END",
+                ['%terbaru%', '%terbaru%']
+            )
+            ->orderByRaw(
+                "CASE WHEN LOWER(status_product) LIKE ? AND (no_urut_status IS NOT NULL AND no_urut_status > 0) THEN no_urut_status ELSE 0 END",
+                ['%terbaru%']
+            )
             ->orderByDesc('created_at')
             ->paginate(20);
 

@@ -40,7 +40,7 @@
                     <td class="py-3.5 px-4">
                         @php $isNew = $product->status_product && str_contains(strtolower($product->status_product), 'terbaru'); @endphp
                         <span class="inline-flex items-center justify-center w-8 h-8 rounded-full {{ $isNew ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }} font-bold text-sm">
-                            {{ $isNew ? ($product->no_urut_status ?? '-') : '-' }}
+                            {{ $isNew ? ($product->no_urut_status ?? 0) : '-' }}
                         </span>
                     </td>
                     <td class="py-3.5 px-4">
@@ -112,7 +112,8 @@
         </svg>
         <div class="text-sm text-blue-800">
             <p class="font-medium mb-1">Informasi:</p>
-             <p>Seluruh produk ditampilkan di sini berdasarkan tanggal dibuat. Gunakan tombol edit untuk mengatur urutan produk terbaru, atau tombol hapus untuk mengeluarkannya dari daftar produk terbaru.</p>
+             <p>Seluruh produk ditampilkan di sini berdasarkan tanggal dibuat. Gunakan tombol <strong>Edit</strong> untuk mengatur urutan produk terbaru, atau tombol <strong>Hapus</strong> untuk mengeluarkannya dari daftar produk terbaru.</p>
+             <p class="mt-1">Atur urutan mulai dari angka <strong>1</strong>. Produk dengan urutan <strong>0</strong> tidak akan ditampilkan di halaman Home.</p>
         </div>
     </div>
 </div>
