@@ -120,7 +120,8 @@ return [
     | Admin Email
     |--------------------------------------------------------------------------
     |
-    | Email address for admin that will be BCC-ed in all sales order emails.
+    | One or more admin addresses, separated by commas or semicolons, that
+     | receive sales order emails.
     |
     */
 

@@ -10,12 +10,10 @@ use App\Models\Product;
 use App\Models\SalesOrder;
 use App\Models\SalesOrderItem;
 use App\Models\User;
-use App\Mail\SalesOrderCreatedMail;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class CartService
@@ -541,17 +539,10 @@ class CartService
     private function sendOrderEmail(SalesOrder $order): void
     {
         try {
-            // Load relations needed for email
-            $order->load(['customer', 'salesPerson', 'items.product']);
-
-            // Only send email if customer exists and has email
-            if ($order->customer && $order->customer->email) {
-                Mail::to($order->customer->email)
-                    ->send(new SalesOrderCreatedMail($order));
-            }
-        } catch (\Exception $e) {
+            app(OrderEmailService::class)->send($order);
+        } catch (\Throwable $exception) {
             // Log error but don't fail the order creation
-            Log::error('Failed to send order email for order #' . $order->order_no . ': ' . $e->getMessage());
+            Log::error('Failed to prepare order email for order #'.$order->order_no.': '.$exception->getMessage());
         }
     }
 }

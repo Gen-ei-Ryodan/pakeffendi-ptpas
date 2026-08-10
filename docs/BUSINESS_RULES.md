@@ -62,6 +62,11 @@ Admin bisa menghapus order — soft delete melalui Eloquent. Tidak ada aturan kh
 - Wajib verifikasi email (kirim kode 6 digit).
 - Setelah berhasil, session buyer di-invalidate (harus login ulang).
 
+### Order Email
+- Email order dikirim terpisah ke setiap alamat customer, sales, dan admin yang valid.
+- Kegagalan pengiriman ke satu alamat dicatat di log dan tidak menghentikan pengiriman ke alamat lain.
+- `ADMIN_EMAIL` dapat berisi beberapa alamat yang dipisahkan koma atau titik koma.
+
 ## Sales
 
 ### Sales Role

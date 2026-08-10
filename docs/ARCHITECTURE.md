@@ -37,6 +37,7 @@ Service layer untuk logika bisnis yang kompleks:
 | Service              | Lokasi                        | Fungsi |
 |----------------------|-------------------------------|--------|
 | **CartService**      | `app/Services/CartService.php` | Resolve cart (session/customer), add/remove/update items, merge cart, checkout |
+| **OrderEmailService** | `app/Services/OrderEmailService.php` | Send order email separately to customer, sales, and configured admin recipients |
 | **ActivityLogger**   | `app/Services/ActivityLogger.php` | Static helper untuk mencatat aktivitas admin ke tabel `activity_logs` |
 
 ## Repository Pattern
@@ -136,5 +137,6 @@ app/
 │   └── User.php
 ├── Services/
 │   ├── ActivityLogger.php
-│   └── CartService.php
+│   ├── CartService.php
+│   └── OrderEmailService.php
 ```
