@@ -18,6 +18,7 @@
 - Pricing tier berdasarkan quantity (price_1/disc_1, price_2/disc_2, price_3/disc_3).
 - Cart merge dilakukan saat guest login sebagai customer.
 - PPN default 11% (disimpan di sales_orders.ppn_percent).
+- Menambah produk yang sudah ada di cart TIDAK menambah quantity; muncul notifikasi "Barang sudah ada di keranjang." (quantity hanya diubah via halaman cart).
 
 ### Database
 - Primary keys string untuk product_categories (`category_code`) dan product_brands (`brand_code`).

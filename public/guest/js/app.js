@@ -67,7 +67,11 @@
                     });
                     this.summary = data.summary || this.summary;
                     this.updateUI();
-                    this.showNotification('Produk ditambahkan ke keranjang!', 'success');
+                    if (data.already_in_cart) {
+                        this.showNotification('Barang sudah ada di keranjang.', 'warning');
+                    } else {
+                        this.showNotification('Produk ditambahkan ke keranjang!', 'success');
+                    }
                 } catch (err) {
                     // Backend will reject if no customer is selected (cookie missing)
                     // Show a helpful message so the user knows to go to cart page first
@@ -101,7 +105,11 @@
                 });
                 this.summary = data.summary || this.summary;
                 this.updateUI();
-                this.showNotification('Produk ditambahkan ke keranjang!', 'success');
+                if (data.already_in_cart) {
+                    this.showNotification('Barang sudah ada di keranjang.', 'warning');
+                } else {
+                    this.showNotification('Produk ditambahkan ke keranjang!', 'success');
+                }
             } catch (_) {
             }
         },

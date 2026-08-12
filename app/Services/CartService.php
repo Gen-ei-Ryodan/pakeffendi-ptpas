@@ -125,7 +125,15 @@ class CartService
         ];
     }
 
-    public function addItem(Cart $cart, Product $product, int $quantity): CartItem
+    /**
+     * Add a product to the cart.
+     *
+     * If the product is already in the cart, the quantity is NOT incremented
+     * and `already_in_cart` is set to true so the caller can notify the user.
+     *
+     * @return array{item: CartItem, already_in_cart: bool}
+     */
+    public function addItem(Cart $cart, Product $product, int $quantity): array
     {
         $quantity = max(1, $quantity);
 
@@ -136,19 +144,21 @@ class CartService
                 ->lockForUpdate()
                 ->first();
 
-            if (! $item) {
-                return CartItem::query()->create([
+            if ($item) {
+                return [
+                    'item' => $item->refresh(),
+                    'already_in_cart' => true,
+                ];
+            }
+
+            return [
+                'item' => CartItem::query()->create([
                     'cart_id' => $cart->id,
                     'product_id' => $product->id,
                     'quantity' => $quantity,
-                ]);
-            }
-
-            $item->update([
-                'quantity' => $item->quantity + $quantity,
-            ]);
-
-            return $item->refresh();
+                ]),
+                'already_in_cart' => false,
+            ];
         });
     }
 

@@ -210,16 +210,24 @@ class CartController extends Controller
                 ->whereHas('category', fn ($q) => $q->where('is_active', true))
                 ->findOrFail($validated['product_id']);
 
-            $this->cartService->addItem($cart, $product, (int) ($validated['quantity'] ?? 1));
+            $result = $this->cartService->addItem($cart, $product, (int) ($validated['quantity'] ?? 1));
 
             $cart->load(['items.product']);
             $summary = $this->buildSummary($cart->items);
 
-            Log::info('Item added successfully');
+            $alreadyInCart = $result['already_in_cart'];
+
+            Log::info('Item added successfully', ['already_in_cart' => $alreadyInCart]);
 
             $response = $request->wantsJson()
-                ? response()->json(['summary' => $summary], 201)
-                : redirect()->to('/cart');
+                ? response()->json([
+                    'summary' => $summary,
+                    'already_in_cart' => $alreadyInCart,
+                ], 201)
+                : redirect()->to('/cart')->with(
+                    $alreadyInCart ? 'warning' : 'success',
+                    $alreadyInCart ? 'Barang sudah ada di keranjang.' : 'Produk ditambahkan ke keranjang!'
+                );
 
             $response = $response->cookie($resolved['cookie']);
 

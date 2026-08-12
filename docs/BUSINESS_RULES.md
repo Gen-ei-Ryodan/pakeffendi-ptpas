@@ -35,6 +35,11 @@ Admin bisa menghapus order — soft delete melalui Eloquent. Tidak ada aturan kh
 - Cart di-set status `converted`.
 - Cart baru (aktif) langsung dibuat untuk customer.
 
+### Add Item Duplicate
+- Jika sebuah produk sudah ada di cart lalu dipilih (add) lagi, **quantity TIDAK ditambah.**
+- Sistem menampilkan notifikasi "Barang sudah ada di keranjang."
+- Quantity hanya bisa diubah dari halaman cart (update quantity) atau saat checkout.
+
 ### Cart Merge
 - Jika guest cart (session) ada itemnya dan user login sebagai customer → item digabung (merge) ke cart customer.
 - Quantity produk yang sama dijumlah.
