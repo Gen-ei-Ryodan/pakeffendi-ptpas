@@ -994,7 +994,6 @@ async function updateCartSummary() {
     if (items.length === 0) {
         if (cartItemsDiv) cartItemsDiv.style.display = 'none';
         if (emptyCartDiv) emptyCartDiv.classList.remove('d-none');
-        return;
     } else {
         if (cartItemsDiv) cartItemsDiv.style.display = '';
         if (emptyCartDiv) emptyCartDiv.classList.add('d-none');
@@ -1147,8 +1146,8 @@ function mobRemoveItem(productId) {
 
 function updateMobCartSummary(summary) {
     const totalEl = document.getElementById('mobTotalPrice');
-    if (totalEl && summary.grand_total) {
-        totalEl.textContent = 'Rp ' + Math.round(Number(summary.grand_total)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    if (totalEl) {
+        totalEl.textContent = 'Rp ' + Math.round(Number(summary.grand_total || 0)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
 }
 
