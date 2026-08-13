@@ -69,6 +69,8 @@ Admin bisa menghapus order — soft delete melalui Eloquent. Tidak ada aturan kh
 
 ### Order Email
 - Email order dikirim terpisah ke setiap alamat customer, sales, dan admin yang valid.
+- Penerima admin diambil dari **semua user ber-role admin/super admin** di database, ditambah alamat ekstra dari `ADMIN_EMAIL`.
+- Alamat dummy yang tidak bisa dikirim (mis. domain `.local`, contoh `admin@pas.local`) otomatis di-skip.
 - Kegagalan pengiriman ke satu alamat dicatat di log dan tidak menghentikan pengiriman ke alamat lain.
 - `ADMIN_EMAIL` dapat berisi beberapa alamat yang dipisahkan koma atau titik koma.
 

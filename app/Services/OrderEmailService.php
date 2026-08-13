@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Mail\SalesOrderCreatedMail;
 use App\Models\SalesOrder;
+use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -17,16 +18,20 @@ class OrderEmailService
     {
         $order->load(['customer', 'salesPerson', 'items.product']);
 
-        $recipients = array_values(array_unique(array_map('trim', array_filter([
+        $recipients = collect([
             $order->customer?->email,
             $order->salesPerson?->email,
             ...$this->adminEmails(),
-        ], static fn ($email): bool => is_string($email)
-            && filter_var(trim($email), FILTER_VALIDATE_EMAIL) !== false))));
+        ])
+            ->filter(fn ($email) => $this->isDeliverableEmail($email))
+            ->map(fn ($email) => strtolower(trim($email)))
+            ->unique()
+            ->values()
+            ->all();
 
         foreach ($recipients as $recipient) {
             try {
-                Mail::to(trim($recipient))->send(new SalesOrderCreatedMail($order));
+                Mail::to($recipient)->send(new SalesOrderCreatedMail($order));
             } catch (Throwable $exception) {
                 Log::error(
                     'Failed to send order email for order #'.$order->order_no.' to '.$recipient.': '
@@ -38,13 +43,35 @@ class OrderEmailService
     }
 
     /**
-     * ADMIN_EMAIL supports multiple addresses separated by commas or semicolons.
-     * Invalid addresses are filtered before attempting SMTP delivery.
+     * All admin/super admin users from the database plus any extra addresses
+     * configured via ADMIN_EMAIL (comma/semicolon separated).
      *
      * @return array<int, string>
      */
     private function adminEmails(): array
     {
-        return preg_split('/[,;]+/', (string) config('mail.admin_email'), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $dbAdmins = User::query()
+            ->whereIn('role', ['admin', 'super admin', 'super_admin', 'superadmin'])
+            ->pluck('email')
+            ->all();
+
+        $envAdmins = preg_split('/[,;]+/', (string) config('mail.admin_email'), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        return array_merge($dbAdmins, $envAdmins);
+    }
+
+    /**
+     * Skip invalid addresses and dummy/local-only addresses (e.g. @pas.local)
+     * that can never be delivered so they do not block real recipients.
+     */
+    private function isDeliverableEmail(mixed $email): bool
+    {
+        if (! is_string($email) || filter_var(trim($email), FILTER_VALIDATE_EMAIL) === false) {
+            return false;
+        }
+
+        $domain = strtolower((string) substr((string) $email, strrpos((string) $email, '@') + 1));
+
+        return ! str_ends_with($domain, '.local') && $domain !== 'localhost';
     }
 }

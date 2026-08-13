@@ -34,6 +34,7 @@
 - Email verifikasi untuk buyer baru (6 digit code).
 - Email change password (6 digit code).
 - Email order dikirim per penerima agar alamat yang gagal tidak menghentikan penerima lain.
+- Penerima admin diambil otomatis dari semua user admin/super admin di database; alamat dummy `.local` di-skip.
 
 ### Perubahan Besar
 - Migrasi dari sistem guest order API ke sistem cart + checkout terintegrasi.
