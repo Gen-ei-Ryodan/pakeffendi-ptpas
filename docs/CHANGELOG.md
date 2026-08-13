@@ -2,6 +2,23 @@
 
 > Catatan keputusan penting selama pengembangan.
 
+## Guest Home Redesign (Frontend)
+
+### Keputusan Desain
+- **Arah visual "Trading Floor"** untuk halaman `guest/home` (scoped di `.home-page`): palet navy-ledger (`#07294a`/`#003366`) + amber aksen (`#f59e0b`), tidak mengubah brand warna global.
+- **Typography**: display face Space Grotesk (dimuat hanya di halaman home via `@stack('styles')`), body tetap Inter.
+- **Signature**: *market ticker* — band marquee kategori di bawah hero (linear motion, pause on hover, konten diduplikasi via JS agar loop seamless, nonaktif saat `prefers-reduced-motion`).
+- **Motion**: hero entrance (ease-out-quint), scroll reveal via `IntersectionObserver` (hanya `opacity` + `transform`), feedback tekan `scale(0.97)` saat pointer-down, hover lift dibatasi `@media (hover:hover)`, carousel jadi crossfade (`carousel-fade`).
+- **Aksesibilitas**: semua animasi mati/reduksi saat `prefers-reduced-motion`; chip hero solid saat `prefers-reduced-transparency`; `focus-visible` ring; hover hanya di perangkat pointer halus.
+
+### Perubahan Behavior
+- **Kartu kategori desktop** (sebelumnya hanya notifikasi yang rusak) sekarang menavigasi ke `/products?category_id=...`, konsisten dengan tile mobile; support keyboard Enter/Space.
+- **Form newsletter** diperbaiki: sebelumnya `document.querySelector('form')` menarget form pencarian header (bug), sekarang ditarget via `#newsletterForm` + validasi email.
+
+### File
+- `resources/views/guest/home.blade.php` (restrukturisasi + `@push('styles')`/`@push('scripts')`)
+- `public/guest/css/app.css` (tambah section scoped `.home-page` di akhir file)
+
 ## v1.0 (Initial)
 
 ### Keputusan Arsitektur
