@@ -4,8 +4,6 @@
 
 @section('content')
 @php
-    $heroImages = $broadcasts ?? collect();
-
     $categoryIcons = ['laptop', 'bag', 'house', 'bicycle', 'heart', 'car', 'phone', 'watch', 'camera', 'speaker', 'tools', 'tags'];
 @endphp
 
@@ -20,37 +18,13 @@
         <div class="container">
             <div class="hero-banner-frame">
                 <div class="hero-banner-media">
-                    <div id="heroCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="3000">
-
-                        <div class="carousel-inner">
-                            @forelse($heroImages as $index => $broadcast)
-                                @php
-                                    $heroImageUrl = \Illuminate\Support\Str::startsWith($broadcast->image_path, ['http://', 'https://'])
-                                        ? $broadcast->image_path
-                                        : asset('storage/' . $broadcast->image_path);
-                                @endphp
-
-                                <div class="carousel-item {{ $index == 0 ? 'active' : '' }}">
-                                    <img
-                                        src="{{ $heroImageUrl }}"
-                                        alt="PAS Market"
-                                        class="hero-banner-image"
-                                        onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-banner.svg') }}'"
-                                    >
-                                </div>
-
-                            @empty
-                                <div class="carousel-item active">
-                                    <img
-                                        src="{{ asset('guest/img/placeholder-banner.svg') }}"
-                                        class="hero-banner-image"
-                                        alt="Placeholder"
-                                    >
-                                </div>
-                            @endforelse
-                        </div>
-
-                    </div>
+                    <img
+                        src="{{ asset('guest/img/bannerrrrr.png') }}"
+                        alt="Promo PAS Market"
+                        class="hero-banner-image"
+                        loading="lazy"
+                        onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-banner.svg') }}'"
+                    >
                     <div class="hero-banner-chip" aria-hidden="true">
                         <i class="bi bi-shop"></i>
                         <span>PAS Market</span>
@@ -75,21 +49,6 @@
             <a class="ticker-cta" href="{{ url('/products') }}">Belanja Sekarang</a>
         </div>
     </div>
-
-    <!-- Promo Banner -->
-    <section class="py-4 py-lg-5">
-        <div class="container">
-            <div class="home-banner reveal">
-                <img
-                    src="{{ asset('guest/img/bannerrrrr.png') }}"
-                    alt="Promo PAS Market"
-                    class="home-banner-img"
-                    loading="lazy"
-                    onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-banner.svg') }}'"
-                >
-            </div>
-        </div>
-    </section>
 
     <!-- Categories Section -->
     <section class="py-5">

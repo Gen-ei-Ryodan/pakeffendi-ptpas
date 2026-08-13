@@ -5292,8 +5292,13 @@ body[data-spa="false"] .mobile-topbar-inner {
 
 .home-page .hero-banner-media {
     position: relative;
+    aspect-ratio: auto;
     box-shadow: 0 24px 60px -30px rgba(7, 41, 74, 0.45);
     animation: hp-hero-in 0.8s var(--hp-ease-out-quint) both;
+}
+
+.home-page .hero-banner-image {
+    height: auto;
 }
 
 @keyframes hp-hero-in {
@@ -6246,29 +6251,4 @@ body[data-spa="false"] .mobile-topbar-inner {
 @media (prefers-reduced-motion: reduce) {
     .pd-tier-row,
     .pd-add-btn { transition: none; }
-}
-
-/* =====================================================
-   HOME PROMO BANNER — static image banner (guest/home.blade.php)
-   ===================================================== */
-
-.home-banner {
-    border-radius: 20px;
-    overflow: hidden;
-    border: 1px solid var(--hp-line, #e4eaf2);
-    box-shadow: 0 24px 48px -28px rgba(16, 35, 63, 0.3);
-    background: var(--hp-surface, #fff);
-}
-
-.home-banner-img {
-    display: block;
-    width: 100%;
-    height: auto;
-    border-radius: inherit;
-}
-
-@media (max-width: 575.98px) {
-    .home-banner {
-        border-radius: 14px;
-    }
 }

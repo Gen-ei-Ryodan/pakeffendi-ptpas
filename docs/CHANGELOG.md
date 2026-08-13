@@ -14,7 +14,7 @@
 ### Perubahan Behavior
 - Loading splash baru menggantikan/mendampingi overlay lama yang dibuat JS — splash branded `#pas-splash` disisipkan langsung di layout setelah `<body>` (tampil sebelum CSS/JS lain selesai).
 - Desktop password fields login/register kini punya tombol show/hide (`auth-eye`) yang benar-benar ter-wire di blade.
-- **Banner statis home**: `bannerrrrr.png` (ditaruh user di root `backend/`, di-gitignore; salinan yang di-serve di `public/guest/img/bannerrrrr.png`) ditampilkan sebagai section banner full-container di home — setelah market ticker, sebelum Kategori. Kartu rounded + shadow, `loading="lazy"`, fallback `placeholder-banner.svg`.
+- **Hero home = banner statis**: `bannerrrrr.png` (ditaruh user di root `backend/`, di-gitignore; salinan yang di-serve di `public/guest/img/bannerrrrr.png`) **menggantikan hero carousel broadcast** (element `#heroCarousel` dihapus). Frame `hero-banner-frame`/`hero-banner-media` dipertahankan; media home di-override `aspect-ratio:auto` + `height:auto` agar banner tampil utuh tanpa crop (dulu 21:9/16:9 dengan `object-fit:cover`). Chip brand tetap overlay di kiri bawah. `loading="lazy"`, fallback `placeholder-banner.svg`.
 
 ### Catatan
 - Route `/register` **masih tidak ada** (pre-existing, bukan dari task ini) — `login.blade.php` menautkan "Daftar sekarang" ke `/register` yang 404. `register.blade.php` sudah di-redesign dan siap dipasang jika route dibuat. Buyer baru dibuat via `/register-buyer` (oleh sales).
@@ -23,8 +23,8 @@
 - `resources/views/guest/layouts/app.blade.php` (Space Grotesk global + splash markup + inline script)
 - `resources/views/guest/auth/login.blade.php`, `register.blade.php` (desktop split-screen)
 - `resources/views/guest/products/show.blade.php` (redesign `pd-page`)
-- `resources/views/guest/home.blade.php` (hapus link Space Grotesk redundan; tambah section home banner)
-- `public/guest/img/bannerrrrr.png` (banner home, diserve dari public)
+- `resources/views/guest/home.blade.php` (hapus link Space Grotesk redundan; hero diganti banner statis, hapus `#heroCarousel`)
+- `public/guest/img/bannerrrrr.png` (banner hero home, diserve dari public)
 - `public/guest/css/app.css` (tokens ke `:root`; splash CSS; section `.pd-page`)
 - `public/guest/css/auth.css` (desktop auth split-screen + polish `.login-page .auth-card`)
 
