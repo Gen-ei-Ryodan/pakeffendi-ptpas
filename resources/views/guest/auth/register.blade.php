@@ -19,112 +19,124 @@
 @endpush
 
 @section('content')
-<!-- Page Header (Desktop) -->
-<section class="bg-light py-4 mobile-hide">
-    <div class="container">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ url('/') }}">Beranda</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Daftar</li>
-            </ol>
-        </nav>
-    </div>
-</section>
-
-<!-- Register Section (Desktop) -->
-<section class="py-5 login-page mobile-hide">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="card border-0 shadow-sm auth-card">
-                    <div class="card-body p-5">
-                        <div class="text-center mb-4">
-                            <a href="{{ url('/') }}" class="text-decoration-none">
-                                <h3 class="fw-bold text-primary">
-                                    <i class="bi bi-shop"></i> PAS Market
-                                </h3>
-                            </a>
-                            <p class="text-muted mt-2">Buat akun baru untuk memulai belanja</p>
-                        </div>
-                        
-                        @if($errors->any())
-                            <div class="alert alert-danger">
-                                <ul class="mb-0">
-                                    @foreach($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-                        <form method="POST" action="{{ route('guest.register.store') }}" data-ajax="false" novalidate id="registerForm">
-                            @csrf
-                            <div class="mb-3">
-                                <label for="fullName" class="form-label">Nama Lengkap</label>
-                                <input type="text" class="form-control" id="fullName" name="full_name" value="{{ old('full_name') }}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email</label>
-                                <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="phone" class="form-label">Nomor HP</label>
-                                <input type="tel" class="form-control" id="phone" name="phone" value="{{ old('phone') }}" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="address" class="form-label">Alamat</label>
-                                <textarea class="form-control" id="address" name="address" rows="2">{{ old('address') }}</textarea>
-                            </div>
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Kata Sandi</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                </div>
-                                <small class="text-muted">Minimal 8 karakter</small>
-                            </div>
-                            <div class="mb-3">
-                                <label for="confirmPassword" class="form-label">Konfirmasi Kata Sandi</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="confirmPassword" name="password_confirmation" required>
-                                    <button class="btn btn-outline-secondary" type="button" id="toggleConfirmPassword">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
-                            <div class="mb-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="terms" name="terms" value="1" required>
-                                    <label class="form-check-label" for="terms">
-                                        Saya menyetujui syarat dan ketentuan
-                                    </label>
-                                </div>
-                            </div>
-                            <button type="submit" class="btn btn-primary w-100 mb-3">
-                                <i class="bi bi-person-plus me-2"></i>Daftar Sekarang
-                            </button>
-                        </form>
-                        
-                        <div class="text-center">
-                            <p class="text-muted mb-0">
-                                Sudah punya akun? 
-                                <a href="{{ url('/login') }}{{ request('redirect') ? ('?redirect=' . urlencode(request('redirect'))) : '' }}" class="text-decoration-none text-primary fw-semibold">
-                                    Login disini
-                                </a>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="text-center mt-4 security-notice">
-                    <small class="text-muted">
-                        <i class="bi bi-shield-check me-1"></i>
-                        Data Anda aman dengan enkripsi SSL 256-bit
-                    </small>
+<!-- ====================== DESKTOP REGISTER (split-screen) ====================== -->
+<section class="auth-desktop mobile-hide" id="desktopRegister">
+    <div class="auth-shell">
+        <aside class="auth-aside">
+            <a href="{{ url('/') }}" class="auth-aside-brand">
+                <span class="pas-brand-text">PAS</span><span class="pas-brand-sub">Market</span>
+            </a>
+            <div class="auth-aside-body">
+                <span class="auth-aside-chip">Trading Floor B2B</span>
+                <h2 class="auth-aside-title">Mulai belanja grosir <em>dengan satu akun.</em></h2>
+                <p class="auth-aside-desc">Akses harga bertingkat, pantau stok real-time, dan kelola pesanan dalam satu platform.</p>
+                <ul class="auth-aside-points">
+                    <li><i class="bi bi-check-circle-fill"></i> Daftar gratis, tanpa biaya</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Harga grosir khusus buyer</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Layani pelanggan Anda sendiri</li>
+                </ul>
+                <div class="auth-aside-stats">
+                    <div class="stat"><strong>12K+</strong><span>Produk</span></div>
+                    <div class="stat"><strong>5K+</strong><span>Buyer</span></div>
+                    <div class="stat"><strong>34</strong><span>Provinsi</span></div>
                 </div>
             </div>
-        </div>
+            <div class="auth-aside-glow auth-aside-glow-1" aria-hidden="true"></div>
+            <div class="auth-aside-glow auth-aside-glow-2" aria-hidden="true"></div>
+        </aside>
+
+        <main class="auth-main">
+            <div class="auth-card-wrap">
+                <div class="auth-head">
+                    <div class="auth-brand-mark"><i class="bi bi-person-plus"></i></div>
+                    <h1 class="auth-title">Buat Akun Baru</h1>
+                    <p class="auth-sub">Daftar gratis untuk mulai belanja grosir</p>
+                </div>
+
+                @if($errors->any())
+                <div class="auth-alert">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <div>
+                        @foreach($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                <form method="POST" action="{{ route('guest.register.store') }}" data-ajax="false" novalidate id="registerForm">
+                    @csrf
+                    <div class="auth-field">
+                        <label for="fullName" class="auth-label">Nama Lengkap</label>
+                        <div class="auth-input">
+                            <i class="bi bi-person"></i>
+                            <input type="text" class="form-control" id="fullName" name="full_name" value="{{ old('full_name') }}" placeholder="Nama lengkap" required>
+                        </div>
+                    </div>
+                    <div class="auth-field">
+                        <label for="email" class="auth-label">Email</label>
+                        <div class="auth-input">
+                            <i class="bi bi-envelope"></i>
+                            <input type="email" class="form-control" id="email" name="email" value="{{ old('email') }}" placeholder="nama@email.com" required>
+                        </div>
+                    </div>
+                    <div class="auth-field">
+                        <label for="phone" class="auth-label">Nomor HP</label>
+                        <div class="auth-input">
+                            <i class="bi bi-phone"></i>
+                            <input type="tel" class="form-control" id="phone" name="phone" value="{{ old('phone') }}" placeholder="08xxxxxxxxxx" required>
+                        </div>
+                    </div>
+                    <div class="auth-field">
+                        <label for="address" class="auth-label">Alamat (opsional)</label>
+                        <div class="auth-input">
+                            <i class="bi bi-geo-alt"></i>
+                            <textarea class="form-control" id="address" name="address" rows="2" placeholder="Alamat lengkap">{{ old('address') }}</textarea>
+                        </div>
+                    </div>
+                    <div class="auth-field">
+                        <label for="password" class="auth-label">Kata Sandi</label>
+                        <div class="auth-input">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Minimal 8 karakter" autocomplete="new-password" required>
+                            <button type="button" class="auth-eye" id="togglePassword" tabindex="-1">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        <small class="auth-hint">Minimal 8 karakter</small>
+                    </div>
+                    <div class="auth-field">
+                        <label for="confirmPassword" class="auth-label">Konfirmasi Kata Sandi</label>
+                        <div class="auth-input">
+                            <i class="bi bi-shield-lock"></i>
+                            <input type="password" class="form-control" id="confirmPassword" name="password_confirmation" placeholder="Ulangi kata sandi" autocomplete="new-password" required>
+                            <button type="button" class="auth-eye" id="toggleConfirmPassword" tabindex="-1">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <label class="auth-terms">
+                        <input type="checkbox" id="terms" name="terms" value="1" required>
+                        <span>Saya menyetujui <a href="#">Syarat &amp; Ketentuan</a></span>
+                    </label>
+
+                    <button type="submit" class="auth-btn">
+                        <i class="bi bi-person-plus"></i>
+                        <span>Daftar Sekarang</span>
+                    </button>
+                </form>
+
+                <div class="auth-switch">
+                    Sudah punya akun? <a href="{{ url('/login') }}{{ request('redirect') ? ('?redirect=' . urlencode(request('redirect'))) : '' }}">Login disini</a>
+                </div>
+
+                <div class="auth-secure">
+                    <i class="bi bi-shield-check"></i>
+                    Data Anda aman dengan enkripsi SSL 256-bit
+                </div>
+            </div>
+        </main>
     </div>
 </section>
 
