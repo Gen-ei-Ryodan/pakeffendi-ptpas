@@ -16,12 +16,42 @@
     <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="{{ asset('guest/css/app.css') }}?v={{ filemtime(public_path('guest/css/app.css')) }}" rel="stylesheet">
 
     @stack('styles')
 </head>
 <body class="d-flex flex-column min-vh-100 has-bottom-nav @if(Request::is('cart')) page-cart @endif" @if(Request::is('login', 'register', 'register-buyer', 'verify-email', 'verify-email/*', 'change-password')) data-spa="false" @endif>
+
+    <!-- PAS Branded Splash (initial page load) -->
+    <div id="pas-splash" class="pas-splash" aria-hidden="true">
+        <div class="pas-splash-mark">
+            <span class="pas-splash-word">PAS</span>
+            <span class="pas-splash-dot"></span>
+        </div>
+        <div class="pas-splash-sub">Trading&nbsp;Floor</div>
+        <div class="pas-splash-bar"><span></span></div>
+    </div>
+    <script>
+    (function() {
+        var s = document.getElementById('pas-splash');
+        if (!s) return;
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var t0 = Date.now(), done = false;
+        function hide() {
+            if (done) return; done = true;
+            var wait = Math.max(0, (reduce ? 220 : 680) - (Date.now() - t0));
+            setTimeout(function() {
+                s.classList.add('pas-splash--done');
+                setTimeout(function() { if (s.parentNode) s.parentNode.removeChild(s); }, 340);
+            }, wait);
+        }
+        if (document.readyState === 'complete') { hide(); }
+        else { window.addEventListener('load', hide); }
+        setTimeout(hide, 2800);
+    })();
+    </script>
 
     <!-- Desktop Header (hidden on mobile) -->
     <header class="desktop-header navbar navbar-expand-lg navbar-light bg-white shadow-sm sticky-top d-none d-lg-flex">

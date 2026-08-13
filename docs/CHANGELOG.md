@@ -2,6 +2,30 @@
 
 > Catatan keputusan penting selama pengembangan.
 
+## Guest UI Continuation (Frontend)
+
+### Keputusan Desain
+- **Design tokens "Trading Floor" dipromosikan global**: blok `--hp-*` dipindah dari `.home-page` ke `:root`, sehingga dipakai juga di halaman auth dan detail produk. Space Grotesk kini dimuat di layout (`guest/layouts/app.blade.php`) untuk semua halaman guest (tidak lagi hanya home).
+- **PAS Splash** (initial page load, semua halaman guest): overlay full-screen navy gradient dengan mark `PAS` + dot amber pulsing + progress bar amber, muncul sebelum konten, fade-out saat `window.load` (min ~680ms, fallback timeout 2.8s), dinonaktifkan animasinya saat `prefers-reduced-motion`.
+- **Login & Register desktop (≥992px)** di-redesign jadi **split-screen "Trading Floor"**: panel kiri navy (brand, headline, bullet points, stats, glow dekoratif), panel kanan kartu form di atas `--hp-paper`. Class baru `auth-desktop/auth-shell/auth-aside/auth-main/auth-card-wrap/...` di `public/guest/css/auth.css`. `body[data-spa="false"] .desktop-header` disembunyikan agar layar auth full-height.
+- **Auth-card bersama** (register-buyer, verify-email, change-password): polish card radius 22px, border `--hp-line`, shadow lembut, input & tombol primary bertema navy — berlaku otomatis via `.login-page .auth-card`.
+- **Detail produk** (`guest/products/show.blade.php`) di-redesign dengan class `pd-page/*`: image card dengan badge "PAS Official", harga di block bertanda putus-putus, tier pricing sebagai baris list dengan baris pertama aktif, spec grid 2 kolom, stepper kuantitas + tombol navy, benefit chips, related products memakai `products-grid-manual`.
+
+### Perubahan Behavior
+- Loading splash baru menggantikan/mendampingi overlay lama yang dibuat JS — splash branded `#pas-splash` disisipkan langsung di layout setelah `<body>` (tampil sebelum CSS/JS lain selesai).
+- Desktop password fields login/register kini punya tombol show/hide (`auth-eye`) yang benar-benar ter-wire di blade.
+
+### Catatan
+- Route `/register` **masih tidak ada** (pre-existing, bukan dari task ini) — `login.blade.php` menautkan "Daftar sekarang" ke `/register` yang 404. `register.blade.php` sudah di-redesign dan siap dipasang jika route dibuat. Buyer baru dibuat via `/register-buyer` (oleh sales).
+
+### File
+- `resources/views/guest/layouts/app.blade.php` (Space Grotesk global + splash markup + inline script)
+- `resources/views/guest/auth/login.blade.php`, `register.blade.php` (desktop split-screen)
+- `resources/views/guest/products/show.blade.php` (redesign `pd-page`)
+- `resources/views/guest/home.blade.php` (hapus link Space Grotesk redundan)
+- `public/guest/css/app.css` (tokens ke `:root`; splash CSS; section `.pd-page`)
+- `public/guest/css/auth.css` (desktop auth split-screen + polish `.login-page .auth-card`)
+
 ## Guest Home Redesign (Frontend)
 
 ### Keputusan Desain

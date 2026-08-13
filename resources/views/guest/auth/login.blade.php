@@ -19,88 +19,98 @@
 @endpush
 
 @section('content')
-<!-- Page Header (Desktop) -->
-<section class="bg-light py-4 mobile-hide">
-    <div class="container">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ url('/') }}">Beranda</a></li>
-                <li class="breadcrumb-item active" aria-current="page">Login</li>
-            </ol>
-        </nav>
-    </div>
-</section>
-
-<!-- Login Section (Desktop) -->
-<section class="py-5 login-page mobile-hide">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="card border-0 shadow-sm auth-card">
-                    <div class="card-body p-5">
-                        <div class="text-center mb-4">
-                            <a href="{{ url('/') }}" class="text-decoration-none">
-                                <h3 class="fw-bold text-primary">
-                                    <i class="bi bi-shop"></i> PAS Market
-                                </h3>
-                            </a>
-                            <p class="text-muted mt-2">Silakan login untuk melanjutkan</p>
-                        </div>
-
-                        @if($errors->any())
-                        <div class="alert alert-danger">
-                            <ul class="mb-0">
-                                @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                                @endforeach
-                            </ul>
-                        </div>
-                        @endif
-                        <form method="POST" action="{{ route('guest.login.store') }}" data-ajax="false" novalidate id="loginForm">
-                            @csrf
-                            <div class="mb-3">
-                                <label for="email" class="form-label">Email atau Nomor HP</label>
-                                <input type="text" class="form-control" id="email" name="login" value="{{ old('login') }}" required>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="password" class="form-label">Kata Sandi</label>
-                                <div class="input-group">
-                                    <input type="password" class="form-control" id="password" name="password" required>
-                                    <button class="btn btn-outline-secondary" type="button" id="togglePassword">
-                                        <i class="bi bi-eye"></i>
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div class="d-flex justify-content-between align-items-center mb-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="rememberMe" name="remember" value="1" @checked(old('remember'))>
-                                    <label class="form-check-label" for="rememberMe">Ingat saya</label>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary w-100 mb-3">
-                                <i class="bi bi-box-arrow-in-right me-2"></i>Login
-                            </button>
-                        </form>
-
-                        <div class="text-center">
-                            <p class="text-muted mb-0">
-                                &nbsp;
-                            </p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="text-center mt-4 security-notice">
-                    <small class="text-muted">
-                        <i class="bi bi-shield-check me-1"></i>
-                        Transaksi Anda aman dengan enkripsi SSL 256-bit
-                    </small>
+<!-- ====================== DESKTOP LOGIN (split-screen) ====================== -->
+<section class="auth-desktop mobile-hide" id="desktopLogin">
+    <div class="auth-shell">
+        <aside class="auth-aside">
+            <a href="{{ url('/') }}" class="auth-aside-brand">
+                <span class="pas-brand-text">PAS</span><span class="pas-brand-sub">Market</span>
+            </a>
+            <div class="auth-aside-body">
+                <span class="auth-aside-chip">Trading Floor B2B</span>
+                <h2 class="auth-aside-title">Belanja grosir jadi <em>lebih mudah dan terpercaya.</em></h2>
+                <p class="auth-aside-desc">Harga bertingkat, stok real-time, dan pengiriman ke seluruh Indonesia — semua dalam satu platform.</p>
+                <ul class="auth-aside-points">
+                    <li><i class="bi bi-check-circle-fill"></i> Harga grosir bertingkat</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Stok real-time dari pusat</li>
+                    <li><i class="bi bi-check-circle-fill"></i> Pengiriman ke seluruh Indonesia</li>
+                </ul>
+                <div class="auth-aside-stats">
+                    <div class="stat"><strong>12K+</strong><span>Produk</span></div>
+                    <div class="stat"><strong>5K+</strong><span>Buyer</span></div>
+                    <div class="stat"><strong>34</strong><span>Provinsi</span></div>
                 </div>
             </div>
-        </div>
+            <div class="auth-aside-glow auth-aside-glow-1" aria-hidden="true"></div>
+            <div class="auth-aside-glow auth-aside-glow-2" aria-hidden="true"></div>
+        </aside>
+
+        <main class="auth-main">
+            <div class="auth-card-wrap">
+                <div class="auth-head">
+                    <div class="auth-brand-mark"><i class="bi bi-shop"></i></div>
+                    <h1 class="auth-title">Selamat Datang</h1>
+                    <p class="auth-sub">Masuk untuk melanjutkan belanja grosir Anda</p>
+                </div>
+
+                @if($errors->any())
+                <div class="auth-alert">
+                    <i class="bi bi-exclamation-circle"></i>
+                    <div>
+                        @foreach($errors->all() as $error)
+                        <div>{{ $error }}</div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                <form method="POST" action="{{ route('guest.login.store') }}" data-ajax="false" novalidate id="loginForm">
+                    @csrf
+                    <div class="auth-field">
+                        <label for="email" class="auth-label">Email atau Nomor HP</label>
+                        <div class="auth-input">
+                            <i class="bi bi-envelope"></i>
+                            <input type="text" class="form-control" id="email" name="login" value="{{ old('login') }}" placeholder="nama@email.com" autocomplete="username" required>
+                        </div>
+                    </div>
+
+                    <div class="auth-field">
+                        <div class="auth-label-row">
+                            <label for="password" class="auth-label">Kata Sandi</label>
+                            <a href="#" class="auth-forgot">Lupa password?</a>
+                        </div>
+                        <div class="auth-input">
+                            <i class="bi bi-lock"></i>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan kata sandi" autocomplete="current-password" required>
+                            <button type="button" class="auth-eye" id="togglePassword" tabindex="-1">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="auth-remember">
+                        <label>
+                            <input type="checkbox" name="remember" value="1" @checked(old('remember'))>
+                            <span class="auth-check">Ingat saya</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="auth-btn">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        <span>Login</span>
+                    </button>
+                </form>
+
+                <div class="auth-switch">
+                    Belum punya akun? <a href="{{ url('/register') }}{{ request('redirect') ? ('?redirect=' . urlencode(request('redirect'))) : '' }}">Daftar sekarang</a>
+                </div>
+
+                <div class="auth-secure">
+                    <i class="bi bi-shield-check"></i>
+                    Transaksi Anda aman dengan enkripsi SSL 256-bit
+                </div>
+            </div>
+        </main>
     </div>
 </section>
 
@@ -167,17 +177,22 @@
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const toggle = document.getElementById('mobTogglePassword');
-    const pwd = document.getElementById('mobPassword');
-    if (toggle && pwd) {
-        toggle.addEventListener('click', function() {
-            const type = pwd.getAttribute('type') === 'password' ? 'text' : 'password';
-            pwd.setAttribute('type', type);
-            const icon = this.querySelector('i');
-            icon.classList.toggle('bi-eye-slash');
-            icon.classList.toggle('bi-eye');
-        });
+    function setupPwdToggle(toggleId, inputId) {
+        const btn = document.getElementById(toggleId);
+        const inp = document.getElementById(inputId);
+        if (btn && inp) {
+            btn.addEventListener('click', function() {
+                const type = inp.getAttribute('type') === 'password' ? 'text' : 'password';
+                inp.setAttribute('type', type);
+                const icon = this.querySelector('i');
+                icon.classList.toggle('bi-eye-slash');
+                icon.classList.toggle('bi-eye');
+            });
+        }
     }
+
+    setupPwdToggle('togglePassword', 'password');
+    setupPwdToggle('mobTogglePassword', 'mobPassword');
 
     const form = document.getElementById('mobLoginForm');
     if (form) {
@@ -197,9 +212,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const login = formDesktop.querySelector('[name="login"]');
             const password = formDesktop.querySelector('[name="password"]');
             const btn = formDesktop.querySelector('button[type="submit"]');
+            const label = btn ? btn.querySelector('span') : null;
             if (!login.value.trim()) { e.preventDefault(); alert('Mohon isi email atau nomor HP'); login.focus(); return; }
             if (!password.value.trim()) { e.preventDefault(); alert('Mohon isi kata sandi'); password.focus(); return; }
-            if (btn) { btn.disabled = true; btn.innerHTML = 'Memproses...'; }
+            if (btn) {
+                btn.disabled = true;
+                if (label) label.textContent = 'Memproses...';
+            }
         });
     }
 });
