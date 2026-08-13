@@ -14,7 +14,7 @@
 ### Perubahan Behavior
 - Loading splash baru menggantikan/mendampingi overlay lama yang dibuat JS — splash branded `#pas-splash` disisipkan langsung di layout setelah `<body>` (tampil sebelum CSS/JS lain selesai).
 - Desktop password fields login/register kini punya tombol show/hide (`auth-eye`) yang benar-benar ter-wire di blade.
-- **Hero home = banner statis**: `bannerrrrr.png` (ditaruh user di root `backend/`, di-gitignore; salinan yang di-serve di `public/guest/img/bannerrrrr.png`) **menggantikan hero carousel broadcast** (element `#heroCarousel` dihapus). Frame `hero-banner-frame`/`hero-banner-media` dipertahankan; media home di-override `aspect-ratio:auto` + `height:auto` agar banner tampil utuh tanpa crop (dulu 21:9/16:9 dengan `object-fit:cover`). Chip brand tetap overlay di kiri bawah. `loading="lazy"`, fallback `placeholder-banner.svg`.
+- **Hero home = banner statis**: `bannerrrrr.png` (ditaruh user di root `backend/`, di-gitignore; salinan yang di-serve di `public/guest/img/bannerrrrr.png`) **menggantikan hero carousel broadcast** (element `#heroCarousel` dihapus). Frame `hero-banner-frame`/`hero-banner-media` dipertahankan; media home diberi **max-height** (`clamp(180px, 46vw, 460px)`) dengan `object-fit:cover` + `object-position:center` agar banner tidak setinggi ukuran asli (1536×1024 ~ 3:2) tapi tetap proporsional sebagai banner. Chip brand tetap overlay di kiri bawah. `loading="lazy"`, fallback `placeholder-banner.svg`.
 
 ### Catatan
 - Route `/register` **masih tidak ada** (pre-existing, bukan dari task ini) — `login.blade.php` menautkan "Daftar sekarang" ke `/register` yang 404. `register.blade.php` sudah di-redesign dan siap dipasang jika route dibuat. Buyer baru dibuat via `/register-buyer` (oleh sales).
