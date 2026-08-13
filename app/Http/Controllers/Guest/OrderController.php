@@ -135,7 +135,7 @@ class OrderController extends Controller
         }
 
         $order->load([
-            'items.product:id,name,sku,photo_path',
+            'items.product:id,name,sku,unit,photo_path',
             'customer:id,full_name,customer_code,email,phone,address,city,province,postal_code',
         ]);
 

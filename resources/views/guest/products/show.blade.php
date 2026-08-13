@@ -62,9 +62,9 @@
                             <div class="pd-tier-row {{ $loop->first ? 'is-active' : '' }}">
                                 <span>
                                     @if($tier['qty_end'])
-                                        {{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs
+                                        {{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} {{ $product->unit ?: 'pcs' }}
                                     @else
-                                        {{ $tier['qty_start'] }}+ pcs
+                                        {{ $tier['qty_start'] }}+ {{ $product->unit ?: 'pcs' }}
                                     @endif
                                 </span>
                                 <span class="pd-tier-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
@@ -141,9 +141,9 @@
                             @foreach($related->pricing_tiers as $tier)
                             <div class="tier-row">
                                 @if($tier['qty_end'])
-                                    <span class="text-muted">{{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs</span>
+                                    <span class="text-muted">{{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} {{ $related->unit ?: 'pcs' }}</span>
                                 @else
-                                    <span class="text-muted">{{ $tier['qty_start'] }}+ pcs</span>
+                                    <span class="text-muted">{{ $tier['qty_start'] }}+ {{ $related->unit ?: 'pcs' }}</span>
                                 @endif
                                 <span class="product-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
                             </div>
@@ -156,7 +156,7 @@
                             @endfor
                             @else
                             <div class="tier-row">
-                                <span class="text-muted">1 pcs</span>
+                                <span class="text-muted">1 {{ $related->unit ?: 'pcs' }}</span>
                                 <span class="product-price">Rp {{ number_format((float) $related->price_1, 0, ',', '.') }}</span>
                             </div>
                             @endif

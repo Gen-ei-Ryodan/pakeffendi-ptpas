@@ -63,9 +63,9 @@
                                     <div class="tier-row">
                                         <span class="tier-qty">
                                             @if($tier['qty_end'])
-                                                {{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs
+                                                {{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} {{ $product->unit ?: 'pcs' }}
                                             @else
-                                                {{ $tier['qty_start'] }}+ pcs
+                                                {{ $tier['qty_start'] }}+ {{ $product->unit ?: 'pcs' }}
                                             @endif
                                         </span>
                                         <span class="tier-price">Rp {{ number_format((float) $tier['net_price'], 0, ',', '.') }}</span>
@@ -73,7 +73,7 @@
                                 @endforeach
                             @else
                                 <div class="tier-row">
-                                    <span class="tier-qty">1 pcs</span>
+                                    <span class="tier-qty">1 {{ $product->unit ?: 'pcs' }}</span>
                                     <span class="tier-price">Rp {{ number_format((float) $product->price_1, 0, ',', '.') }}</span>
                                 </div>
                             @endif

@@ -94,7 +94,7 @@
                                 $netPrice = (float) ($pricing['net_price'] ?? 0);
                                 $lineTotal = $netPrice * $qty;
                             @endphp
-                            <div class="cart-item border-bottom pb-3 mb-3" data-product-id="{{ $product?->id }}">
+                            <div class="cart-item border-bottom pb-3 mb-3" data-product-id="{{ $product?->id }}" data-unit="{{ $product?->unit ?: 'pcs' }}">
                                 <div class="row align-items-center">
                                     <div class="col-md-2">
                                         <img src="{{ $imageUrl }}" alt="{{ $product?->name }}" class="img-fluid rounded" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
@@ -123,7 +123,7 @@
                                     <div class="col-md-3 text-end">
                                         <div class="fw-bold text-primary" data-line-total>Rp {{ number_format($lineTotal, 0, ',', '.') }}</div>
                                         <small class="text-muted" data-unit-price>
-                                            Rp {{ number_format($netPrice, 0, ',', '.') }}/pcs
+                                            Rp {{ number_format($netPrice, 0, ',', '.') }}/{{ $product?->unit ?: 'pcs' }}
                                             @if($discountPercent > 0)
                                                 <span class="text-muted"> (disc {{ rtrim(rtrim(number_format($discountPercent, 2, '.', ''), '0'), '.') }}%)</span>
                                             @endif
@@ -1055,7 +1055,8 @@ async function updateCartSummary() {
             const net = Math.round(Number(it.net_price || 0)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
             const disc = Number(it.discount_percent || 0);
             const discText = disc > 0 ? ` (disc ${String(disc).replace(/\.0+$/, '')}%)` : '';
-            unitPriceEl.textContent = `Rp ${net}/pcs${discText}`;
+            const unit = row.getAttribute('data-unit') || 'pcs';
+            unitPriceEl.textContent = `Rp ${net}/${unit}${discText}`;
         }
     });
 }

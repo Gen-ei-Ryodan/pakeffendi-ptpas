@@ -32,9 +32,9 @@
                                 <div class="tier {{ $loop->first ? 'active' : '' }}">
                                     <span>
                                         @if($tier['qty_end'])
-                                            {{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} pcs
+                                            {{ $tier['qty_start'] }} - {{ $tier['qty_end'] }} {{ $product->unit ?: 'pcs' }}
                                         @else
-                                            {{ $tier['qty_start'] }}+ pcs
+                                            {{ $tier['qty_start'] }}+ {{ $product->unit ?: 'pcs' }}
                                         @endif
                                     </span>
                                     <span>Rp {{ number_format((float) $tier['price'], 0, ',', '.') }}</span>

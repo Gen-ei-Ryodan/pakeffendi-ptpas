@@ -111,7 +111,7 @@
                                                         @endif
                                                     </td>@endif
                                                     <td class="text-end">
-                                                        Rp {{ number_format((float) $item->net_price, 0, ',', '.') }}
+                                                        Rp {{ number_format((float) $item->net_price, 0, ',', '.') }}/{{ $item->product?->unit ?: 'pcs' }}
                                                         @if(((float) $item->discount_percent) > 0)
                                                             <div class="text-muted small">disc {{ rtrim(rtrim(number_format((float) $item->discount_percent, 2, '.', ''), '0'), '.') }}%</div>
                                                         @endif
@@ -243,7 +243,7 @@
             <div class="mob-order-product-brand">{{ $item->product->brand->brand_name }}</div>
             @endif
             <div class="mob-order-product-prices">
-                <span class="mob-order-product-unit">Rp {{ number_format((float) $item->net_price, 0, ',', '.') }}/pcs</span>
+                <span class="mob-order-product-unit">Rp {{ number_format((float) $item->net_price, 0, ',', '.') }}/{{ $item->product?->unit ?: 'pcs' }}</span>
                 <span class="mob-order-product-subtotal">Rp {{ number_format((float) $item->final_total, 0, ',', '.') }}</span>
             </div>
             @if($is_sales && $stockQty !== null)
