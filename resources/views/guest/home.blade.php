@@ -76,6 +76,21 @@
         </div>
     </div>
 
+    <!-- Promo Banner -->
+    <section class="py-4 py-lg-5">
+        <div class="container">
+            <div class="home-banner reveal">
+                <img
+                    src="{{ asset('guest/img/bannerrrrr.png') }}"
+                    alt="Promo PAS Market"
+                    class="home-banner-img"
+                    loading="lazy"
+                    onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-banner.svg') }}'"
+                >
+            </div>
+        </div>
+    </section>
+
     <!-- Categories Section -->
     <section class="py-5">
         <div class="container">
