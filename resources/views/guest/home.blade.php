@@ -7,7 +7,6 @@
     $heroImages = $broadcasts ?? collect();
 
     $categoryIcons = ['laptop', 'bag', 'house', 'bicycle', 'heart', 'car', 'phone', 'watch', 'camera', 'speaker', 'tools', 'tags'];
-    $categoryColors = ['blue', 'orange', 'purple', 'yellow', 'cyan', 'grey'];
 @endphp
 
 @push('styles')
@@ -83,26 +82,34 @@
     <!-- Categories Section -->
     <section class="py-5">
         <div class="container">
-            <div class="section-container">
+            <div class="section-container reveal">
                 <h3 class="section-title">Kategori</h3>
-                <!-- Desktop: horizontal scroll -->
-                <div class="categories-scroll reveal">
-                    @foreach(($categories ?? collect()) as $category)
-                        <div class="category-card {{ $categoryColors[$loop->index % count($categoryColors)] }}" role="button" tabindex="0" data-category-id="{{ $category->category_code }}">
-                            <i class="bi bi-{{ $categoryIcons[$loop->index % count($categoryIcons)] ?? 'tags' }} cat-icon"></i>
-                            <span class="cat-name">{{ $category->name }}</span>
-                        </div>
-                    @endforeach
-                </div>
-                <!-- Mobile: grid 5 cols -->
-                <div class="categories-grid reveal">
-                    @foreach(($categories ?? collect())->take(5) as $category)
+
+                <!-- Desktop & tablet: larger grid, no slide -->
+                <div class="cat-grid cat-grid-desktop">
+                    @foreach(($categories ?? collect())->take(10) as $category)
                         <a href="{{ url('/products') }}?category_id={{ $category->category_code }}" class="cat-item" data-category-id="{{ $category->category_code }}">
                             <i class="bi bi-{{ $categoryIcons[$loop->index % count($categoryIcons)] ?? 'tags' }} cat-icon"></i>
                             <span class="cat-name">{{ $category->name }}</span>
                         </a>
                     @endforeach
-                    @if(($categories ?? collect())->count() > 5)
+                    @if(($categories ?? collect())->count() > 10)
+                        <a href="{{ url('/categories') }}" class="cat-see-all">
+                            <i class="bi bi-grid-3x3-gap-fill cat-icon"></i>
+                            <span class="cat-name">Lihat Semua</span>
+                        </a>
+                    @endif
+                </div>
+
+                <!-- Mobile: compact grid, no slide -->
+                <div class="cat-grid cat-grid-mobile">
+                    @foreach(($categories ?? collect())->take(6) as $category)
+                        <a href="{{ url('/products') }}?category_id={{ $category->category_code }}" class="cat-item" data-category-id="{{ $category->category_code }}">
+                            <i class="bi bi-{{ $categoryIcons[$loop->index % count($categoryIcons)] ?? 'tags' }} cat-icon"></i>
+                            <span class="cat-name">{{ $category->name }}</span>
+                        </a>
+                    @endforeach
+                    @if(($categories ?? collect())->count() > 6)
                         <a href="{{ url('/categories') }}" class="cat-see-all">
                             <i class="bi bi-grid-3x3-gap-fill cat-icon"></i>
                             <span class="cat-name">Lihat Semua</span>
@@ -261,18 +268,6 @@
             track.classList.add('is-animating');
         }
     }
-
-    // Desktop category cards navigate like the mobile tiles
-    document.querySelectorAll('.home-page .category-card[data-category-id]').forEach(function (card) {
-        var go = function () {
-            var id = card.getAttribute('data-category-id');
-            if (id) { window.location.href = '/products?category_id=' + encodeURIComponent(id); }
-        };
-        card.addEventListener('click', go);
-        card.addEventListener('keydown', function (e) {
-            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
-        });
-    });
 
     // Newsletter form
     var newsletterForm = document.getElementById('newsletterForm');

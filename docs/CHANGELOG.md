@@ -12,7 +12,7 @@
 - **Aksesibilitas**: semua animasi mati/reduksi saat `prefers-reduced-motion`; chip hero solid saat `prefers-reduced-transparency`; `focus-visible` ring; hover hanya di perangkat pointer halus.
 
 ### Perubahan Behavior
-- **Kartu kategori desktop** (sebelumnya hanya notifikasi yang rusak) sekarang menavigasi ke `/products?category_id=...`, konsisten dengan tile mobile; support keyboard Enter/Space.
+- **Kategori home**: layout desktop berubah dari horizontal-slide cards (`categories-scroll`) menjadi grid responsif non-slide — 5 kolom desktop / 4 kolom tablet / 3 kolom mobile, kartu lebih besar, dengan tile **"Lihat Semua"** ke `/categories` (tampil jika jumlah kategori > 10 desktop, > 6 mobile). Semua item adalah `<a>` asli (tanpa JS navigasi).
 - **Form newsletter** diperbaiki: sebelumnya `document.querySelector('form')` menarget form pencarian header (bug), sekarang ditarget via `#newsletterForm` + validasi email.
 
 ### File
