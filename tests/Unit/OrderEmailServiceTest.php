@@ -15,11 +15,11 @@ class OrderEmailServiceTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_order_email_is_sent_separately_to_customer_sales_and_each_admin(): void
+    public function test_order_email_is_sent_to_all_real_admins_and_skips_dummy_local_addresses(): void
     {
         Mail::fake();
         config([
-            'mail.admin_email' => 'admin@pas.local, real-admin@example.com; admin@pas.local',
+            'mail.admin_email' => 'env-admin@example.com; env-dummy@pas.local',
         ]);
 
         $customer = Customer::query()->create([
@@ -41,6 +41,27 @@ class OrderEmailServiceTest extends TestCase
             'role' => 'sales',
         ]);
 
+        $admin = User::query()->create([
+            'name' => 'Admin One',
+            'email' => 'admin@example.com',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+
+        $superAdmin = User::query()->create([
+            'name' => 'Super Admin',
+            'email' => 'super-admin@example.com',
+            'password' => 'password',
+            'role' => 'super admin',
+        ]);
+
+        $dummyAdmin = User::query()->create([
+            'name' => 'Dummy Admin',
+            'email' => 'dummy@pas.local',
+            'password' => 'password',
+            'role' => 'admin',
+        ]);
+
         $order = SalesOrder::query()->create([
             'order_no' => 'W2608100001',
             'order_date' => now(),
@@ -51,13 +72,25 @@ class OrderEmailServiceTest extends TestCase
 
         app(OrderEmailService::class)->send($order);
 
-        Mail::assertQueued(SalesOrderCreatedMail::class, 4);
+        $expected = ['buyer@example.com', 'sales@example.com', 'admin@example.com', 'super-admin@example.com', 'env-admin@example.com'];
 
-        foreach (['buyer@example.com', 'sales@example.com', 'admin@pas.local', 'real-admin@example.com'] as $recipient) {
+        Mail::assertQueued(SalesOrderCreatedMail::class, count($expected));
+
+        foreach ($expected as $recipient) {
             Mail::assertQueued(
                 SalesOrderCreatedMail::class,
                 fn (SalesOrderCreatedMail $mail): bool => $mail->hasTo($recipient),
             );
         }
+
+        Mail::assertNotQueued(
+            SalesOrderCreatedMail::class,
+            fn (SalesOrderCreatedMail $mail): bool => $mail->hasTo('dummy@pas.local'),
+        );
+
+        Mail::assertNotQueued(
+            SalesOrderCreatedMail::class,
+            fn (SalesOrderCreatedMail $mail): bool => $mail->hasTo('env-dummy@pas.local'),
+        );
     }
 }
