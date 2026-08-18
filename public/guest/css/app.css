@@ -1144,6 +1144,37 @@ html {
     flex-direction: column;
 }
 
+/* Checkout Loading Overlay */
+#checkout-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(8px);
+    z-index: 10050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    padding: 24px;
+}
+
+#checkout-loading-overlay .loading-text {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+#checkout-loading-overlay .loading-sub {
+    font-size: 0.9rem;
+    color: #6c757d;
+    margin-top: 8px;
+    max-width: 320px;
+}
+
 #page-loading-indicator {
     position: fixed;
     top: 0;

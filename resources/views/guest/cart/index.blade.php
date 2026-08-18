@@ -592,6 +592,15 @@
     </div>
 </div>
 
+<!-- Checkout Loading Overlay -->
+<div id="checkout-loading-overlay" style="display: none;" aria-hidden="true">
+    <div class="text-center">
+        <div class="loading-spinner mb-3"></div>
+        <div class="loading-text">Pesanan sedang dibuat</div>
+        <div class="loading-sub">Mohon ditunggu. Jangan tekan tombol Back atau tutup halaman ini.</div>
+    </div>
+</div>
+
 @endsection
 
 @push('scripts')
@@ -842,6 +851,8 @@ function submitCheckout() {
         form = document.getElementById('mobCheckoutForm');
     }
     if (!form) return;
+
+    showCheckoutLoading();
 
     var isSales = {{ isset($is_sales) && $is_sales ? 'true' : 'false' }};
     if (isSales) {
@@ -1238,6 +1249,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             var form = document.getElementById('mobCheckoutForm');
             if (form) {
+                showCheckoutLoading();
                 form.submit();
             }
         });
@@ -1275,5 +1287,29 @@ function mobUpdateCheckoutState() {
         checkoutBtn.style.opacity = checked.length > 0 ? '1' : '0.4';
     }
 }
+
+// ==================== CHECKOUT LOADING OVERLAY ====================
+var checkoutLoadingShown = false;
+
+function showCheckoutLoading() {
+    var overlay = document.getElementById('checkout-loading-overlay');
+    if (!overlay || checkoutLoadingShown) return;
+    checkoutLoadingShown = true;
+    overlay.style.display = 'flex';
+
+    document.querySelectorAll('#checkoutForm button[type="submit"], #salesCheckoutForm button[type="submit"], #mobSalesCheckoutForm button[type="submit"], #mobCheckoutForm button[type="submit"]').forEach(function(btn) {
+        btn.disabled = true;
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    ['checkoutForm', 'salesCheckoutForm', 'mobSalesCheckoutForm'].forEach(function(formId) {
+        var form = document.getElementById(formId);
+        if (!form) return;
+        form.addEventListener('submit', function() {
+            showCheckoutLoading();
+        });
+    });
+});
 </script>
 @endpush
