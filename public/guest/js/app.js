@@ -171,7 +171,7 @@
                 });
         },
         
-        showNotification(message, type = 'info') {
+        showNotification(message, type = 'info', duration = 3000) {
             // Create notification element
             const notification = document.createElement('div');
             notification.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
@@ -183,12 +183,12 @@
             
             document.body.appendChild(notification);
             
-            // Auto remove after 3 seconds
+            // Auto remove after given duration
             setTimeout(() => {
                 if (notification.parentNode) {
                     notification.remove();
                 }
-            }, 3000);
+            }, duration);
         }
     };
 

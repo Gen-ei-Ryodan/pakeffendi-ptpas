@@ -283,3 +283,15 @@
     </a>
 </section>
 @endsection
+
+@push('scripts')
+@if(session('order_success'))
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        if (PAS?.Cart && typeof PAS.Cart.showNotification === 'function') {
+            PAS.Cart.showNotification('{{ session('order_success') }}', 'success', 8000);
+        }
+    });
+</script>
+@endif
+@endpush

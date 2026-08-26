@@ -424,6 +424,7 @@ class CartController extends Controller
 
         return redirect()
             ->to('/orders/'.$order->id)
+            ->with('order_success', 'Pesanan berhasil dibuat.')
             ->withCookie($resolved['cookie']);
     }
 
