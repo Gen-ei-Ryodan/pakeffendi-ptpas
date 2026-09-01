@@ -16,6 +16,9 @@
         
         <div class="d-flex justify-content-between align-items-center mt-3">
             <h1 class="h3 fw-bold text-secondary mb-0">Detail Pesanan</h1>
+            <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i> Cetak
+            </button>
         </div>
     </div>
 </section>
@@ -176,6 +179,9 @@
     <div class="mob-order-detail-header">
         <a href="{{ url('/orders') }}" class="mob-order-detail-back"><i class="bi bi-chevron-left"></i></a>
         <h1 class="mob-order-detail-title">Detail Pesanan</h1>
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onclick="window.print()" title="Cetak">
+            <i class="bi bi-printer"></i>
+        </button>
     </div>
 
     <!-- Status banner -->
@@ -285,6 +291,21 @@
 @endsection
 
 @push('scripts')
+<style>
+@media print {
+    .desktop-header, .mobile-topbar, .bottom-nav, footer, .profile-sidebar,
+    .breadcrumb, .mobile-hide, .mob-order-detail-header, .mob-order-back-btn,
+    nav, header, .btn, #mobOrderDetailSection .mob-order-status-banner { display: none !important; }
+    .main-content { margin: 0 !important; padding: 0 !important; }
+    .container { max-width: 100% !important; }
+    .card { border: 1px solid #ddd !important; box-shadow: none !important; }
+    body { background: white !important; }
+    #mobOrderDetailSection { display: block !important; }
+    #mobOrderDetailSection .mob-order-info-card,
+    #mobOrderDetailSection .mob-order-products,
+    #mobOrderDetailSection .mob-order-summary { border: 1px solid #ddd !important; box-shadow: none !important; }
+}
+</style>
 @if(session('order_success'))
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -294,4 +315,12 @@
     });
 </script>
 @endif
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('print') === '1') {
+        setTimeout(function() { window.print(); }, 500);
+    }
+});
+</script>
 @endpush

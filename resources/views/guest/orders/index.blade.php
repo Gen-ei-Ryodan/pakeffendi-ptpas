@@ -145,6 +145,9 @@
                                                     <a href="{{ route('guest.orders.show', $order) }}" class="btn btn-outline-primary btn-sm">
                                                         <i class="bi bi-eye"></i>
                                                     </a>
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="printOrder({{ $order->id }})" title="Cetak">
+                                                        <i class="bi bi-printer"></i>
+                                                    </button>
                                                 @endif
                                             </td>
                                         </tr>
@@ -244,6 +247,9 @@
                 <a href="{{ route('guest.orders.show', $order) }}" class="mob-order-card-detail">
                     Lihat Detail <i class="bi bi-chevron-right"></i>
                 </a>
+                <button type="button" class="btn btn-outline-secondary btn-sm mt-2 w-100" onclick="printOrder({{ $order->id }})">
+                    <i class="bi bi-printer me-1"></i> Cetak
+                </button>
                 @endif
             </div>
         </div>
@@ -264,7 +270,21 @@
 @endsection
 
 @push('scripts')
+<style>
+@media print {
+    .desktop-header, .mobile-topbar, .bottom-nav, footer, .profile-sidebar,
+    .breadcrumb, .mobile-hide, #mobOrdersSection, .mob-orders-header,
+    .mob-orders-tabs-wrap, .mob-orders-search-bar, .mob-orders-pagination,
+    nav, header, .btn, form { display: none !important; }
+    .main-content { margin: 0 !important; padding: 0 !important; }
+    .container { max-width: 100% !important; }
+    body { background: white !important; }
+}
+</style>
 <script>
+function printOrder(orderId) {
+    window.open('/orders/' + orderId + '?print=1', '_blank');
+}
 document.addEventListener('DOMContentLoaded', function() {
     var searchBtn = document.getElementById('mobOrdersSearchBtn');
     var searchBar = document.getElementById('mobOrdersSearchBar');

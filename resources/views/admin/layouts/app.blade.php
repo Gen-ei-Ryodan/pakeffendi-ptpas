@@ -6,6 +6,7 @@
     <title>@yield('title', 'Admin')</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    @stack('styles')
     <style>
         main input[type="text"],
         main input[type="email"],
@@ -103,5 +104,6 @@
         </main>
     </div>
 </div>
+@stack('scripts')
 </body>
 </html>

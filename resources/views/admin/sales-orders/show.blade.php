@@ -9,6 +9,10 @@
         <div class="text-sm text-slate-500">{{ $order->order_no }}</div>
         <div class="flex items-center gap-2">
             <a href="{{ route('admin.sales-orders.edit', $order) }}" class="px-4 py-2 rounded-lg bg-sky-600 text-white font-semibold hover:bg-sky-700">Edit</a>
+            <button type="button" onclick="window.print()" class="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 font-semibold">
+                <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                Cetak
+            </button>
             <a href="{{ route('admin.sales-orders.index') }}" class="px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-100">Kembali</a>
         </div>
     </div>
@@ -140,4 +144,26 @@
         </div>
     </div>
 @endsection
+
+@push('styles')
+<style>
+@media print {
+    .min-h-screen > aside, header, nav { display: none !important; }
+    .flex-1 > main { padding: 0 !important; }
+    .bg-white { border: 1px solid #ddd !important; box-shadow: none !important; }
+    body { background: white !important; }
+}
+</style>
+@endpush
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('print') === '1') {
+        setTimeout(function() { window.print(); }, 500);
+    }
+});
+</script>
+@endpush
 
