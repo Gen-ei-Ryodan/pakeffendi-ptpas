@@ -149,4 +149,25 @@ class OrderController extends Controller
             'is_sales' => ($shopper instanceof User && $shopper->isSales()),
         ]);
     }
+
+    public function print(SalesOrder $order)
+    {
+        $shopper = $this->getShopper();
+        abort_unless($shopper, 401);
+
+        if ($shopper instanceof Customer) {
+            abort_unless((int) $order->customer_id === (int) $shopper->id, 404);
+        } else {
+            abort_unless((int) $order->sales_id === (int) $shopper->id, 404);
+        }
+
+        $order->load([
+            'items.product:id,name,sku,unit',
+            'customer:id,full_name,customer_code,phone,address,city,province',
+        ]);
+
+        return view('guest.orders.print', [
+            'order' => $order,
+        ]);
+    }
 }

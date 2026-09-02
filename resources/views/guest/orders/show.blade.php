@@ -16,8 +16,8 @@
         
         <div class="d-flex justify-content-between align-items-center mt-3">
             <h1 class="h3 fw-bold text-secondary mb-0">Detail Pesanan</h1>
-            <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
-                <i class="bi bi-printer me-1"></i> Cetak
+            <button type="button" class="btn btn-outline-secondary" onclick="printNota('{{ route('guest.orders.print', $order) }}')">
+                <i class="bi bi-printer me-1"></i> Cetak Nota
             </button>
         </div>
     </div>
@@ -179,7 +179,7 @@
     <div class="mob-order-detail-header">
         <a href="{{ url('/orders') }}" class="mob-order-detail-back"><i class="bi bi-chevron-left"></i></a>
         <h1 class="mob-order-detail-title">Detail Pesanan</h1>
-        <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onclick="window.print()" title="Cetak">
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-auto" onclick="printNota('{{ route('guest.orders.print', $order) }}')" title="Cetak Nota">
             <i class="bi bi-printer"></i>
         </button>
     </div>
@@ -316,11 +316,21 @@
 </script>
 @endif
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('print') === '1') {
-        setTimeout(function() { window.print(); }, 500);
-    }
-});
+function printNota(url) {
+    var iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    iframe.style.left = '-9999px';
+    document.body.appendChild(iframe);
+    iframe.onload = function() {
+        setTimeout(function() {
+            iframe.contentWindow.print();
+            setTimeout(function() { iframe.remove(); }, 500);
+        }, 300);
+    };
+    iframe.src = url;
+}
 </script>
 @endpush

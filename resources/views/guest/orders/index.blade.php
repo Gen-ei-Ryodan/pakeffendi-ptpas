@@ -283,7 +283,21 @@
 </style>
 <script>
 function printOrder(orderId) {
-    window.open('/orders/' + orderId + '?print=1', '_blank');
+    var url = '/orders/' + orderId + '/print';
+    var iframe = document.createElement('iframe');
+    iframe.style.position = 'fixed';
+    iframe.style.width = '0';
+    iframe.style.height = '0';
+    iframe.style.border = 'none';
+    iframe.style.left = '-9999px';
+    document.body.appendChild(iframe);
+    iframe.onload = function() {
+        setTimeout(function() {
+            iframe.contentWindow.print();
+            setTimeout(function() { iframe.remove(); }, 500);
+        }, 300);
+    };
+    iframe.src = url;
 }
 document.addEventListener('DOMContentLoaded', function() {
     var searchBtn = document.getElementById('mobOrdersSearchBtn');

@@ -58,6 +58,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('statuses', ProductStatusController::class)->except(['show']);
 
         Route::resource('sales-orders', SalesOrderController::class)->only(['index', 'show', 'edit', 'update', 'destroy']);
+        Route::get('sales-orders/{salesOrder}/print', [SalesOrderController::class, 'print'])->name('sales-orders.print');
         Route::resource('broadcasts', BroadcastController::class)->except(['show']);
         Route::resource('favorite-brands', FavoriteBrandController::class)->only(['index', 'create', 'store', 'destroy']);
         Route::resource('featured-products', FeaturedProductController::class)->except(['show']);

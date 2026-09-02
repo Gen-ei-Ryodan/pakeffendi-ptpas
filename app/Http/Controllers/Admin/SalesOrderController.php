@@ -97,4 +97,13 @@ class SalesOrderController extends Controller
 
         return redirect()->route('admin.sales-orders.index')->with('status', 'Sales order berhasil dihapus.');
     }
+
+    public function print(SalesOrder $salesOrder)
+    {
+        $order = $salesOrder->load(['customer', 'items.product', 'salesPerson']);
+
+        return view('admin.sales-orders.print', [
+            'order' => $order,
+        ]);
+    }
 }

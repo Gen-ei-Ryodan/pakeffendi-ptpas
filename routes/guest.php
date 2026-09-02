@@ -404,6 +404,7 @@ Route::prefix('/')->group(function () {
     // Orders
     Route::get('/orders', [OrderController::class, 'index'])->middleware('guest.auth')->name('guest.orders.index');
     Route::get('/orders/{order}', [OrderController::class, 'show'])->middleware('guest.auth')->name('guest.orders.show');
+    Route::get('/orders/{order}/print', [OrderController::class, 'print'])->middleware('guest.auth')->name('guest.orders.print');
 
     // About & Contact
     Route::get('/about', function () {
