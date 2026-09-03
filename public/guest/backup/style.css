@@ -323,7 +323,8 @@ body {
 }
 
 .qty-input {
-    width: 40px;
+    width: 60px;
+    min-width: 60px;
     text-align: center;
     border: none;
     background: transparent;
@@ -1344,7 +1345,8 @@ body {
 .text-orange { color: var(--primary-dark); }
 
 .qty-input-box {
-    width: 40px;
+    width: 60px;
+    min-width: 60px;
     text-align: center;
     border: none;
     outline: none;

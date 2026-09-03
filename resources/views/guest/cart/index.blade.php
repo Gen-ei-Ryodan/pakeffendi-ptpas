@@ -108,7 +108,7 @@
                                         <input type="text" class="form-control form-control-sm mt-1 item-notes-input" placeholder="Catatan item..." value="{{ $item->notes }}" data-product-id="{{ $product?->id }}" style="max-width:260px;font-size:0.78rem;" onchange="updateItemNotes({{ $product?->id }}, this.value)">
                                     </div>
                                     <div class="col-md-2">
-                                        <div class="input-group input-group-sm" style="min-width: 120px;">
+                                        <div class="input-group input-group-sm flex-nowrap" style="width: 150px;">
                                             <button class="btn btn-secondary btn-sm flex-shrink-0" type="button" onclick="updateQuantity({{ $product?->id }}, -1)">
                                                 <i class="bi bi-dash"></i>
                                             </button>

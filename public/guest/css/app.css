@@ -265,6 +265,21 @@ main > section:first-of-type {
     border-left: none;
 }
 
+.cart-item .input-group {
+    flex-wrap: nowrap;
+}
+
+.cart-item .col-md-2 {
+    width: 150px;
+    max-width: 150px;
+    flex: 0 0 150px;
+}
+
+.cart-item .input-group .form-control {
+    width: 100%;
+    text-align: center;
+}
+
 /* Card Styles */
 .card {
     border: none;
@@ -373,7 +388,8 @@ main > section:first-of-type {
 }
 
 .qty-selector .qty-input {
-    width: 36px;
+    width: 60px;
+    min-width: 60px;
     height: 30px;
     border: none;
     border-left: 1px solid #d1d5db;
@@ -1602,7 +1618,7 @@ html {
 }
 
 .qorder-card .qty-input-box {
-    min-width: 50px;
+    min-width: 70px;
 }
 
 .qorder-card .checkbox-wrapper {
@@ -2512,6 +2528,8 @@ body {
         font-size: 0.7rem;
     }
 
+    /* moved to base styles below */
+
     /* ----- CART SUMMARY ----- */
     .card-body h5 {
         font-size: 0.88rem;
@@ -3163,7 +3181,8 @@ body {
     }
 
     .mob-qty-input {
-        width: 36px;
+        width: 60px;
+        min-width: 60px;
         height: 30px;
         border: none;
         border-left: 1px solid #e0e0e0;
