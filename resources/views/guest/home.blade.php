@@ -17,18 +17,38 @@
     <section class="hero-banner">
         <div class="container">
             <div class="hero-banner-frame">
-                <div class="hero-banner-media">
-                    <img
-                        src="{{ asset('guest/img/bannerrrrr.png') }}"
-                        alt="Promo PAS Market"
-                        class="hero-banner-image"
-                        loading="lazy"
-                        onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-banner.svg') }}'"
-                    >
+                <div class="hero-banner-media" id="heroBannerCarousel">
+                    <div class="hero-banner-slides" id="heroBannerSlides">
+                        @foreach($broadcasts as $index => $broadcast)
+                        <div class="hero-banner-slide">
+                            <img
+                                src="{{ $broadcast->image_url }}"
+                                alt="Banner Promo {{ $index + 1 }}"
+                                loading="lazy"
+                                onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-banner.svg') }}'"
+                            >
+                        </div>
+                        @endforeach
+                        @if($broadcasts->isEmpty())
+                        <div class="hero-banner-slide">
+                            <img
+                                src="{{ asset('guest/img/placeholder-banner.svg') }}"
+                                alt="Promo PAS Market"
+                            >
+                        </div>
+                        @endif
+                    </div>
                     <div class="hero-banner-chip" aria-hidden="true">
                         <i class="bi bi-shop"></i>
                         <span>PAS Market</span>
                     </div>
+                    @if($broadcasts->count() > 1)
+                    <div class="hero-banner-dots">
+                        @foreach($broadcasts as $index => $broadcast)
+                        <span class="hero-dot {{ $index === 0 ? 'active' : '' }}" data-slide="{{ $index }}"></span>
+                        @endforeach
+                    </div>
+                    @endif
                 </div>
             </div>
         </div>
@@ -237,6 +257,61 @@
             track.innerHTML = once.repeat(copies);
             track.style.animationDuration = Math.max(16, (track.scrollWidth / 2) / 55) + 's';
             track.classList.add('is-animating');
+        }
+    }
+
+    // Hero Banner Carousel - one direction loop
+    var carousel = document.getElementById('heroBannerCarousel');
+    var slidesContainer = document.getElementById('heroBannerSlides');
+    if (carousel && slidesContainer) {
+        var originalSlides = carousel.querySelectorAll('.hero-banner-slide');
+        var dots = carousel.querySelectorAll('.hero-dot');
+        var totalSlides = originalSlides.length;
+
+        if (totalSlides > 1 && !reduce) {
+            // Clone first slide to end for seamless loop
+            var clone = originalSlides[0].cloneNode(true);
+            slidesContainer.appendChild(clone);
+
+            var currentSlide = 0;
+
+            function goToSlide(index, animate) {
+                currentSlide = index;
+                if (animate) {
+                    slidesContainer.style.transition = 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+                } else {
+                    slidesContainer.style.transition = 'none';
+                }
+                slidesContainer.style.transform = 'translateX(-' + (currentSlide * 100) + '%)';
+                dots.forEach(function(dot, i) {
+                    dot.classList.toggle('active', i === (currentSlide % totalSlides));
+                });
+            }
+
+            function nextSlide() {
+                var next = currentSlide + 1;
+                if (next > totalSlides) {
+                    // Reached the clone, instantly reset to start
+                    goToSlide(0, false);
+                    // Force reflow then slide to 1
+                    slidesContainer.offsetHeight;
+                    goToSlide(1, true);
+                } else {
+                    goToSlide(next, true);
+                }
+            }
+
+            // Auto slide every 4 seconds
+            var slideInterval = setInterval(nextSlide, 4000);
+
+            // Click dots to navigate
+            dots.forEach(function(dot) {
+                dot.addEventListener('click', function() {
+                    clearInterval(slideInterval);
+                    goToSlide(parseInt(this.dataset.slide), true);
+                    slideInterval = setInterval(nextSlide, 4000);
+                });
+            });
         }
     }
 
