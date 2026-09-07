@@ -2,66 +2,71 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Nota Pesanan - {{ $order->order_no }}</title>
+    <title>Sales Order - {{ $order->order_no }}</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Times New Roman', Times, serif; font-size: 11px; background: #fff; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 11px; background: #fff; color: #000; }
         .page { width: 210mm; min-height: 297mm; margin: 0 auto; padding: 10mm; }
 
         /* Header */
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8mm; }
-        .header-left { text-align: left; }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4mm; }
         .header-left .company-name { font-size: 14px; font-weight: bold; }
-        .header-right { text-align: right; }
-        .header-right .title { font-size: 22px; font-weight: bold; letter-spacing: 2px; }
-        .header-right .meta { margin-top: 4mm; font-size: 11px; }
-        .header-right .meta div { margin-bottom: 1mm; }
-        .meta-label { display: inline-block; width: 70px; text-align: left; }
+        .header-left .company-address { font-size: 10px; margin-top: 1mm; }
+        .header-right .title { font-size: 18px; font-weight: bold; text-align: right; }
 
-        /* Order Status */
-        .status-badge { display: inline-block; padding: 1mm 3mm; background: #f0f0f0; border: 1px solid #999; border-radius: 3px; font-size: 10px; font-weight: bold; margin-bottom: 3mm; }
-
-        /* Customer Info */
-        .customer-info { margin-bottom: 5mm; }
-        .customer-row { display: flex; margin-bottom: 1mm; }
-        .customer-label { width: 80px; font-weight: bold; }
-        .customer-sublabel { width: 80px; text-align: right; margin-right: 5px; }
+        /* Info Section */
+        .info-section { display: flex; justify-content: space-between; margin-bottom: 5mm; }
+        .customer-info { width: 55%; }
+        .customer-label { font-weight: bold; margin-bottom: 1mm; }
+        .customer-name { font-weight: bold; font-size: 12px; margin-bottom: 1mm; }
+        .customer-address { font-size: 10px; line-height: 1.4; }
+        .order-meta { width: 40%; text-align: right; }
+        .order-meta-table { margin-left: auto; }
+        .order-meta-table td { padding: 0.5mm 0; font-size: 11px; }
+        .order-meta-table .label { text-align: left; padding-right: 3mm; }
+        .order-meta-table .value { text-align: left; font-weight: bold; }
 
         /* Table */
         .items-table { width: 100%; border-collapse: collapse; margin-bottom: 3mm; }
         .items-table th,
-        .items-table td { border: 1px solid #000; padding: 2mm; font-size: 10px; }
-        .items-table th { background: #f0f0f0; font-weight: bold; text-align: center; }
-        .items-table td { vertical-align: top; }
+        .items-table td { padding: 1.5mm 2mm; font-size: 10px; }
+        .items-table th { border-bottom: 2px solid #000; font-weight: bold; text-align: center; }
+        .items-table td { border-bottom: 1px solid #ccc; }
+        .items-table thead tr { border-top: 2px solid #000; border-bottom: 2px solid #000; }
         .col-no { width: 4%; text-align: center; }
-        .col-qty { width: 8%; text-align: center; }
-        .col-unit { width: 8%; text-align: center; }
-        .col-price { width: 15%; text-align: right; }
-        .col-subtotal { width: 15%; text-align: right; }
-        .col-desc { width: 50%; }
+        .col-kode { width: 12%; text-align: left; }
+        .col-nama { width: 38%; text-align: left; }
+        .col-jml { width: 6%; text-align: center; }
+        .col-unit { width: 6%; text-align: center; }
+        .col-harga { width: 12%; text-align: right; }
+        .col-disc { width: 8%; text-align: right; }
+        .col-ext { width: 14%; text-align: right; }
 
-        /* Bottom Section - Notes left, Totals right */
-        .bottom-section { display: flex; justify-content: space-between; margin-top: 3mm; }
-        .notes-section { width: 55%; }
+        /* Bottom Section */
+        .bottom-section { display: flex; justify-content: space-between; margin-top: 8mm; }
+        .notes-section { width: 40%; }
         .notes-label { font-weight: bold; margin-bottom: 2mm; }
-        .notes-content { font-size: 10px; line-height: 1.5; }
+        .notes-content { font-size: 10px; line-height: 1.4; }
 
-        .totals-section { width: 40%; text-align: right; }
-        .totals-table { display: inline-table; border-collapse: collapse; width: auto; }
-        .totals-table td { border: 1px solid #000; padding: 2mm 5mm; font-size: 10px; }
-        .totals-table .label { font-weight: bold; text-align: left; white-space: nowrap; }
-        .totals-table .value { text-align: right; white-space: nowrap; }
-        .totals-table .grand { font-size: 12px; font-weight: bold; }
+        .signature-section { width: 20%; text-align: center; }
+        .signature-label { font-weight: bold; margin-bottom: 15mm; }
+        .signature-line { border-top: 1px solid #000; padding-top: 2mm; font-size: 9px; }
 
-        /* Signature */
-        .signature-section { display: flex; justify-content: space-between; margin-top: 10mm; }
-        .signature-box { width: 45%; border: 1px solid #000; padding: 4mm; text-align: center; }
-        .signature-box .box-title { font-weight: bold; margin-bottom: 12mm; text-decoration: underline; font-size: 10px; }
-        .signature-box .box-footer { margin-top: 12mm; font-size: 9px; }
+        .totals-section { width: 35%; text-align: right; }
+        .totals-table { margin-left: auto; border-collapse: collapse; }
+        .totals-table td { padding: 1mm 3mm; font-size: 11px; }
+        .totals-table .label { text-align: left; }
+        .totals-table .colon { text-align: center; padding: 0 2mm; }
+        .totals-table .value { text-align: right; font-weight: bold; }
+        .totals-table .grand { font-size: 12px; font-weight: bold; border-top: 1px solid #000; padding-top: 2mm; }
+
+        .footer-note { font-size: 9px; font-style: italic; margin-top: 3mm; text-align: right; }
 
         @media print {
             .page { width: 100%; padding: 8mm; }
-            @page { size: A4 portrait; margin: 0; }
+            @page { size: A4 portrait; margin: 10mm 8mm; }
+            .items-table thead { display: table-header-group; }
+            .items-table tbody tr { page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -70,87 +75,81 @@
         <!-- Header -->
         <div class="header">
             <div class="header-left">
-                <div class="company-name">CV. EFFENDI</div>
+                <div class="company-name">PT.PARAMA ASIA SEJAHTERA</div>
+                <div class="company-address">Jl. Cempaka Biru Selatan 1 No. 9X, Denpasar Utara, Bali</div>
+                <div class="company-address">081210015727 /</div>
             </div>
             <div class="header-right">
-                <div class="title">NOTA PESANAN</div>
-                <div class="status-badge">{{ $order->status }}</div>
-                <div class="meta">
-                    <div><span class="meta-label">No. Pesanan</span> : {{ $order->order_no }}</div>
-                    <div><span class="meta-label">Tanggal</span> : {{ optional($order->order_date)->format('Y-m-d H:i') }}</div>
-                    <div><span class="meta-label">Customer ID</span> : {{ $order->customer?->customer_code }}</div>
-                </div>
+                <div class="title">Sales Order</div>
             </div>
         </div>
 
-        <!-- Customer Info -->
-        <div class="customer-info">
-            <div class="customer-row">
-                <div class="customer-label">Penerima</div>
-                <div>: {{ $order->delivery_to ?: $order->customer?->full_name }}</div>
+        <!-- Info Section -->
+        <div class="info-section">
+            <div class="customer-info">
+                <div class="customer-label">Customer:</div>
+                <div class="customer-name">{{ $order->customer?->name ?? $order->delivery_to }}</div>
+                <div class="customer-address">
+                    {{ $order->delivery_address ?: $order->customer?->address }}
+                </div>
             </div>
-            @if($order->delivery_phone || $order->customer?->phone)
-            <div class="customer-row">
-                <div class="customer-label">Telepon</div>
-                <div>: {{ $order->delivery_phone ?: $order->customer->phone }}</div>
+            <div class="order-meta">
+                <table class="order-meta-table">
+                    <tr>
+                        <td class="label">Sales Order No</td>
+                        <td class="value">: {{ $order->order_no }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Tgl</td>
+                        <td class="value">: {{ optional($order->order_date)->format('d-M-Y') }}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Jatuh Tempo Hr</td>
+                        <td class="value">: {{ $order->payment_terms ?? '-' }} hari</td>
+                    </tr>
+                </table>
             </div>
-            @endif
-            @if($order->delivery_address || $order->customer?->address)
-            <div class="customer-row">
-                <div class="customer-label">Alamat</div>
-                <div>: {{ $order->delivery_address ?: $order->customer->address }}</div>
-            </div>
-            @endif
         </div>
 
         <!-- Items Table -->
         <table class="items-table">
             <thead>
                 <tr>
-                    <th class="col-no">NO</th>
-                    <th class="col-qty">JUMLAH</th>
-                    <th class="col-unit">SATUAN</th>
-                    <th class="col-desc">URAIAN</th>
-                    <th class="col-price">HARGA</th>
-                    <th class="col-subtotal">SUBTOTAL</th>
+                    <th class="col-no">No</th>
+                    <th class="col-kode">Kode</th>
+                    <th class="col-nama">Nama Barang</th>
+                    <th class="col-jml">Jml</th>
+                    <th class="col-unit">Unit</th>
+                    <th class="col-harga">Harga</th>
+                    <th class="col-disc">Disc %</th>
+                    <th class="col-ext">Ext Price</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach ($order->items as $i => $item)
                 <tr>
                     <td>{{ $i + 1 }}</td>
-                    <td>{{ $item->quantity }}</td>
-                    <td>{{ $item->product?->unit ?: 'pcs' }}</td>
+                    <td>{{ $item->product?->sku ?? $item->product?->code }}</td>
                     <td>
                         {{ $item->product_name }}
                         @if(!empty($item->notes))
-                        <div style="font-size:9px; color:#666;">* {{ $item->notes }}</div>
-                        @endif
-                        @if((float) $item->discount_percent > 0)
-                        <div style="font-size:9px; color:#666;">Disc {{ number_format((float) $item->discount_percent, 0) }}%</div>
+                        <br><span style="font-size:9px;">* {{ $item->notes }}</span>
                         @endif
                     </td>
-                    <td>Rp {{ number_format((float) $item->net_price, 0, ',', '.') }}/{{ $item->product?->unit ?: 'pcs' }}</td>
-                    <td>Rp {{ number_format((float) $item->final_total, 0, ',', '.') }}</td>
+                    <td>{{ $item->quantity }}</td>
+                    <td>{{ $item->product?->unit ?: 'PCS' }}</td>
+                    <td>{{ number_format((float) $item->net_price, 0, ',', '.') }}</td>
+                    <td>{{ number_format((float) $item->discount_percent, 2) }}</td>
+                    <td>{{ number_format((float) $item->final_total, 0, ',', '.') }}</td>
                 </tr>
                 @endforeach
-                @for($i = count($order->items); $i < 8; $i++)
-                <tr>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                </tr>
-                @endfor
             </tbody>
         </table>
 
-        <!-- Bottom Section: Notes left, Totals right -->
+        <!-- Bottom Section -->
         <div class="bottom-section">
             <div class="notes-section">
-                <div class="notes-label">Catatan</div>
+                <div class="notes-label">Notes:</div>
                 <div class="notes-content">
                     @if(!empty($order->notes))
                         {{ $order->notes }}
@@ -159,33 +158,29 @@
                     @endif
                 </div>
             </div>
+            <div class="signature-section">
+                <div class="signature-label">Dibuat Oleh</div>
+                <div class="signature-line">&nbsp;</div>
+            </div>
             <div class="totals-section">
                 <table class="totals-table">
                     <tr>
-                        <td class="label">Total</td>
-                        <td class="value">Rp {{ number_format((float) $order->grand_total, 0, ',', '.') }}</td>
+                        <td class="label">Sub Total</td>
+                        <td class="colon">:</td>
+                        <td class="value">{{ number_format((float) $order->grand_total, 0, ',', '.') }}</td>
                     </tr>
                     <tr>
-                        <td class="label">Ongkir</td>
-                        <td class="value">Rp {{ number_format((float) $order->shipping_fee, 0, ',', '.') }}</td>
+                        <td class="label">Extra Discount</td>
+                        <td class="colon">:</td>
+                        <td class="value">{{ number_format((float) ($order->extra_discount ?? 0), 0) }} %</td>
                     </tr>
                     <tr>
                         <td class="label grand">Grand Total</td>
-                        <td class="value grand">Rp {{ number_format((float) ($order->grand_total + $order->shipping_fee), 0, ',', '.') }}</td>
+                        <td class="colon grand">:</td>
+                        <td class="value grand">{{ number_format((float) ($order->grand_total + $order->shipping_fee), 0, ',', '.') }}</td>
                     </tr>
                 </table>
-            </div>
-        </div>
-
-        <!-- Signature -->
-        <div class="signature-section">
-            <div class="signature-box">
-                <div class="box-title">PEMESAN</div>
-                <div class="box-footer">NAMA / TTD / CAP</div>
-            </div>
-            <div class="signature-box">
-                <div class="box-title">CV. EFFENDI</div>
-                <div class="box-footer">NAMA / TTD / CAP</div>
+                <div class="footer-note">* harga sudah termasuk ppn</div>
             </div>
         </div>
     </div>
