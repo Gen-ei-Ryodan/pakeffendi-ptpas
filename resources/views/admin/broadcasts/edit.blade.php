@@ -26,6 +26,7 @@
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Broadcast Image</label>
                         <input type="file" name="image" accept="image/*" class="w-full text-sm text-slate-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100">
+                        <p class="mt-1.5 text-xs text-slate-400">Gunakan gambar dengan rasio 3:1 (lebar 3x tinggi) untuk tampilan optimal di halaman beranda.</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-700 mb-1.5">Description <span class="text-red-500">*</span></label>
