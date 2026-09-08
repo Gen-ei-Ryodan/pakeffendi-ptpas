@@ -5594,6 +5594,14 @@ body[data-spa="false"] .mobile-topbar-inner {
     color: var(--hp-navy-700);
 }
 
+.home-page .cat-grid .cat-img {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 12px;
+    object-fit: contain;
+    background: var(--hp-navy-100);
+}
+
 .home-page .cat-grid .cat-name {
     font-size: 0.85rem;
     font-weight: 600;

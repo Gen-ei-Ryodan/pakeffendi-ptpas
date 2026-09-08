@@ -80,7 +80,11 @@
                 <div class="cat-grid cat-grid-desktop">
                     @foreach(($categories ?? collect())->take(10) as $category)
                         <a href="{{ url('/products') }}?category_id={{ $category->category_code }}" class="cat-item" data-category-id="{{ $category->category_code }}">
-                            <i class="bi bi-{{ $categoryIcons[$loop->index % count($categoryIcons)] ?? 'tags' }} cat-icon"></i>
+                            @if($category->image_path)
+                                <img src="{{ asset('storage/'.$category->image_path) }}" alt="{{ $category->name }}" class="cat-img">
+                            @else
+                                <i class="bi bi-{{ $categoryIcons[$loop->index % count($categoryIcons)] ?? 'tags' }} cat-icon"></i>
+                            @endif
                             <span class="cat-name">{{ $category->name }}</span>
                         </a>
                     @endforeach
@@ -96,7 +100,11 @@
                 <div class="cat-grid cat-grid-mobile">
                     @foreach(($categories ?? collect())->take(6) as $category)
                         <a href="{{ url('/products') }}?category_id={{ $category->category_code }}" class="cat-item" data-category-id="{{ $category->category_code }}">
-                            <i class="bi bi-{{ $categoryIcons[$loop->index % count($categoryIcons)] ?? 'tags' }} cat-icon"></i>
+                            @if($category->image_path)
+                                <img src="{{ asset('storage/'.$category->image_path) }}" alt="{{ $category->name }}" class="cat-img">
+                            @else
+                                <i class="bi bi-{{ $categoryIcons[$loop->index % count($categoryIcons)] ?? 'tags' }} cat-icon"></i>
+                            @endif
                             <span class="cat-name">{{ $category->name }}</span>
                         </a>
                     @endforeach
