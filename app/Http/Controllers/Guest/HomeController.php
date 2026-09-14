@@ -36,7 +36,6 @@ class HomeController extends Controller
             ->with(['brand', 'images'])
             ->active()
             ->activeCategory()
-            ->hasPhoto()
             ->orderBy('name')
             ->limit(10)
             ->get();
@@ -49,7 +48,6 @@ class HomeController extends Controller
                 ->active()
                 ->activeCategory()
                 ->validPricing()
-                ->hasPhoto()
                 ->byStatus($status->code)
                 ->limit(8)
                 ->get();
@@ -102,7 +100,6 @@ class HomeController extends Controller
             ->with(['brand', 'images'])
             ->active()
             ->activeCategory()
-            ->hasPhoto()
             ->orderBy('name')
             ->limit(10)
             ->get();
@@ -115,7 +112,6 @@ class HomeController extends Controller
                 ->active()
                 ->activeCategory()
                 ->validPricing()
-                ->hasPhoto()
                 ->byStatus($status->code)
                 ->limit(8)
                 ->get();

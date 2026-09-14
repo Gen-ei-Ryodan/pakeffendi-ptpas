@@ -30,7 +30,6 @@ Route::prefix('/')->group(function () {
             ->whereRaw('LOWER(status_product) LIKE ?', ['%terlaris%'])
             ->active()
             ->activeCategory()
-            ->hasPhoto()
             ->where('no_urut_status', '>', 0)
             ->orderBy('no_urut_status')
             ->orderBy('name')
@@ -42,7 +41,6 @@ Route::prefix('/')->group(function () {
             ->whereRaw('LOWER(status_product) LIKE ?', ['%terbaru%'])
             ->active()
             ->activeCategory()
-            ->hasPhoto()
             ->where('no_urut_status', '>', 0)
             ->orderBy('no_urut_status')
             ->orderBy('name')
@@ -60,7 +58,6 @@ Route::prefix('/')->group(function () {
                 ->with(['brand:brand_code,brand_name'])
                 ->active()
                 ->activeCategory()
-                ->hasPhoto()
                 ->where('no_urut_status', '>', 0)
                 ->byStatus($status->code)
                 ->limit(8)
@@ -110,7 +107,6 @@ Route::prefix('/')->group(function () {
             ->with(['brand:brand_code,brand_name', 'category:category_code,name'])
             ->active()
             ->activeCategory()
-            ->hasPhoto()
             ->orderBy('name');
 
         if (! empty($validated['q'])) {
@@ -229,7 +225,6 @@ Route::prefix('/')->group(function () {
             ->with(['brand:brand_code,brand_name'])
             ->active()
             ->activeCategory()
-            ->hasPhoto()
             ->orderBy('name');
 
         if (! empty($validated['q'])) {
@@ -305,12 +300,11 @@ Route::prefix('/')->group(function () {
                 'brand:brand_code,brand_name',
                 'category:category_code,name',
                 'relatedProducts' => function ($q) {
-                    $q->with(['brand:brand_code,brand_name'])->active()->activeCategory()->hasPhoto()->orderBy('name');
+                    $q->with(['brand:brand_code,brand_name'])->active()->activeCategory()->orderBy('name');
                 },
             ])
             ->active()
             ->activeCategory()
-            ->hasPhoto()
             ->findOrFail($id);
 
         $relatedProducts = $product->relatedProducts;

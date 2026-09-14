@@ -16,11 +16,7 @@
             @foreach($featuredProducts as $product)
                 <div class="qorder-card" data-product-id="{{ $product->id }}">
                     <div class="qorder-img">
-                        @if($product->has_photo)
-                            <img src="{{ $product->photo_url }}" alt="{{ $product->name }}" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
-                        @else
-                            <i class="far fa-image qorder-placeholder-icon"></i>
-                        @endif
+                        <img src="{{ $product->photo_url }}" alt="{{ $product->name }}" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
                     </div>
                     <div class="qorder-info">
                         <h4 class="qorder-title">{{ $product->name }}</h4>

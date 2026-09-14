@@ -108,7 +108,6 @@ Rumus: `net_price = unit_price × (1 - (discount_percent / 100))`
 Produk tampil di guest area jika:
 1. `discontinued = false`
 2. Kategori produk aktif (`is_active = true`)
-3. Memiliki foto (`photo_path` tidak null/kosong dan bukan placeholder)
 
 ## Access Control
 
