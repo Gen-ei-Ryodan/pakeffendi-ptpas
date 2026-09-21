@@ -84,6 +84,9 @@
                         <div class="pd-spec-item"><span>Unit</span><strong>{{ $product->unit }}</strong></div>
                         <div class="pd-spec-item"><span>Berat</span><strong>{{ number_format((float) $product->weight_kg, 2, ',', '.') }} kg</strong></div>
                         <div class="pd-spec-item"><span>Kategori</span><strong>{{ $product->category?->name }}</strong></div>
+                        @if((float) ($product->min_multiply_qty ?? 1) > 1)
+                        <div class="pd-spec-item"><span>Min. Kelipatan</span><strong>{{ $product->min_multiply_notes ?: $product->min_multiply_qty }}</strong></div>
+                        @endif
                     </div>
 
                     <div class="pd-buy">

@@ -36,8 +36,9 @@ Admin bisa menghapus order — soft delete melalui Eloquent. Tidak ada aturan kh
 - Cart baru (aktif) langsung dibuat untuk customer.
 
 ### Add Item Duplicate
-- Jika sebuah produk sudah ada di cart lalu dipilih (add) lagi, **quantity TIDAK ditambah.**
-- Sistem menampilkan notifikasi "Barang sudah ada di keranjang."
+- Jika sebuah produk sudah ada di cart lalu dipilih (add) lagi, **quantity TIDAK ditambah otomatis.**
+- Sistem menampilkan notifikasi konfirmasi: "Barang sudah ada di keranjang, apakah anda mau menambahkan?"
+- Jika user konfirmasi, qty ditambah via endpoint `add-more`.
 - Quantity hanya bisa diubah dari halaman cart (update quantity) atau saat checkout.
 
 ### Cart Merge
@@ -108,6 +109,18 @@ Rumus: `net_price = unit_price × (1 - (discount_percent / 100))`
 Produk tampil di guest area jika:
 1. `discontinued = false`
 2. Kategori produk aktif (`is_active = true`)
+
+### Min Multiply Qty (CO Minimum Kelipatan)
+Setiap produk bisa memiliki `min_multiply_qty` yang menentukan kelipatan minimum quantity saat checkout.
+
+- Jika `min_multiply_qty = 0` atau `1`, tidak ada batasan kelipatan.
+- Jika `min_multiply_qty = 10`, maka qty harus kelipatan 10 (10, 20, 30, dst).
+- `min_multiply_notes` berisi catatan untuk user (misal: "1 box isi 10").
+- Validasi dilakukan saat:
+  - Update quantity di cart
+  - Checkout
+  - Save draft
+- Jika qty tidak sesuai kelipatan, sistem akan menolak dengan pesan error.
 
 ## Access Control
 

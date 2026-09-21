@@ -216,6 +216,7 @@ class CartController extends Controller
             $summary = $this->buildSummary($cart->items);
 
             $alreadyInCart = $result['already_in_cart'];
+            $existingQuantity = $result['existing_quantity'];
 
             Log::info('Item added successfully', ['already_in_cart' => $alreadyInCart]);
 
@@ -223,6 +224,11 @@ class CartController extends Controller
                 ? response()->json([
                     'summary' => $summary,
                     'already_in_cart' => $alreadyInCart,
+                    'existing_quantity' => $existingQuantity,
+                    'product_id' => $product->id,
+                    'product_name' => $product->name,
+                    'min_multiply_qty' => (float) $product->min_multiply_qty,
+                    'min_multiply_notes' => $product->min_multiply_notes,
                 ], 201)
                 : redirect()->to('/cart')->with(
                     $alreadyInCart ? 'warning' : 'success',
@@ -242,6 +248,81 @@ class CartController extends Controller
         } catch (\Exception $e) {
             Log::error('Error adding item to cart: '.$e->getMessage());
             Log::error($e->getTraceAsString());
+            throw $e;
+        }
+    }
+
+    public function addMoreItem(Request $request)
+    {
+        try {
+            $rules = [
+                'product_id' => ['required', 'integer', 'exists:products,id'],
+                'quantity' => ['required', 'integer', 'min:1', 'max:999999'],
+            ];
+
+            $shopper = $this->getShopper();
+            if ($shopper instanceof User && $shopper->isSales()) {
+                $rules['customer_id'] = ['nullable', 'integer', 'exists:customers,id'];
+            }
+
+            $validated = $request->validate($rules);
+
+            if ($shopper instanceof User && $shopper->isSales()) {
+                if (empty($validated['customer_id'])) {
+                    $cookieCid = (int) $request->cookie(self::SALES_CUSTOMER_COOKIE, '0');
+                    $validated['customer_id'] = $cookieCid > 0 ? $cookieCid : null;
+                }
+
+                $customer = Customer::where('id', $validated['customer_id'])
+                    ->where('sales_id', $shopper->id)
+                    ->first();
+
+                if (! $customer) {
+                    abort(422, 'Silakan pilih customer terlebih dahulu di halaman Keranjang.');
+                }
+
+                $resolved = $this->cartService->resolve($request, $customer, (int) $shopper->id);
+            } else {
+                $resolved = $this->resolveCart($request);
+            }
+
+            $cart = $resolved['cart'];
+
+            $product = Product::query()
+                ->where('discontinued', false)
+                ->whereHas('category', fn ($q) => $q->where('is_active', true))
+                ->findOrFail($validated['product_id']);
+
+            // Validate min_multiply_qty
+            $quantity = (int) $validated['quantity'];
+            $minMultiply = (float) $product->min_multiply_qty;
+            if ($minMultiply > 1 && $quantity % (int) $minMultiply !== 0) {
+                abort(422, 'Qty harus kelipatan '.$minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'.');
+            }
+
+            $result = $this->cartService->addMoreItem($cart, $product, $quantity);
+
+            $cart->load(['items.product']);
+            $summary = $this->buildSummary($cart->items);
+
+            $response = $request->wantsJson()
+                ? response()->json([
+                    'summary' => $summary,
+                    'new_quantity' => $result['new_quantity'],
+                ], 201)
+                : redirect()->to('/cart')->with('success', 'Produk ditambahkan ke keranjang!');
+
+            $response = $response->cookie($resolved['cookie']);
+
+            if ($shopper instanceof User && $shopper->isSales() && isset($validated['customer_id'])) {
+                $response = $response->cookie(
+                    cookie(self::SALES_CUSTOMER_COOKIE, (string) $validated['customer_id'], 60 * 24 * 30)
+                );
+            }
+
+            return $response;
+        } catch (\Exception $e) {
+            Log::error('Error adding more item to cart: '.$e->getMessage());
             throw $e;
         }
     }

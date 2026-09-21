@@ -68,7 +68,7 @@
                     this.summary = data.summary || this.summary;
                     this.updateUI();
                     if (data.already_in_cart) {
-                        this.showNotification('Barang sudah ada di keranjang.', 'warning');
+                        this.showAddMoreConfirmDialog(data, quantity);
                     } else {
                         this.showNotification('Produk ditambahkan ke keranjang!', 'success');
                     }
@@ -106,11 +106,42 @@
                 this.summary = data.summary || this.summary;
                 this.updateUI();
                 if (data.already_in_cart) {
-                    this.showNotification('Barang sudah ada di keranjang.', 'warning');
+                    this.showAddMoreConfirmDialog(data, quantity);
                 } else {
                     this.showNotification('Produk ditambahkan ke keranjang!', 'success');
                 }
             } catch (_) {
+            }
+        },
+
+        showAddMoreConfirmDialog(data, quantity) {
+            const productName = data.product_name || 'Produk ini';
+            const existingQty = data.existing_quantity || 0;
+            const minMultiply = data.min_multiply_qty || 1;
+            const minNotes = data.min_multiply_notes || '';
+
+            let message = `${productName} sudah ada di keranjang (qty: ${existingQty}). Apakah anda mau menambahkan?`;
+            if (minMultiply > 1) {
+                message += `\n\nMinimal kelipatan: ${minMultiply}${minNotes ? ' (' + minNotes + ')' : ''}`;
+            }
+
+            if (confirm(message)) {
+                this.addMoreItem(data.product_id, quantity);
+            }
+        },
+
+        async addMoreItem(productId, quantity) {
+            try {
+                const data = await API.request('/cart/items/add-more', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': this.csrfToken() },
+                    body: JSON.stringify({ product_id: productId, quantity }),
+                });
+                this.summary = data.summary || this.summary;
+                this.updateUI();
+                this.showNotification('Jumlah produk ditambahkan di keranjang!', 'success');
+            } catch (err) {
+                // Error already handled by API.request
             }
         },
 

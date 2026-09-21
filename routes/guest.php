@@ -320,6 +320,7 @@ Route::prefix('/')->group(function () {
     Route::get('/cart/count', [CartController::class, 'count'])->name('guest.cart.count');
     Route::get('/cart/summary', [CartController::class, 'summary'])->name('guest.cart.summary');
     Route::post('/cart/items', [CartController::class, 'addItem'])->middleware('guest.auth')->name('guest.cart.items.store');
+    Route::post('/cart/items/add-more', [CartController::class, 'addMoreItem'])->middleware('guest.auth')->name('guest.cart.items.add-more');
     Route::post('/cart/items/{product}', [CartController::class, 'setItemQuantity'])->middleware('guest.auth')->name('guest.cart.items.set');
     Route::delete('/cart/items/{product}', [CartController::class, 'removeItem'])->middleware('guest.auth')->name('guest.cart.items.destroy');
     Route::delete('/cart', [CartController::class, 'clear'])->middleware('guest.auth')->name('guest.cart.clear');

@@ -129,6 +129,16 @@
                         <input type="number" name="no_urut_status" value="{{ old('no_urut_status', 0) }}" min="0" class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-sky-500">
                     </div>
                     <div></div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Min. Kelipatan Qty (CO)</label>
+                        <input type="number" step="0.01" name="min_multiply_qty" value="{{ old('min_multiply_qty', 1) }}" min="0" class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-sky-500">
+                        <p class="text-xs text-slate-400 mt-1">Qty harus kelipatan dari nilai ini. 0 atau 1 = tanpa batasan.</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Catatan Min. Kelipatan</label>
+                        <input name="min_multiply_notes" value="{{ old('min_multiply_notes') }}" maxlength="50" placeholder="Contoh: 1 box isi 10" class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-sky-500">
+                    </div>
+                    <div></div>
                 </div>
             </div>
 

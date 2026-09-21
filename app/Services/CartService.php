@@ -131,7 +131,7 @@ class CartService
      * If the product is already in the cart, the quantity is NOT incremented
      * and `already_in_cart` is set to true so the caller can notify the user.
      *
-     * @return array{item: CartItem, already_in_cart: bool}
+     * @return array{item: CartItem, already_in_cart: bool, existing_quantity: int|null}
      */
     public function addItem(Cart $cart, Product $product, int $quantity): array
     {
@@ -148,6 +148,7 @@ class CartService
                 return [
                     'item' => $item->refresh(),
                     'already_in_cart' => true,
+                    'existing_quantity' => (int) $item->quantity,
                 ];
             }
 
@@ -158,6 +159,49 @@ class CartService
                     'quantity' => $quantity,
                 ]),
                 'already_in_cart' => false,
+                'existing_quantity' => null,
+            ];
+        });
+    }
+
+    /**
+     * Add more quantity to an existing cart item.
+     *
+     * Validates against min_multiply_qty if set on the product.
+     *
+     * @return array{item: CartItem, new_quantity: int}
+     */
+    public function addMoreItem(Cart $cart, Product $product, int $addQuantity): array
+    {
+        $addQuantity = max(1, $addQuantity);
+
+        return DB::transaction(function () use ($cart, $product, $addQuantity) {
+            $item = CartItem::query()
+                ->where('cart_id', $cart->id)
+                ->where('product_id', $product->id)
+                ->lockForUpdate()
+                ->first();
+
+            if (! $item) {
+                // Item doesn't exist, create it
+                $item = CartItem::query()->create([
+                    'cart_id' => $cart->id,
+                    'product_id' => $product->id,
+                    'quantity' => $addQuantity,
+                ]);
+
+                return [
+                    'item' => $item,
+                    'new_quantity' => $addQuantity,
+                ];
+            }
+
+            $newQuantity = (int) $item->quantity + $addQuantity;
+            $item->update(['quantity' => $newQuantity]);
+
+            return [
+                'item' => $item->refresh(),
+                'new_quantity' => $newQuantity,
             ];
         });
     }
@@ -191,6 +235,12 @@ class CartService
                 $item->delete();
 
                 return;
+            }
+
+            // Validate min_multiply_qty
+            $minMultiply = (float) $product->min_multiply_qty;
+            if ($minMultiply > 1 && $quantity % (int) $minMultiply !== 0) {
+                abort(422, 'Qty harus kelipatan '.$minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'.');
             }
 
             $item->update(['quantity' => $quantity]);
@@ -382,6 +432,10 @@ class CartService
                 }
 
                 $qty = (int) $item->quantity;
+                $minMultiply = (float) $product->min_multiply_qty;
+                if ($minMultiply > 1 && $qty % (int) $minMultiply !== 0) {
+                    abort(422, 'Qty produk "'.$product->name.'" harus kelipatan '.$minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'.');
+                }
                 $pricing = $product->pricingForQuantity($qty);
                 $unitPrice = (float) $pricing['unit_price'];
                 $discountPercent = (float) $pricing['discount_percent'];
@@ -474,6 +528,10 @@ class CartService
                 }
 
                 $qty = (int) $item->quantity;
+                $minMultiply = (float) $product->min_multiply_qty;
+                if ($minMultiply > 1 && $qty % (int) $minMultiply !== 0) {
+                    abort(422, 'Qty produk "'.$product->name.'" harus kelipatan '.$minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'.');
+                }
                 $pricing = $product->pricingForQuantity($qty);
                 $unitPrice = (float) $pricing['unit_price'];
                 $discountPercent = (float) $pricing['discount_percent'];

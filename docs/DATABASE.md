@@ -157,6 +157,8 @@ product_statuses (standalone)
 | photo_path            | string   | nullable                       |
 | status_product        | string   | nullable, FK logic → product_statuses |
 | no_urut_status        | integer  | Urutan sorting per status      |
+| min_multiply_qty      | float    | Minimal kelipatan qty saat CO (default 1) |
+| min_multiply_notes    | char(50) | Catatan kelipatan (misal: "1 box isi 10") |
 
 ### sales_orders
 | Column           | Type     | Notes                              |

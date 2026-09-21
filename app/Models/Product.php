@@ -35,6 +35,8 @@ class Product extends Model
         'disc_3',
         'status_product',
         'no_urut_status',
+        'min_multiply_qty',
+        'min_multiply_notes',
     ];
 
     protected $casts = [
@@ -46,6 +48,7 @@ class Product extends Model
         'disc_1' => 'decimal:2',
         'disc_2' => 'decimal:2',
         'disc_3' => 'decimal:2',
+        'min_multiply_qty' => 'decimal:1',
     ];
 
     public function brand(): BelongsTo
@@ -184,5 +187,34 @@ class Product extends Model
         }
 
         return asset('storage/'.$path);
+    }
+
+    /**
+     * Check if quantity is a valid multiple of min_multiply_qty.
+     * If min_multiply_qty is 0 or 1, any quantity is valid.
+     */
+    public function isValidMultiplyQty(int $quantity): bool
+    {
+        $minMultiply = (float) $this->min_multiply_qty;
+
+        if ($minMultiply <= 1) {
+            return true;
+        }
+
+        return $quantity % (int) $minMultiply === 0;
+    }
+
+    /**
+     * Get the minimum multiply notes for display.
+     */
+    public function getMinMultiplyNotesDisplay(): ?string
+    {
+        $minMultiply = (float) $this->min_multiply_qty;
+
+        if ($minMultiply <= 1) {
+            return null;
+        }
+
+        return $this->min_multiply_notes ?: 'Kelipatan '.$this->min_multiply_qty;
     }
 }
