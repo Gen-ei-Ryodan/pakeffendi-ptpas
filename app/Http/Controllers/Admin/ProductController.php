@@ -186,6 +186,7 @@ class ProductController extends Controller
         $product->fill([
             ...$validated,
             'discontinued' => (bool) ($validated['discontinued'] ?? false),
+            'no_urut_status' => (int) ($validated['no_urut_status'] ?? 0),
             'min_multiply_qty' => (float) ($validated['min_multiply_qty'] ?? 1),
         ]);
         $product->save();
