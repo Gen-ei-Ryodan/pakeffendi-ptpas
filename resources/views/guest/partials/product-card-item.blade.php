@@ -51,7 +51,7 @@
             </div>
             <button class="btn btn-primary product-cart-btn btn-add-to-cart w-100" data-product-id="{{ $product->id }}">
                 <i class="bi bi-cart-plus"></i>
-                <span>Tambah</span>
+                <!-- <span>Tambah</span> -->
             </button>
         </div>
     </div>
