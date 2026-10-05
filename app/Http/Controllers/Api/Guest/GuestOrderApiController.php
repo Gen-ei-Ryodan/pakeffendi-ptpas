@@ -53,6 +53,10 @@ class GuestOrderApiController extends Controller
                 ]
             );
 
+            if (empty(trim((string) $customer->phone))) {
+                $customer->update(['phone' => $validated['customer']['phone']]);
+            }
+
             $itemsInput = $validated['items'];
             $productIds = collect($itemsInput)->pluck('product_id')->unique()->values()->all();
             $products = Product::query()
@@ -91,6 +95,11 @@ class GuestOrderApiController extends Controller
             foreach ($itemsInput as $itemInput) {
                 $product = $products->get($itemInput['product_id']);
                 $qty = (int) $itemInput['quantity'];
+
+                $minMultiply = (float) $product->min_multiply_qty;
+                if ($minMultiply > 1 && $qty % (int) $minMultiply !== 0) {
+                    abort(422, 'Qty produk "'.$product->name.'" harus kelipatan '.$minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'.');
+                }
 
                 $pricing = $product->pricingForQuantity($qty);
                 $unitPrice = (float) $pricing['unit_price'];

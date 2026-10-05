@@ -327,6 +327,10 @@ class CartService
                     abort(403, 'Hanya customer dengan status Active yang dapat melakukan order.');
                 }
 
+                if (empty(trim((string) $shopper->email)) || empty(trim((string) $shopper->phone))) {
+                    abort(422, 'Customer belum memiliki email atau nomor telepon. Lengkapi data customer terlebih dahulu.');
+                }
+
                 $selectedAddressId = isset($payload['address_id']) ? (int) $payload['address_id'] : null;
                 $activeAddress = null;
 
@@ -367,6 +371,10 @@ class CartService
 
                 if ($targetCustomer->status !== Customer::STATUS_ACTIVE) {
                     abort(403, 'Hanya customer dengan status Active yang dapat melakukan order.');
+                }
+
+                if (empty(trim((string) $targetCustomer->email)) || empty(trim((string) $targetCustomer->phone))) {
+                    abort(422, 'Customer belum memiliki email atau nomor telepon. Lengkapi data customer terlebih dahulu.');
                 }
 
                 $salesId = $shopper->id;

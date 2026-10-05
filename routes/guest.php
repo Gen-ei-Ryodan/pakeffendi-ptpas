@@ -230,6 +230,37 @@ Route::prefix('/')->group(function () {
         if (! empty($validated['q'])) {
             $q = trim((string) $validated['q']);
             $words = preg_split('/\s+/', $q);
+
+            // Mirror the ranking logic from /products so infinite scroll
+            // page 2+ returns the same ordering (avoids duplicates).
+            $caseConditions = "CASE ";
+            $caseBindings = [];
+
+            $caseConditions .= "WHEN LOWER(name) = LOWER(?) THEN 1 ";
+            $caseBindings[] = $q;
+
+            $caseConditions .= "WHEN LOWER(sku) = LOWER(?) THEN 2 ";
+            $caseBindings[] = $q;
+
+            $caseConditions .= "WHEN LOWER(name) LIKE LOWER(?) THEN 3 ";
+            $caseBindings[] = $q . ' %';
+
+            $caseConditions .= "WHEN LOWER(name) LIKE LOWER(?) THEN 4 ";
+            $caseBindings[] = $q . '%';
+
+            $rankAdded = 4;
+            if (count($words) >= 2) {
+                $caseConditions .= "WHEN LOWER(name) LIKE LOWER(?) THEN " . (++$rankAdded) . " ";
+                $caseBindings[] = $words[0] . ' %';
+
+                $caseConditions .= "WHEN LOWER(name) LIKE LOWER(?) THEN " . (++$rankAdded) . " ";
+                $caseBindings[] = '% ' . $words[0] . ' %';
+            }
+
+            $caseConditions .= "ELSE " . (++$rankAdded) . " END";
+
+            $query->reorder()->orderByRaw($caseConditions, $caseBindings)->orderBy('name');
+
             foreach ($words as $word) {
                 if ($word === '') continue;
                 $query->where(function ($qBuilder) use ($word) {
