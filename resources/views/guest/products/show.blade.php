@@ -94,7 +94,7 @@
                             <label class="pd-block-title" for="quantity">Jumlah</label>
                             <div class="pd-stepper">
                                 <button class="pd-stepper-btn" type="button" data-action="decrease"><i class="bi bi-dash"></i></button>
-                                <input type="number" class="pd-stepper-input" id="quantity" value="1" min="1" max="999999">
+                                <input type="number" class="pd-stepper-input" id="quantity" value="{{ ($product->min_multiply_qty ?? 0) > 1 ? (int) $product->min_multiply_qty : 1 }}" min="{{ ($product->min_multiply_qty ?? 0) > 1 ? (int) $product->min_multiply_qty : 1 }}" max="999999">
                                 <button class="pd-stepper-btn" type="button" data-action="increase"><i class="bi bi-plus"></i></button>
                             </div>
                         </div>

@@ -105,6 +105,15 @@
                                             <p class="text-muted small mb-1">{{ $product?->variant }}</p>
                                         @endif
                                         <p class="text-muted small mb-1">Brand: {{ $product?->brand?->brand_name ?? '-' }}</p>
+                                        @php
+                                            $minMultiply = (float) ($product->min_multiply_qty ?? 0);
+                                            $qtyInvalid = $product && $minMultiply > 1 && ((int) $qty % (int) $minMultiply) !== 0;
+                                        @endphp
+                                        @if($qtyInvalid)
+                                            <div class="text-danger small fw-semibold mb-1">
+                                                <i class="bi bi-exclamation-triangle-fill me-1"></i>Qty harus kelipatan {{ (int) $minMultiply }}{{ $product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '' }}
+                                            </div>
+                                        @endif
                                         <input type="text" class="form-control form-control-sm mt-1 item-notes-input" placeholder="Catatan item..." value="{{ $item->notes }}" data-product-id="{{ $product?->id }}" style="max-width:260px;font-size:0.78rem;" onchange="updateItemNotes({{ $product?->id }}, this.value)">
                                     </div>
                                     <div class="col-md-2">
@@ -418,6 +427,15 @@
                 <div class="mob-cart-name">{{ $product?->name }}</div>
                 @if(($product?->variant ?? '') !== '')
                     <div class="mob-cart-variant">{{ $product?->variant }}</div>
+                @endif
+                @php
+                    $mobMinMultiply = (float) ($product->min_multiply_qty ?? 0);
+                    $mobQtyInvalid = $product && $mobMinMultiply > 1 && ((int) $qty % (int) $mobMinMultiply) !== 0;
+                @endphp
+                @if($mobQtyInvalid)
+                    <div class="text-danger small fw-semibold mb-1">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i>Qty harus kelipatan {{ (int) $mobMinMultiply }}{{ $product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '' }}
+                    </div>
                 @endif
                 <div class="mob-cart-price" data-line-total>Rp {{ number_format($lineTotal, 0, ',', '.') }}</div>
                 <input type="text" class="mob-cart-notes" placeholder="Catatan item..." value="{{ $item->notes }}" data-product-id="{{ $product?->id }}" onchange="updateItemNotes({{ $product?->id }}, this.value)">
@@ -942,7 +960,9 @@ async function updateCartItem(productId, quantity) {
     });
 
     if (!res.ok) {
-        PAS.Cart.showNotification('Gagal memperbarui keranjang', 'danger');
+        let msg = 'Gagal memperbarui keranjang';
+        try { msg = (await res.text()).trim() || msg; } catch (_) {}
+        PAS.Cart.showNotification(msg, 'danger');
         return;
     }
 
@@ -1093,12 +1113,14 @@ function mobUpdateQty(productId, change) {
         body: JSON.stringify({ quantity: val })
     })
     .then(function(res) {
-        if (!res.ok) throw new Error();
+        if (!res.ok) {
+            return res.text().then(function(t) { throw new Error(t && t.trim() ? t.trim() : 'Gagal memperbarui keranjang'); });
+        }
         updateCartSummary();
         PAS.Cart.showNotification('Keranjang diperbarui', 'success');
     })
-    .catch(function() {
-        PAS.Cart.showNotification('Gagal memperbarui keranjang', 'danger');
+    .catch(function(err) {
+        PAS.Cart.showNotification(err && err.message ? err.message : 'Gagal memperbarui keranjang', 'danger');
     });
 }
 
@@ -1123,12 +1145,14 @@ function mobSetQty(productId, newVal) {
         body: JSON.stringify({ quantity: val })
     })
     .then(function(res) {
-        if (!res.ok) throw new Error();
+        if (!res.ok) {
+            return res.text().then(function(t) { throw new Error(t && t.trim() ? t.trim() : 'Gagal memperbarui keranjang'); });
+        }
         updateCartSummary();
         PAS.Cart.showNotification('Keranjang diperbarui', 'success');
     })
-    .catch(function() {
-        PAS.Cart.showNotification('Gagal memperbarui keranjang', 'danger');
+    .catch(function(err) {
+        PAS.Cart.showNotification(err && err.message ? err.message : 'Gagal memperbarui keranjang', 'danger');
     });
 }
 

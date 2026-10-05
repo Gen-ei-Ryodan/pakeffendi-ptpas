@@ -201,6 +201,8 @@
             let quantity = 1;
             const qtyInput =
                 productCard?.querySelector('.quantity-control input[type="number"]') ||
+                productCard?.querySelector('.qty-selector input[type="number"]') ||
+                productCard?.querySelector('.qty-input') ||
                 button.closest('section')?.querySelector('#quantity');
             if (qtyInput) {
                 const raw = parseInt(qtyInput.value, 10);
