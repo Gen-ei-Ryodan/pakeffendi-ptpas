@@ -355,6 +355,10 @@ class CartService
                     abort(422, 'Customer harus dipilih.');
                 }
 
+                if (empty(trim((string) $shopper->email))) {
+                    abort(422, 'Akun sales belum memiliki email. Lengkapi data akun terlebih dahulu.');
+                }
+
                 // Verify customer belongs to sales
                 $targetCustomer = Customer::where('id', $customerId)
                     ->where('sales_id', $shopper->id)

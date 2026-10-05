@@ -34,7 +34,7 @@ Admin bisa menghapus order — soft delete melalui Eloquent. Tidak ada aturan kh
 - Saat checkout, semua `cart_items` dikonversi ke `sales_order_items`.
 - Cart di-set status `converted`.
 - Cart baru (aktif) langsung dibuat untuk customer.
-- Customer wajib memiliki **email dan nomor telepon** terisi; jika salah satunya kosong, checkout ditolak (422).
+- Customer wajib memiliki **email dan nomor telepon** terisi; jika salah satunya kosong, checkout ditolak (422). Akun sales (tabel `users`) juga wajib memiliki email terisi.
 
 ### Add Item Duplicate
 - Jika sebuah produk sudah ada di cart lalu dipilih (add) lagi, **quantity TIDAK ditambah otomatis.**
