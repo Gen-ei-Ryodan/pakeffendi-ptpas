@@ -920,10 +920,11 @@ function updateQuantity(productId, change) {
         let currentValue = parseInt(input.value) || 1;
         let newValue = currentValue + change;
         let maxValue = parseInt(input.max) || 999999;
-        
+
         if (newValue >= 1 && newValue <= maxValue) {
+            const prevValue = input.value;
             input.value = newValue;
-            updateCartItem(productId, newValue);
+            updateCartItem(productId, newValue, prevValue);
         }
     }
 }
@@ -931,16 +932,18 @@ function updateQuantity(productId, change) {
 function updateQuantityDirect(productId, newValue) {
     let value = parseInt(newValue) || 1;
     let maxValue = 999999;
-    
+
     if (value < 1) value = 1;
     if (value > maxValue) value = maxValue;
-    
+
     const input = document.querySelector(`[data-product-id="${productId}"] input[type="number"]`);
+    let prevValue = null;
     if (input) {
+        prevValue = input.value;
         input.value = value;
     }
-    
-    updateCartItem(productId, value);
+
+    updateCartItem(productId, value, prevValue);
 }
 
 function csrfToken() {
@@ -948,7 +951,7 @@ function csrfToken() {
     return el ? el.getAttribute('content') : '';
 }
 
-async function updateCartItem(productId, quantity) {
+async function updateCartItem(productId, quantity, prevValue) {
     const res = await fetch(`/cart/items/${productId}`, {
         method: 'POST',
         headers: {
@@ -971,6 +974,10 @@ async function updateCartItem(productId, quantity) {
             }
         } catch (_) {}
         PAS.Cart.showNotification(msg, 'danger');
+        if (prevValue !== undefined && prevValue !== null) {
+            const input = document.querySelector(`[data-product-id="${productId}"] input[type="number"]`);
+            if (input) input.value = prevValue;
+        }
         return;
     }
 
@@ -1109,6 +1116,7 @@ function mobUpdateQty(productId, change) {
     let val = (parseInt(input.value) || 1) + change;
     if (val < 1) val = 1;
 
+    const prevValue = input.value;
     input.value = val;
 
     fetch('/cart/items/' + productId, {
@@ -1130,6 +1138,7 @@ function mobUpdateQty(productId, change) {
                 } catch (_) {
                     if (t && t.trim() && t.length < 200) m = t.trim();
                 }
+                input.value = prevValue;
                 throw new Error(m);
             });
         }
@@ -1146,10 +1155,14 @@ function mobSetQty(productId, newVal) {
     if (isNaN(val) || val < 1) val = 1;
     if (val > 999999) val = 999999;
 
+    let mobPrevValue = null;
     const item = document.querySelector(`.mob-cart-item[data-product-id="${productId}"]`);
     if (item) {
         const input = item.querySelector('.mob-qty-input');
-        if (input) input.value = val;
+        if (input) {
+            mobPrevValue = input.value;
+            input.value = val;
+        }
     }
 
     fetch('/cart/items/' + productId, {
@@ -1170,6 +1183,10 @@ function mobSetQty(productId, newVal) {
                     if (d && d.message) m = d.message;
                 } catch (_) {
                     if (t && t.trim() && t.length < 200) m = t.trim();
+                }
+                if (item && mobPrevValue !== null) {
+                    const input = item.querySelector('.mob-qty-input');
+                    if (input) input.value = mobPrevValue;
                 }
                 throw new Error(m);
             });
