@@ -123,6 +123,7 @@
                                             </button>
                                             <input type="number" class="form-control text-center" 
                                                    value="{{ (int) $item->quantity }}" min="1" max="999999"
+                                                   data-last-valid="{{ (int) $item->quantity }}"
                                                    onchange="updateQuantityDirect({{ $product?->id }}, this.value)">
                                             <button class="btn btn-secondary btn-sm flex-shrink-0" type="button" onclick="updateQuantity({{ $product?->id }}, 1)">
                                                 <i class="bi bi-plus"></i>
@@ -442,7 +443,7 @@
                 <div class="mob-cart-actions">
                     <div class="mob-qty-wrap">
                         <button class="mob-qty-btn" onclick="mobUpdateQty({{ $product?->id }}, -1)"><i class="bi bi-dash"></i></button>
-                        <input type="number" class="mob-qty-input" value="{{ $qty }}" min="1" onchange="mobSetQty({{ $product?->id }}, this.value)">
+                        <input type="number" class="mob-qty-input" value="{{ $qty }}" min="1" data-last-valid="{{ $qty }}" onchange="mobSetQty({{ $product?->id }}, this.value)">
                         <button class="mob-qty-btn" onclick="mobUpdateQty({{ $product?->id }}, 1)"><i class="bi bi-plus"></i></button>
                     </div>
                     <button class="mob-cart-del" onclick="mobRemoveItem({{ $product?->id }})"><i class="bi bi-trash3"></i></button>
@@ -922,9 +923,8 @@ function updateQuantity(productId, change) {
         let maxValue = parseInt(input.max) || 999999;
 
         if (newValue >= 1 && newValue <= maxValue) {
-            const prevValue = input.value;
             input.value = newValue;
-            updateCartItem(productId, newValue, prevValue);
+            updateCartItem(productId, newValue);
         }
     }
 }
@@ -937,13 +937,11 @@ function updateQuantityDirect(productId, newValue) {
     if (value > maxValue) value = maxValue;
 
     const input = document.querySelector(`[data-product-id="${productId}"] input[type="number"]`);
-    let prevValue = null;
     if (input) {
-        prevValue = input.value;
         input.value = value;
     }
 
-    updateCartItem(productId, value, prevValue);
+    updateCartItem(productId, value);
 }
 
 function csrfToken() {
@@ -951,7 +949,7 @@ function csrfToken() {
     return el ? el.getAttribute('content') : '';
 }
 
-async function updateCartItem(productId, quantity, prevValue) {
+async function updateCartItem(productId, quantity) {
     const res = await fetch(`/cart/items/${productId}`, {
         method: 'POST',
         headers: {
@@ -974,12 +972,16 @@ async function updateCartItem(productId, quantity, prevValue) {
             }
         } catch (_) {}
         PAS.Cart.showNotification(msg, 'danger');
-        if (prevValue !== undefined && prevValue !== null) {
-            const input = document.querySelector(`[data-product-id="${productId}"] input[type="number"]`);
-            if (input) input.value = prevValue;
+        const input = document.querySelector(`[data-product-id="${productId}"] input[type="number"]`);
+        if (input) {
+            const lastValid = input.getAttribute('data-last-valid');
+            if (lastValid !== null && lastValid !== '') input.value = lastValid;
         }
         return;
     }
+
+    const input = document.querySelector(`[data-product-id="${productId}"] input[type="number"]`);
+    if (input) input.setAttribute('data-last-valid', String(quantity));
 
     updateCartSummary();
     PAS.Cart.showNotification('Keranjang diperbarui', 'success');
@@ -1116,7 +1118,6 @@ function mobUpdateQty(productId, change) {
     let val = (parseInt(input.value) || 1) + change;
     if (val < 1) val = 1;
 
-    const prevValue = input.value;
     input.value = val;
 
     fetch('/cart/items/' + productId, {
@@ -1138,10 +1139,12 @@ function mobUpdateQty(productId, change) {
                 } catch (_) {
                     if (t && t.trim() && t.length < 200) m = t.trim();
                 }
-                input.value = prevValue;
+                const lastValid = input.getAttribute('data-last-valid');
+                if (lastValid !== null && lastValid !== '') input.value = lastValid;
                 throw new Error(m);
             });
         }
+        input.setAttribute('data-last-valid', String(val));
         updateCartSummary();
         PAS.Cart.showNotification('Keranjang diperbarui', 'success');
     })
@@ -1155,14 +1158,11 @@ function mobSetQty(productId, newVal) {
     if (isNaN(val) || val < 1) val = 1;
     if (val > 999999) val = 999999;
 
-    let mobPrevValue = null;
+    let mobInput = null;
     const item = document.querySelector(`.mob-cart-item[data-product-id="${productId}"]`);
     if (item) {
-        const input = item.querySelector('.mob-qty-input');
-        if (input) {
-            mobPrevValue = input.value;
-            input.value = val;
-        }
+        mobInput = item.querySelector('.mob-qty-input');
+        if (mobInput) mobInput.value = val;
     }
 
     fetch('/cart/items/' + productId, {
@@ -1184,13 +1184,14 @@ function mobSetQty(productId, newVal) {
                 } catch (_) {
                     if (t && t.trim() && t.length < 200) m = t.trim();
                 }
-                if (item && mobPrevValue !== null) {
-                    const input = item.querySelector('.mob-qty-input');
-                    if (input) input.value = mobPrevValue;
+                if (mobInput) {
+                    const lastValid = mobInput.getAttribute('data-last-valid');
+                    if (lastValid !== null && lastValid !== '') mobInput.value = lastValid;
                 }
                 throw new Error(m);
             });
         }
+        if (mobInput) mobInput.setAttribute('data-last-valid', String(val));
         updateCartSummary();
         PAS.Cart.showNotification('Keranjang diperbarui', 'success');
     })
