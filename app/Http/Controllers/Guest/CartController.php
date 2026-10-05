@@ -216,7 +216,14 @@ class CartController extends Controller
                 abort(422, 'Qty harus kelipatan '.(int) $minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'. Minimal qty '.(int) $minMultiply.'.');
             }
 
-            $result = $this->cartService->addItem($cart, $product, $quantity);
+            try {
+                $result = $this->cartService->addItem($cart, $product, $quantity);
+            } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+                if ($request->wantsJson()) {
+                    return response()->json(['message' => $e->getMessage()], $e->getStatusCode())->cookie($resolved['cookie']);
+                }
+                throw $e;
+            }
 
             $cart->load(['items.product']);
             $summary = $this->buildSummary($cart->items);
@@ -306,7 +313,14 @@ class CartController extends Controller
                 abort(422, 'Qty harus kelipatan '.$minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'.');
             }
 
-            $result = $this->cartService->addMoreItem($cart, $product, $quantity);
+            try {
+                $result = $this->cartService->addMoreItem($cart, $product, $quantity);
+            } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+                if ($request->wantsJson()) {
+                    return response()->json(['message' => $e->getMessage()], $e->getStatusCode())->cookie($resolved['cookie']);
+                }
+                throw $e;
+            }
 
             $cart->load(['items.product']);
             $summary = $this->buildSummary($cart->items);
@@ -344,7 +358,15 @@ class CartController extends Controller
         $resolved = $this->resolveCart($request);
         $cart = $resolved['cart'];
 
-        $this->cartService->setItemQuantity($cart, $product, (int) $validated['quantity']);
+        try {
+            $this->cartService->setItemQuantity($cart, $product, (int) $validated['quantity']);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            if ($request->wantsJson()) {
+                return response()->json(['message' => $e->getMessage()], $e->getStatusCode())->cookie($resolved['cookie']);
+            }
+
+            return redirect()->to('/cart')->with('error', $e->getMessage());
+        }
 
         $cart->load(['items.product']);
         $summary = $this->buildSummary($cart->items);

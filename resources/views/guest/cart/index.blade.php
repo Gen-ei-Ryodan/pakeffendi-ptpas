@@ -961,7 +961,15 @@ async function updateCartItem(productId, quantity) {
 
     if (!res.ok) {
         let msg = 'Gagal memperbarui keranjang';
-        try { msg = (await res.text()).trim() || msg; } catch (_) {}
+        try {
+            const text = await res.text();
+            try {
+                const data = JSON.parse(text);
+                if (data && data.message) msg = data.message;
+            } catch (_) {
+                if (text && text.trim() && text.length < 200) msg = text.trim();
+            }
+        } catch (_) {}
         PAS.Cart.showNotification(msg, 'danger');
         return;
     }
@@ -1114,7 +1122,16 @@ function mobUpdateQty(productId, change) {
     })
     .then(function(res) {
         if (!res.ok) {
-            return res.text().then(function(t) { throw new Error(t && t.trim() ? t.trim() : 'Gagal memperbarui keranjang'); });
+            return res.text().then(function(t) {
+                let m = 'Gagal memperbarui keranjang';
+                try {
+                    const d = JSON.parse(t);
+                    if (d && d.message) m = d.message;
+                } catch (_) {
+                    if (t && t.trim() && t.length < 200) m = t.trim();
+                }
+                throw new Error(m);
+            });
         }
         updateCartSummary();
         PAS.Cart.showNotification('Keranjang diperbarui', 'success');
@@ -1146,7 +1163,16 @@ function mobSetQty(productId, newVal) {
     })
     .then(function(res) {
         if (!res.ok) {
-            return res.text().then(function(t) { throw new Error(t && t.trim() ? t.trim() : 'Gagal memperbarui keranjang'); });
+            return res.text().then(function(t) {
+                let m = 'Gagal memperbarui keranjang';
+                try {
+                    const d = JSON.parse(t);
+                    if (d && d.message) m = d.message;
+                } catch (_) {
+                    if (t && t.trim() && t.length < 200) m = t.trim();
+                }
+                throw new Error(m);
+            });
         }
         updateCartSummary();
         PAS.Cart.showNotification('Keranjang diperbarui', 'success');
