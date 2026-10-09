@@ -127,6 +127,9 @@ class CartController extends Controller
                 $activeAddressId = $addresses->firstWhere('is_active', true)?->id;
             }
 
+            $contactTarget = $isSales ? $selectedCustomer : ($shopper instanceof Customer ? $shopper : null);
+            $missingContact = $this->missingContactFields($contactTarget);
+
             return response()
                 ->view('guest.cart.index', [
                     'cart' => $cart,
@@ -137,6 +140,10 @@ class CartController extends Controller
                     'my_customers' => $myCustomers,
                     'addresses' => $addresses,
                     'active_address_id' => $activeAddressId,
+                    'missing_contact' => $missingContact,
+                    'contact_warning' => $missingContact
+                        ? 'Customer belum memiliki '.implode(' atau ', $missingContact).'. Lengkapi data customer terlebih dahulu.'
+                        : null,
                 ])
                 ->cookie($resolved['cookie']);
         } catch (\Exception $e) {
@@ -479,6 +486,31 @@ class CartController extends Controller
             ->cookie(cookie(CartController::SALES_CUSTOMER_COOKIE, (string) $customer->id, 60 * 24 * 30));
     }
 
+    /**
+     * @return array<int, string> Empty array when customer is null or contact data is complete.
+     */
+    private function missingContactFields(?Customer $customer): array
+    {
+        if (! $customer) {
+            return [];
+        }
+
+        $missing = [];
+        if (trim((string) $customer->email) === '') {
+            $missing[] = 'email';
+        }
+        if (trim((string) $customer->phone) === '') {
+            $missing[] = 'nomor telepon';
+        }
+
+        return $missing;
+    }
+
+    private function cartError(string $message)
+    {
+        return redirect()->to('/cart')->with('error', $message);
+    }
+
     public function checkout(Request $request)
     {
         $shopper = $this->getShopper();
@@ -506,11 +538,18 @@ class CartController extends Controller
         $resolved = $this->resolveCart($request);
         $cart = $resolved['cart'];
 
+        // Pre-check kontak customer agar tidak crash ke halaman error 422
+        $contactTarget = $shopper instanceof Customer ? $shopper : ($resolved['customer'] ?? null);
+        $missingContact = $this->missingContactFields($contactTarget);
+        if ($missingContact) {
+            return $this->cartError('Customer belum memiliki '.implode(' atau ', $missingContact).'. Lengkapi data customer terlebih dahulu.');
+        }
+
         // For sales, ensure customer_id is passed to checkout
         if ($shopper instanceof User && $shopper->isSales()) {
             $resolvedCustomer = $resolved['customer'];
             if (! $resolvedCustomer) {
-                abort(422, 'Silakan pilih customer terlebih dahulu.');
+                return $this->cartError('Silakan pilih customer terlebih dahulu.');
             }
             $validated['customer_id'] = $resolvedCustomer->id;
 
@@ -521,7 +560,7 @@ class CartController extends Controller
                 ->first();
 
             if (! $customer) {
-                abort(422, 'Customer tidak ditemukan atau bukan milik Anda.');
+                return $this->cartError('Customer tidak ditemukan atau bukan milik Anda.');
             }
 
             // Verify address belongs to this customer
@@ -532,13 +571,13 @@ class CartController extends Controller
                     ->first();
 
                 if (! $address) {
-                    abort(422, 'Alamat tidak ditemukan untuk customer tersebut.');
+                    return $this->cartError('Alamat tidak ditemukan untuk customer tersebut.');
                 }
             }
         }
 
         if ($cart->items()->doesntExist()) {
-            abort(422, 'Keranjang belanja kosong.');
+            return $this->cartError('Keranjang belanja kosong.');
         }
 
         // Pre-validate kelipatan qty agar user tidak melihat halaman error
@@ -553,7 +592,12 @@ class CartController extends Controller
             }
         }
 
-        $order = $this->cartService->checkout($cart, $shopper, $validated);
+        try {
+            $order = $this->cartService->checkout($cart, $shopper, $validated);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpExceptionInterface $e) {
+            // Tangkap abort() dari service (mis. kontak customer kosong) → flash, bukan halaman 422
+            return $this->cartError($e->getMessage());
+        }
 
         return redirect()
             ->to('/orders/'.$order->id)
