@@ -96,7 +96,7 @@ class GuestOrderApiController extends Controller
                 $product = $products->get($itemInput['product_id']);
                 $qty = (int) $itemInput['quantity'];
 
-                $minMultiply = (float) $product->min_multiply_qty;
+                $minMultiply = (float) $product->qty_1;
                 if ($minMultiply > 1 && $qty % (int) $minMultiply !== 0) {
                     abort(422, 'Qty produk "'.$product->name.'" harus kelipatan '.$minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'.');
                 }

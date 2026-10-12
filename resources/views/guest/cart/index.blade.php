@@ -106,7 +106,7 @@
                                         @endif
                                         <p class="text-muted small mb-1">Brand: {{ $product?->brand?->brand_name ?? '-' }}</p>
                                         @php
-                                            $minMultiply = (float) ($product->min_multiply_qty ?? 0);
+                                            $minMultiply = (float) ($product->qty_1 ?? 0);
                                             $qtyInvalid = $product && $minMultiply > 1 && ((int) $qty % (int) $minMultiply) !== 0;
                                         @endphp
                                         @if($qtyInvalid)
@@ -430,7 +430,7 @@
                     <div class="mob-cart-variant">{{ $product?->variant }}</div>
                 @endif
                 @php
-                    $mobMinMultiply = (float) ($product->min_multiply_qty ?? 0);
+                    $mobMinMultiply = (float) ($product->qty_1 ?? 0);
                     $mobQtyInvalid = $product && $mobMinMultiply > 1 && ((int) $qty % (int) $mobMinMultiply) !== 0;
                 @endphp
                 @if($mobQtyInvalid)

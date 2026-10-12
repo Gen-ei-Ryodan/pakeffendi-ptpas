@@ -211,7 +211,7 @@ class CartController extends Controller
                 ->findOrFail($validated['product_id']);
 
             $quantity = (int) ($validated['quantity'] ?? 1);
-            $minMultiply = (float) $product->min_multiply_qty;
+            $minMultiply = (float) $product->qty_1;
             if ($minMultiply > 1 && $quantity % (int) $minMultiply !== 0) {
                 abort(422, 'Qty harus kelipatan '.(int) $minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'. Minimal qty '.(int) $minMultiply.'.');
             }
@@ -240,7 +240,7 @@ class CartController extends Controller
                     'existing_quantity' => $existingQuantity,
                     'product_id' => $product->id,
                     'product_name' => $product->name,
-                    'min_multiply_qty' => (float) $product->min_multiply_qty,
+                    'qty_1' => (float) $product->qty_1,
                     'min_multiply_notes' => $product->min_multiply_notes,
                 ], 201)
                 : redirect()->to('/cart')->with(
@@ -306,9 +306,9 @@ class CartController extends Controller
                 ->whereHas('category', fn ($q) => $q->where('is_active', true))
                 ->findOrFail($validated['product_id']);
 
-            // Validate min_multiply_qty
+            // Validate kelipatan menggunakan qty_1
             $quantity = (int) $validated['quantity'];
-            $minMultiply = (float) $product->min_multiply_qty;
+            $minMultiply = (float) $product->qty_1;
             if ($minMultiply > 1 && $quantity % (int) $minMultiply !== 0) {
                 abort(422, 'Qty harus kelipatan '.$minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'.');
             }
@@ -426,13 +426,13 @@ class CartController extends Controller
 
         $customer = $resolved['customer'];
 
-        // Pre-validate kelipatan qty
+        // Pre-validate kelipatan qty menggunakan qty_1
         foreach ($cart->items()->with('product')->get() as $item) {
             $p = $item->product;
             if (! $p) {
                 continue;
             }
-            $minMultiply = (float) $p->min_multiply_qty;
+            $minMultiply = (float) $p->qty_1;
             if ($minMultiply > 1 && (int) $item->quantity % (int) $minMultiply !== 0) {
                 return redirect()->to('/cart')->with('error', 'Qty produk "'.$p->name.'" harus kelipatan '.(int) $minMultiply.($p->min_multiply_notes ? ' ('.$p->min_multiply_notes.')' : '').'.');
             }
@@ -541,13 +541,13 @@ class CartController extends Controller
             abort(422, 'Keranjang belanja kosong.');
         }
 
-        // Pre-validate kelipatan qty agar user tidak melihat halaman error
+        // Pre-validate kelipatan qty agar user tidak melihat halaman error (gunakan qty_1)
         foreach ($cart->items()->with('product')->get() as $item) {
             $p = $item->product;
             if (! $p) {
                 continue;
             }
-            $minMultiply = (float) $p->min_multiply_qty;
+            $minMultiply = (float) $p->qty_1;
             if ($minMultiply > 1 && (int) $item->quantity % (int) $minMultiply !== 0) {
                 return redirect()->to('/cart')->with('error', 'Qty produk "'.$p->name.'" harus kelipatan '.(int) $minMultiply.($p->min_multiply_notes ? ' ('.$p->min_multiply_notes.')' : '').'.');
             }

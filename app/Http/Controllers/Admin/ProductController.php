@@ -109,7 +109,7 @@ class ProductController extends Controller
             'disc_3' => ['nullable', 'numeric', 'min:0'],
             'status_product' => ['nullable', 'string', 'max:50'],
             'no_urut_status' => ['nullable', 'integer', 'min:0'],
-            'min_multiply_qty' => ['nullable', 'numeric', 'min:0'],
+            'qty_1' => ['nullable', 'integer', 'min:0'],
             'min_multiply_notes' => ['nullable', 'string', 'max:50'],
         ]);
 
@@ -118,7 +118,7 @@ class ProductController extends Controller
             'discontinued' => (bool) ($validated['discontinued'] ?? false),
             'photo_path' => null,
             'no_urut_status' => (int) ($validated['no_urut_status'] ?? 0),
-            'min_multiply_qty' => (float) ($validated['min_multiply_qty'] ?? 1),
+            'qty_1' => (float) ($validated['qty_1'] ?? 1),
         ]);
 
         if ($request->hasFile('photo')) {
@@ -171,7 +171,7 @@ class ProductController extends Controller
             'disc_3' => ['nullable', 'numeric', 'min:0'],
             'status_product' => ['nullable', 'string', 'max:50'],
             'no_urut_status' => ['nullable', 'integer', 'min:0'],
-            'min_multiply_qty' => ['nullable', 'numeric', 'min:0'],
+            'qty_1' => ['nullable', 'integer', 'min:0'],
             'min_multiply_notes' => ['nullable', 'string', 'max:50'],
         ]);
 
@@ -187,7 +187,7 @@ class ProductController extends Controller
             ...$validated,
             'discontinued' => (bool) ($validated['discontinued'] ?? false),
             'no_urut_status' => (int) ($validated['no_urut_status'] ?? 0),
-            'min_multiply_qty' => (float) ($validated['min_multiply_qty'] ?? 1),
+            'qty_1' => (float) ($validated['qty_1'] ?? 1),
         ]);
         $product->save();
 

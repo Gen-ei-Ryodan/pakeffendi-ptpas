@@ -84,8 +84,8 @@
                         <div class="pd-spec-item"><span>Unit</span><strong>{{ $product->unit }}</strong></div>
                         <div class="pd-spec-item"><span>Berat</span><strong>{{ number_format((float) $product->weight_kg, 2, ',', '.') }} kg</strong></div>
                         <div class="pd-spec-item"><span>Kategori</span><strong>{{ $product->category?->name }}</strong></div>
-                        @if((float) ($product->min_multiply_qty ?? 1) > 1)
-                        <div class="pd-spec-item"><span>Min. Kelipatan</span><strong>{{ $product->min_multiply_notes ?: $product->min_multiply_qty }}</strong></div>
+                        @if((float) ($product->qty_1 ?? 1) > 1)
+                        <div class="pd-spec-item"><span>Min. Kelipatan</span><strong>{{ $product->min_multiply_notes ?: $product->qty_1 }}</strong></div>
                         @endif
                     </div>
 
@@ -94,7 +94,7 @@
                             <label class="pd-block-title" for="quantity">Jumlah</label>
                             <div class="pd-stepper">
                                 <button class="pd-stepper-btn" type="button" data-action="decrease"><i class="bi bi-dash"></i></button>
-                                <input type="number" class="pd-stepper-input" id="quantity" value="{{ ($product->min_multiply_qty ?? 0) > 1 ? (int) $product->min_multiply_qty : 1 }}" min="{{ ($product->min_multiply_qty ?? 0) > 1 ? (int) $product->min_multiply_qty : 1 }}" max="999999">
+                                <input type="number" class="pd-stepper-input" id="quantity" value="{{ ($product->qty_1 ?? 0) > 1 ? (int) $product->qty_1 : 1 }}" min="{{ ($product->qty_1 ?? 0) > 1 ? (int) $product->qty_1 : 1 }}" max="999999">
                                 <button class="pd-stepper-btn" type="button" data-action="increase"><i class="bi bi-plus"></i></button>
                             </div>
                         </div>

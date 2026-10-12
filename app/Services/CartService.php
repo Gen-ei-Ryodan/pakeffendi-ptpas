@@ -237,8 +237,8 @@ class CartService
                 return;
             }
 
-            // Validate min_multiply_qty
-            $minMultiply = (float) $product->min_multiply_qty;
+            // Validate kelipatan menggunakan qty_1 (ganti min_multiply_qty)
+            $minMultiply = (float) $product->qty_1;
             if ($minMultiply > 1 && $quantity % (int) $minMultiply !== 0) {
                 abort(422, 'Qty harus kelipatan '.$minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'.');
             }
@@ -444,7 +444,7 @@ class CartService
                 }
 
                 $qty = (int) $item->quantity;
-                $minMultiply = (float) $product->min_multiply_qty;
+                $minMultiply = (float) $product->qty_1;
                 if ($minMultiply > 1 && $qty % (int) $minMultiply !== 0) {
                     abort(422, 'Qty produk "'.$product->name.'" harus kelipatan '.$minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'.');
                 }
@@ -540,7 +540,7 @@ class CartService
                 }
 
                 $qty = (int) $item->quantity;
-                $minMultiply = (float) $product->min_multiply_qty;
+                $minMultiply = (float) $product->qty_1;
                 if ($minMultiply > 1 && $qty % (int) $minMultiply !== 0) {
                     abort(422, 'Qty produk "'.$product->name.'" harus kelipatan '.$minMultiply.($product->min_multiply_notes ? ' ('.$product->min_multiply_notes.')' : '').'.');
                 }

@@ -117,7 +117,7 @@
         showAddMoreConfirmDialog(data, quantity) {
             const productName = data.product_name || 'Produk ini';
             const existingQty = data.existing_quantity || 0;
-            const minMultiply = data.min_multiply_qty || 1;
+            const minMultiply = data.qty_1 || 1;
             const minNotes = data.min_multiply_notes || '';
 
             let message = `${productName} sudah ada di keranjang (qty: ${existingQty}). Apakah anda mau menambahkan?`;

@@ -190,12 +190,12 @@ class Product extends Model
     }
 
     /**
-     * Check if quantity is a valid multiple of min_multiply_qty.
-     * If min_multiply_qty is 0 or 1, any quantity is valid.
+     * Check if quantity is a valid multiple of qty_1.
+     * If qty_1 is 0 or 1, any quantity is valid.
      */
     public function isValidMultiplyQty(int $quantity): bool
     {
-        $minMultiply = (float) $this->min_multiply_qty;
+        $minMultiply = (float) $this->qty_1;
 
         if ($minMultiply <= 1) {
             return true;
@@ -209,12 +209,12 @@ class Product extends Model
      */
     public function getMinMultiplyNotesDisplay(): ?string
     {
-        $minMultiply = (float) $this->min_multiply_qty;
+        $minMultiply = (float) $this->qty_1;
 
         if ($minMultiply <= 1) {
             return null;
         }
 
-        return $this->min_multiply_notes ?: 'Kelipatan '.$this->min_multiply_qty;
+        return $this->min_multiply_notes ?: 'Kelipatan '.$this->qty_1;
     }
 }
