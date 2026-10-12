@@ -252,8 +252,15 @@
                                     </div>
 
                                     @php
-                                        $disableSalesCheckout = $noItems || $salesNoCustomer || $salesAddrList->isEmpty();
+                                        $disableSalesCheckout = $noItems || $salesNoCustomer || $salesAddrList->isEmpty() || !empty($missing_contact);
                                     @endphp
+
+                                    @if(!empty($missing_contact))
+                                        <div class="alert alert-warning mb-2">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>{{ $contact_warning }}
+                                        </div>
+                                        <a href="{{ route('guest.profile.my-customers.edit', $selected_customer) }}" class="btn btn-outline-warning btn-sm w-100 mb-2">Lengkapi Data Customer</a>
+                                    @endif
                                     <button type="submit" class="btn btn-success btn-lg w-100 mb-3" @disabled($disableSalesCheckout)>
                                         <i class="bi bi-cart-check me-2"></i>Buat Pesanan
                                     </button>
@@ -271,6 +278,7 @@
                                         $activeAddressId = $active_address_id ?? null;
                                         $hasAddresses = $addresses->count() > 0;
                                         $disableCheckout = ! $hasAddresses;
+                                        $noItems = ($summary['total_items'] ?? 0) <= 0;
                                     @endphp
 
                                     <div class="mb-3">
@@ -302,8 +310,15 @@
 
                                     @php
                                         $customerNoAddress = $disableCheckout;
-                                        $disableBtn = $noItems || $customerNoAddress;
+                                        $disableBtn = $noItems || $customerNoAddress || !empty($missing_contact);
                                     @endphp
+
+                                    @if(!empty($missing_contact))
+                                        <div class="alert alert-warning mb-2">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>{{ $contact_warning }}
+                                        </div>
+                                        <a href="{{ url('/profile') }}" class="btn btn-outline-warning btn-sm w-100 mb-2">Lengkapi Data Akun</a>
+                                    @endif
                                     <button type="submit" class="btn btn-primary btn-lg w-100 mb-3" @disabled($disableBtn)>
                                         <i class="bi bi-credit-card me-2"></i>Lanjut ke Pembayaran
                                     </button>
@@ -399,6 +414,14 @@
                 <button type="button" class="btn btn-outline-secondary btn-sm py-0 px-2 text-nowrap" style="font-size:0.75rem;" id="mobCustomerCancelBtn">Batal</button>
             </div>
             @endif
+        </div>
+    </div>
+    @endif
+
+    @if(!empty($missing_contact))
+    <div class="px-3 pt-2">
+        <div class="alert alert-warning py-2 mb-0" style="font-size:0.78rem;">
+            <i class="bi bi-exclamation-triangle me-1"></i>{{ $contact_warning }}
         </div>
     </div>
     @endif
@@ -536,11 +559,17 @@
 
     {{-- Create Order --}}
     @php
-        $mobDisableSalesCheckout = $mobNoItems || $mobSalesNoCustomer || $mobSalesAddrList->isEmpty();
+        $mobDisableSalesCheckout = $mobNoItems || $mobSalesNoCustomer || $mobSalesAddrList->isEmpty() || !empty($missing_contact);
     @endphp
     <form method="POST" action="{{ route('guest.cart.checkout') }}" id="mobSalesCheckoutForm" data-ajax="false">
         @csrf
         <input type="hidden" name="address_id" id="mobSalesAddressHidden" value="{{ $active_address_id ?? '' }}">
+        @if(!empty($missing_contact))
+            <div class="alert alert-warning py-2 mb-2" style="font-size:0.78rem;">
+                <i class="bi bi-exclamation-triangle me-1"></i>{{ $contact_warning }}
+                <a href="{{ route('guest.profile.my-customers.edit', $selected_customer) }}" class="alert-link d-block">Lengkapi Data Customer</a>
+            </div>
+        @endif
         <button type="submit" class="btn btn-success w-100 py-2" style="font-size:0.82rem;font-weight:600;" @disabled($mobDisableSalesCheckout)>
             <i class="bi bi-cart-check me-1"></i>Buat Pesanan
         </button>
@@ -1283,6 +1312,12 @@ document.addEventListener('DOMContentLoaded', function() {
             var isLoggedIn = checkoutBar ? parseInt(checkoutBar.dataset.isLoggedIn) : 0;
             if (!isLoggedIn) {
                 window.location.href = '{{ url('/login') }}?redirect={{ url('/cart') }}';
+                return;
+            }
+
+            var contactIncomplete = {{ !empty($missing_contact) ? 'true' : 'false' }};
+            if (contactIncomplete) {
+                alert(@json($contact_warning));
                 return;
             }
 
