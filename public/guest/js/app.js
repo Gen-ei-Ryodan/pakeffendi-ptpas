@@ -315,14 +315,17 @@
                     const input = card?.querySelector('.qty-input');
                     if (!input) return;
                     const current = parseInt(input.value, 10) || 1;
+                    // Baca step dari atribut min input (sudah di-set ke qty_1 di Blade)
+                    // Jika min > 1 (yaitu qty_1 > 1), maka step = min (qty_1), else step = 1
+                    const step = parseInt(input.min, 10) > 1 ? parseInt(input.min, 10) : 1;
                     const min = parseInt(input.min, 10) || 1;
                     const max = parseInt(input.max, 10) || 999999;
                     const action = qtyBtn.dataset.action;
                     let newVal = current;
                     if (action === 'increase') {
-                        newVal = Math.min(max, current + 1);
+                        newVal = Math.min(max, current + step);
                     } else if (action === 'decrease') {
-                        newVal = Math.max(min, current - 1);
+                        newVal = Math.max(min, current - step);
                     }
                     input.value = newVal;
                     return;

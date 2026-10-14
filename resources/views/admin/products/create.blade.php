@@ -128,13 +128,6 @@
                         <label class="block text-sm font-medium mb-1">No. Urut Status</label>
                         <input type="number" name="no_urut_status" value="{{ old('no_urut_status', 0) }}" min="0" class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-sky-500">
                     </div>
-                    <div></div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Min. Kelipatan Qty (CO)</label>
-                        <input type="number" step="0.01" name="qty_1" value="{{ old('qty_1', 1) }}" min="0" class="w-full rounded-lg border border-slate-200 focus:border-sky-500 focus:ring-sky-500">
-                        <p class="text-xs text-slate-400 mt-1">Qty harus kelipatan dari nilai ini. 0 atau 1 = tanpa batasan.</p>
-                    </div>
-                    <div></div>
                 </div>
             </div>
 
