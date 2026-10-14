@@ -196,11 +196,14 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.addEventListener('click', function() {
                 let currentValue = parseInt(quantityInput.value) || 1;
                 let maxValue = parseInt(quantityInput.max) || 999999;
-                if (this.dataset.action === 'decrease' && currentValue > 1) {
-                    quantityInput.value = currentValue - 1;
+                let minValue = parseInt(quantityInput.min) || 1;
+                // Step mengikuti min input (qty_1): jika min > 1 maka step = min, selain itu step = 1
+                let step = minValue > 1 ? minValue : 1;
+                if (this.dataset.action === 'decrease' && currentValue > minValue) {
+                    quantityInput.value = Math.max(minValue, currentValue - step);
                 }
                 if (this.dataset.action === 'increase' && currentValue < maxValue) {
-                    quantityInput.value = currentValue + 1;
+                    quantityInput.value = Math.min(maxValue, currentValue + step);
                 }
             });
         });
