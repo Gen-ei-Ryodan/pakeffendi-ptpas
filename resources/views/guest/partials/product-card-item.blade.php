@@ -44,7 +44,7 @@
                 <button class="qty-btn" type="button" data-action="decrease">
                     <i class="bi bi-dash"></i>
                 </button>
-                <input type="number" class="qty-input" value="{{ ($product->min_multiply_qty ?? 0) > 1 ? (int) $product->min_multiply_qty : 1 }}" min="{{ ($product->min_multiply_qty ?? 0) > 1 ? (int) $product->min_multiply_qty : 1 }}" max="999999">
+                <input type="number" class="qty-input" value="{{ ($product->qty_1 ?? 0) > 1 ? (int) $product->qty_1 : 1 }}" min="{{ ($product->qty_1 ?? 0) > 1 ? (int) $product->qty_1 : 1 }}" max="999999">
                 <button class="qty-btn" type="button" data-action="increase">
                     <i class="bi bi-plus"></i>
                 </button>
