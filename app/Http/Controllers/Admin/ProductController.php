@@ -110,7 +110,6 @@ class ProductController extends Controller
             'status_product' => ['nullable', 'string', 'max:50'],
             'no_urut_status' => ['nullable', 'integer', 'min:0'],
             'qty_1' => ['nullable', 'integer', 'min:0'],
-            'min_multiply_notes' => ['nullable', 'string', 'max:50'],
         ]);
 
         $product = Product::create([
@@ -172,7 +171,6 @@ class ProductController extends Controller
             'status_product' => ['nullable', 'string', 'max:50'],
             'no_urut_status' => ['nullable', 'integer', 'min:0'],
             'qty_1' => ['nullable', 'integer', 'min:0'],
-            'min_multiply_notes' => ['nullable', 'string', 'max:50'],
         ]);
 
         if ($request->hasFile('photo')) {
