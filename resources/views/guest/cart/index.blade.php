@@ -123,6 +123,7 @@
                                             </button>
                                             <input type="number" class="form-control text-center" 
                                                    value="{{ (int) $item->quantity }}" min="1" max="999999"
+                                                   data-min-multiply="{{ $product ? max(1, (int) ($product->qty_1 ?? 1)) : 1 }}"
                                                    data-last-valid="{{ (int) $item->quantity }}"
                                                    onchange="updateQuantityDirect({{ $product?->id }}, this.value)">
                                             <button class="btn btn-secondary btn-sm flex-shrink-0" type="button" onclick="updateQuantity({{ $product?->id }}, 1)">
@@ -466,7 +467,7 @@
                 <div class="mob-cart-actions">
                     <div class="mob-qty-wrap">
                         <button class="mob-qty-btn" onclick="mobUpdateQty({{ $product?->id }}, -1)"><i class="bi bi-dash"></i></button>
-                        <input type="number" class="mob-qty-input" value="{{ $qty }}" min="1" data-last-valid="{{ $qty }}" onchange="mobSetQty({{ $product?->id }}, this.value)">
+                        <input type="number" class="mob-qty-input" value="{{ $qty }}" min="1" data-min-multiply="{{ $product ? max(1, (int) ($product->qty_1 ?? 1)) : 1 }}" data-last-valid="{{ $qty }}" onchange="mobSetQty({{ $product?->id }}, this.value)">
                         <button class="mob-qty-btn" onclick="mobUpdateQty({{ $product?->id }}, 1)"><i class="bi bi-plus"></i></button>
                     </div>
                     <button class="mob-cart-del" onclick="mobRemoveItem({{ $product?->id }})"><i class="bi bi-trash3"></i></button>
@@ -948,8 +949,11 @@ function updateQuantity(productId, change) {
     const input = document.querySelector(`[data-product-id="${productId}"] input[type="number"]`);
     if (input) {
         let currentValue = parseInt(input.value) || 1;
-        let newValue = currentValue + change;
         let maxValue = parseInt(input.max) || 999999;
+        // Step mengikuti qty_1 (data-min-multiply). Jika qty_1 > 1 → step = qty_1, selain itu step = 1
+        const minMultiply = parseInt(input.getAttribute('data-min-multiply'), 10) || 1;
+        const step = minMultiply > 1 ? minMultiply : 1;
+        let newValue = currentValue + (change * step);
 
         if (newValue >= 1 && newValue <= maxValue) {
             input.value = newValue;
@@ -966,6 +970,12 @@ function updateQuantityDirect(productId, newValue) {
     if (value > maxValue) value = maxValue;
 
     const input = document.querySelector(`[data-product-id="${productId}"] input[type="number"]`);
+    // Jika qty_1 > 1, bulatkan nilai ke kelipatan qty_1 terdekat agar valid
+    const minMultiply = input ? (parseInt(input.getAttribute('data-min-multiply'), 10) || 1) : 1;
+    if (minMultiply > 1) {
+        value = Math.max(minMultiply, Math.round(value / minMultiply) * minMultiply);
+    }
+
     if (input) {
         input.value = value;
     }
@@ -1144,7 +1154,10 @@ function mobUpdateQty(productId, change) {
     const item = document.querySelector(`.mob-cart-item[data-product-id="${productId}"]`);
     if (!item) return;
     const input = item.querySelector('.mob-qty-input');
-    let val = (parseInt(input.value) || 1) + change;
+    // Step mengikuti qty_1 (data-min-multiply). Jika qty_1 > 1 → step = qty_1, selain itu step = 1
+    const minMultiply = parseInt(input.getAttribute('data-min-multiply'), 10) || 1;
+    const step = minMultiply > 1 ? minMultiply : 1;
+    let val = (parseInt(input.value) || 1) + (change * step);
     if (val < 1) val = 1;
 
     input.value = val;
@@ -1191,6 +1204,11 @@ function mobSetQty(productId, newVal) {
     const item = document.querySelector(`.mob-cart-item[data-product-id="${productId}"]`);
     if (item) {
         mobInput = item.querySelector('.mob-qty-input');
+        // Jika qty_1 > 1, bulatkan nilai ke kelipatan qty_1 terdekat agar valid
+        const minMultiply = mobInput ? (parseInt(mobInput.getAttribute('data-min-multiply'), 10) || 1) : 1;
+        if (minMultiply > 1) {
+            val = Math.max(minMultiply, Math.round(val / minMultiply) * minMultiply);
+        }
         if (mobInput) mobInput.value = val;
     }
 
