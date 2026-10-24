@@ -2654,13 +2654,24 @@ body {
     .bottom-nav-item span {
         font-size: 0.6rem;
     }
+
+    /* Center mobile sections so they don't stretch full-width on tablet */
+    #mobLoginPage .login-mob-inner,
+    #mobCartSection,
+    #mobOrdersSection,
+    #mobAddressSection {
+        max-width: 540px;
+        margin-left: auto;
+        margin-right: auto;
+    }
 }
 
 /* ===========================
    MOBILE PRODUCT PAGE
    =========================== */
 
-@media (max-width: 575.98px) {
+/* Mobile UI (d-lg-none / .mobile-hide) must be styled for phone AND tablet */
+@media (max-width: 991.98px) {
 
     /* Mobile top bar for product page (inside existing mobile-topbar-inner) */
     .mobile-prod-topbar-inner {
