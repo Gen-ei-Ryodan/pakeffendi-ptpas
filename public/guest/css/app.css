@@ -855,6 +855,36 @@ footer a:hover {
     box-shadow: var(--box-shadow-lg);
 }
 
+/* Scrollable modal where a <form> wraps .modal-body + .modal-footer.
+   Without this, the form is a plain block inside the flex .modal-content:
+   .modal-body never gets a bounded height, so it never scrolls and the
+   footer (Simpan Alamat) gets clipped by overflow: hidden on mobile. */
+.modal-dialog-scrollable .modal-content > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.modal-dialog-scrollable .modal-content > form .modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile browser chrome: 100vh can exceed the visible viewport */
+@supports (max-height: 100dvh) {
+    .modal-dialog-scrollable {
+        max-height: calc(100dvh - 1rem);
+    }
+
+    .modal-dialog-scrollable .modal-content {
+        max-height: calc(100dvh - 1rem);
+    }
+}
+
 /* Table Styles */
 .table {
     border-radius: var(--border-radius);

@@ -9,6 +9,9 @@
     <meta name="theme-color" content="#003366">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PAS Market">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <title>@yield('title', 'PAS Market - Belanja Online Terpercaya')</title>
 
     <!-- Bootstrap 5 CSS -->
@@ -304,6 +307,16 @@
                 });
             }
         });
+        // Register Service Worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js').then(function(reg) {
+                    console.log('PAS Market Service Worker registered:', reg.scope);
+                }).catch(function(err) {
+                    console.log('Service Worker registration failed:', err);
+                });
+            });
+        }
     </script>
 </body>
 </html>

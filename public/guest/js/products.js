@@ -187,6 +187,9 @@
         },
         
         handleAddToCart(button) {
+            // Product cards are handled by PAS.ProductCards in app.js (cart button → qty stepper flow)
+            if (button.closest('.product-card')) return;
+
             const productCard =
                 button.closest('.product-card') ||
                 button.closest('.card[data-product-id]') ||

@@ -165,6 +165,8 @@
                 this.updateUI();
                 this.showNotification('Produk dihapus dari keranjang!', 'info');
             } catch (_) {
+                // Backend rejected the removal → restore steppers from last known summary
+                this.updateUI();
             }
         },
         
@@ -190,6 +192,8 @@
                 this.summary = data.summary || this.summary;
                 this.updateUI();
             } catch (_) {
+                // Backend rejected the value → restore steppers from last known summary
+                this.updateUI();
             }
         },
         
@@ -200,6 +204,8 @@
                     badge.textContent = totalItems;
                     badge.style.display = totalItems > 0 ? 'inline-flex' : 'none';
                 });
+            // Keep product-card qty steppers in sync with cart state
+            window.PAS.ProductCards?.syncSteppers?.(this.summary);
         },
         
         showNotification(message, type = 'info', duration = 3000) {
@@ -312,50 +318,120 @@
                     e.preventDefault();
                     e.stopPropagation();
                     const card = qtyBtn.closest('.product-card');
-                    const input = card?.querySelector('.qty-input');
-                    if (!input) return;
-                    const current = parseInt(input.value, 10) || 1;
-                    // Baca step dari atribut min input (sudah di-set ke qty_1 di Blade)
-                    // Jika min > 1 (yaitu qty_1 > 1), maka step = min (qty_1), else step = 1
-                    const step = parseInt(input.min, 10) > 1 ? parseInt(input.min, 10) : 1;
-                    const min = parseInt(input.min, 10) || 1;
-                    const max = parseInt(input.max, 10) || 999999;
-                    const action = qtyBtn.dataset.action;
-                    let newVal = current;
-                    if (action === 'increase') {
-                        newVal = Math.min(max, current + step);
-                    } else if (action === 'decrease') {
-                        newVal = Math.max(min, current - step);
-                    }
-                    input.value = newVal;
+                    if (card) this.handleQtyStep(card, qtyBtn.dataset.action);
                     return;
                 }
 
-                // Add to cart button
+                // Add to cart button (product cards only; detail page handled by products.js)
                 if (e.target.closest('.btn-add-to-cart')) {
                     e.preventDefault();
                     const button = e.target.closest('.btn-add-to-cart');
-                    const productData = this.getProductData(button);
-                    Cart.addItem(productData);
+                    if (!button.closest('.product-card')) return;
+                    if (window.PAS.ProductInteractions?.animateAddToCart) {
+                        window.PAS.ProductInteractions.animateAddToCart(button, button.closest('.product-card'));
+                    }
+                    Cart.addItem(this.getProductData(button));
+                }
+            });
+
+            // Typed quantity in product-card stepper
+            document.addEventListener('change', (e) => {
+                const input = e.target.closest('.product-card .qty-input');
+                if (input) this.handleQtyTyped(input.closest('.product-card'));
+            });
+        },
+
+        // Step size from input min (= qty_1, min kelipatan) set in Blade
+        qtyStep(input) {
+            return Math.max(1, parseInt(input.min, 10) || 1);
+        },
+
+        // Show/hide steppers so that only products already in the cart expose a stepper
+        syncSteppers(summary) {
+            const items = (summary || Cart.summary || {}).items || [];
+            document.querySelectorAll('.product-card .qty-selector').forEach((selector) => {
+                const card = selector.closest('.product-card');
+                const input = selector.querySelector('.qty-input');
+                const cartBtn = card?.querySelector('.btn-add-to-cart');
+                if (!card || !input) return;
+                const inCart = items.find((item) => String(item.product_id) === String(card.dataset.productId));
+                if (inCart && inCart.quantity > 0) {
+                    selector.classList.remove('d-none');
+                    input.value = inCart.quantity;
+                    cartBtn?.classList.add('d-none');
+                } else {
+                    selector.classList.add('d-none');
+                    input.value = this.qtyStep(input);
+                    cartBtn?.classList.remove('d-none');
                 }
             });
         },
-        
+
+        // (+)/(-) click: sync to backend when the product is in the cart
+        handleQtyStep(card, action) {
+            const selector = card.querySelector('.qty-selector');
+            const input = selector?.querySelector('.qty-input');
+            if (!input) return;
+            const step = this.qtyStep(input);
+            const current = parseInt(input.value, 10) || step;
+            const target = action === 'increase' ? current + step : current - step;
+            const active = !selector.classList.contains('d-none');
+
+            if (target < step) {
+                // Below minimum → remove item from cart and restore cart button
+                if (active) {
+                    Cart.removeItem(card.dataset.productId);
+                } else {
+                    input.value = step;
+                }
+                return;
+            }
+
+            input.value = target;
+            if (active) Cart.updateQuantity(card.dataset.productId, target);
+        },
+
+        // Typed quantity: snap to kelipatan, sync (or remove when 0)
+        handleQtyTyped(card) {
+            const selector = card.querySelector('.qty-selector');
+            const input = selector?.querySelector('.qty-input');
+            if (!input) return;
+            const step = this.qtyStep(input);
+            const max = parseInt(input.max, 10) || 999999;
+            const active = !selector.classList.contains('d-none');
+            let raw = parseInt(input.value, 10);
+
+            if (!Number.isFinite(raw) || raw <= 0) {
+                if (active) {
+                    Cart.removeItem(card.dataset.productId);
+                } else {
+                    input.value = step;
+                }
+                return;
+            }
+
+            raw = Math.min(max, Math.ceil(raw / step) * step);
+            input.value = raw;
+            if (active) Cart.updateQuantity(card.dataset.productId, raw);
+        },
+
         getProductData(button) {
             const card = button.closest('.product-card');
             const qtyInput = card?.querySelector('.qty-input');
             let quantity = 1;
             if (qtyInput) {
+                const step = this.qtyStep(qtyInput);
                 const raw = parseInt(qtyInput.value, 10);
-                const min = parseInt(qtyInput.min, 10) || 1;
                 const max = parseInt(qtyInput.max, 10) || 999999;
-                quantity = Number.isFinite(raw) ? Math.max(min, Math.min(max, raw)) : 1;
+                quantity = Number.isFinite(raw) ? Math.max(step, Math.min(max, raw)) : step;
+                quantity = Math.ceil(quantity / step) * step;
+                qtyInput.value = quantity;
             }
             return {
-                id: card.dataset.productId,
-                name: card.querySelector('.product-title')?.textContent || '',
-                price: parseFloat(card.querySelector('.product-price')?.textContent?.replace(/[^0-9,-]/g, '').replace(',', '.') || 0),
-                image: card.querySelector('.product-image')?.src || '',
+                id: card?.dataset.productId || button.dataset.productId,
+                name: card?.querySelector('.product-title')?.textContent || '',
+                price: parseFloat(card?.querySelector('.product-price')?.textContent?.replace(/[^0-9,-]/g, '').replace(',', '.') || 0),
+                image: card?.querySelector('.product-image')?.src || '',
                 quantity: quantity
             };
         },
@@ -486,5 +562,6 @@
     window.PAS.Cart = Cart;
     window.PAS.Search = Search;
     window.PAS.API = API;
+    window.PAS.ProductCards = ProductCards;
 
 })();

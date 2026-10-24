@@ -402,6 +402,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (savedView === 'list') {
                     grid.classList.add('products-grid-list');
                 }
+
+                // Sync qty steppers for newly appended cards (products already in cart)
+                if (window.PAS && PAS.ProductCards && typeof PAS.ProductCards.syncSteppers === 'function') {
+                    PAS.ProductCards.syncSteppers();
+                }
             })
             .catch(function() {
                 if (spinner) spinner.style.display = 'none';

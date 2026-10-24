@@ -1,6 +1,7 @@
 @php
     $tierCount = count($product->pricing_tiers);
     $isLoggedIn = Auth::guard('customer')->check() || (Auth::guard('web')->check() && Auth::guard('web')->user()->isSales());
+    $minStep = ($product->qty_1 ?? 0) > 1 ? (int) $product->qty_1 : 1;
 @endphp
 <div class="product-card" data-product-id="{{ $product->id }}">
     <div class="position-relative">
@@ -40,11 +41,11 @@
         @endif
         </div>
         <div class="product-card-actions">
-            <div class="qty-selector">
+            <div class="qty-selector d-none" data-min-multiply="{{ $minStep }}">
                 <button class="qty-btn" type="button" data-action="decrease">
                     <i class="bi bi-dash"></i>
                 </button>
-                <input type="number" class="qty-input" value="{{ ($product->qty_1 ?? 0) > 1 ? (int) $product->qty_1 : 1 }}" min="{{ ($product->qty_1 ?? 0) > 1 ? (int) $product->qty_1 : 1 }}" max="999999">
+                <input type="number" class="qty-input" value="{{ $minStep }}" min="{{ $minStep }}" max="999999">
                 <button class="qty-btn" type="button" data-action="increase">
                     <i class="bi bi-plus"></i>
                 </button>
