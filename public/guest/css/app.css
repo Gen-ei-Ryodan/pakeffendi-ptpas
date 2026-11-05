@@ -2657,6 +2657,7 @@ body {
 
     /* Center mobile sections so they don't stretch full-width on tablet */
     #mobLoginPage .login-mob-inner,
+    #mobRegisterInfo .login-mob-inner,
     #mobCartSection,
     #mobOrdersSection,
     #mobAddressSection {

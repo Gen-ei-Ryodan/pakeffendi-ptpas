@@ -25,7 +25,7 @@
 
     @stack('styles')
 </head>
-<body class="d-flex flex-column min-vh-100 has-bottom-nav @if(Request::is('cart')) page-cart @endif" @if(Request::is('login', 'register', 'register-buyer', 'verify-email', 'verify-email/*', 'change-password')) data-spa="false" @endif>
+<body class="d-flex flex-column min-vh-100 has-bottom-nav @if(Request::is('cart')) page-cart @endif @if(Request::is('login', 'register')) auth-fullscreen @endif" @if(Request::is('login', 'register', 'register-buyer', 'verify-email', 'verify-email/*', 'change-password')) data-spa="false" @endif>
 
     <!-- PAS Branded Splash (initial page load) -->
     <div id="pas-splash" class="pas-splash" aria-hidden="true">

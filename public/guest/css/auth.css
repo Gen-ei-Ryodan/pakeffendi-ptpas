@@ -623,7 +623,249 @@ body[data-spa="false"] > footer {
     .login-page .auth-card .card-body { padding: 1.5rem; }
 }
 
+/* =====================================================
+   REGISTER INFO — self-register disabled, hubungi Sales/Admin
+   Used by register-info.blade.php
+   ===================================================== */
+
+/* ---- Full-bleed auth pages (login & register): fit viewport, no page scroll ---- */
+body.auth-fullscreen .main-content {
+    padding: 0 !important;
+}
+
+body.auth-fullscreen .main-content > .container {
+    margin: 0 !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+}
+
+body.auth-fullscreen main > section:first-of-type {
+    padding: 0 !important;
+}
+
+@media (min-width: 992px) {
+    body.auth-fullscreen .auth-desktop {
+        height: 100vh;
+        min-height: 100vh;
+        overflow: hidden;
+    }
+
+    body.auth-fullscreen .auth-main {
+        overflow-y: auto;
+    }
+}
+
+.auth-notice {
+    display: flex;
+    gap: 0.65rem;
+    align-items: flex-start;
+    background: #fff8e8;
+    border: 1px solid #ffe1a6;
+    color: #8a5a06;
+    border-radius: 14px;
+    padding: 0.9rem 1rem;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    margin-bottom: 1.35rem;
+}
+
+.auth-notice i {
+    color: #f59e0b;
+    font-size: 1.05rem;
+    margin-top: 2px;
+}
+
+.auth-notice strong { color: #6b4403; }
+
+.auth-section-label {
+    font-family: var(--hp-display, 'Space Grotesk', sans-serif);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #94a3b8;
+    margin-bottom: 0.7rem;
+}
+
+.auth-contacts {
+    display: grid;
+    gap: 0.6rem;
+    margin-bottom: 0.3rem;
+}
+
+.auth-contact {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    border: 1.5px solid #e4eaf2;
+    border-radius: 13px;
+    background: #fff;
+    text-decoration: none;
+    transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+}
+
+.auth-contact:hover {
+    border-color: #003366;
+    box-shadow: 0 12px 24px -18px rgba(0, 51, 102, 0.55);
+    transform: translateY(-1px);
+}
+
+.auth-contact-icon {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+    background: #e9f7ef;
+    color: #16a34a;
+}
+
+.auth-contact-icon--phone { background: #eaf1fb; color: #003366; }
+
+.auth-contact-body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.auth-contact-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #94a3b8;
+}
+
+.auth-contact-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #10233f;
+}
+
+.auth-contact-arrow {
+    margin-left: auto;
+    color: #cbd5e1;
+    font-size: 0.9rem;
+}
+
+.auth-contact:hover .auth-contact-arrow { color: #003366; }
+
+/* WhatsApp row: primary emphasis */
+.auth-contact--primary {
+    background: linear-gradient(150deg, #07294a, #003366);
+    border-color: transparent;
+    box-shadow: 0 14px 26px -14px rgba(0, 51, 102, 0.55);
+}
+
+.auth-contact--primary:hover {
+    background: linear-gradient(150deg, #003a66, #004a8f);
+    border-color: transparent;
+    box-shadow: 0 18px 30px -16px rgba(0, 51, 102, 0.6);
+}
+
+.auth-contact--primary .auth-contact-icon {
+    background: rgba(255, 255, 255, 0.14);
+    color: #4ade80;
+}
+
+.auth-contact--primary .auth-contact-label { color: rgba(255, 255, 255, 0.6); }
+.auth-contact--primary .auth-contact-value { color: #fff; }
+.auth-contact--primary .auth-contact-arrow { color: rgba(255, 255, 255, 0.5); }
+.auth-contact--primary:hover .auth-contact-arrow { color: #ffd27d; }
+
+/* ---- Mobile register info ---- */
+@media (max-width: 991.98px) {
+    #mobRegisterInfo {
+        min-height: calc(100dvh - 52px);
+        display: flex;
+        flex-direction: column;
+        background: #fff;
+    }
+
+    #mobRegisterInfo .login-mob-inner {
+        justify-content: flex-start;
+        padding: 22px 24px 16px;
+        overflow-y: auto;
+    }
+
+    .mobri-notice {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        background: #fff8e8;
+        border: 1px solid #ffe1a6;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-size: 0.76rem;
+        line-height: 1.55;
+        color: #8a5a06;
+        margin-bottom: 14px;
+        flex-shrink: 0;
+    }
+
+    .mobri-notice i {
+        color: #f59e0b;
+        font-size: 0.95rem;
+        margin-top: 1px;
+        flex-shrink: 0;
+    }
+
+    .mobri-label {
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        margin-bottom: 7px;
+        flex-shrink: 0;
+    }
+
+    .mobri-contacts {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .mobri-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+        padding: 11px 6px;
+        border-radius: 12px;
+        border: 1.5px solid #e4eaf2;
+        background: #fff;
+        text-decoration: none;
+        color: #003366;
+        font-size: 0.72rem;
+        font-weight: 700;
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    .mobri-btn i { font-size: 1.15rem; }
+
+    .mobri-btn:active {
+        border-color: #003366;
+        box-shadow: 0 0 0 3px rgba(0, 59, 122, 0.08);
+    }
+
+    .mobri-btn--wa {
+        background: #16a34a;
+        border-color: #16a34a;
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.25);
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     .auth-card-wrap { animation: none; }
     .auth-btn { transition: none; }
+    .auth-contact { transition: none; }
 }

@@ -2,6 +2,24 @@
 
 > Catatan keputusan penting selama pengembangan.
 
+## Register Info Page (Guest)
+
+### Keputusan Desain
+- **`GET /register` kini ada** dan menampilkan **halaman info registrasi**, bukan form pendaftaran — sejalan dengan BUSINESS_RULES.md (*"Self-register: Tidak ada. Customer hanya bisa didaftarkan oleh Sales atau Admin"*). Sebelumnya URL ini mengembalikan **404** padahal `login.blade.php` menautkan "Daftar sekarang" ke `/register`.
+- Pesan utama halaman: **"Registrasi Customer Baru — Silakan hubungi Sales / Admin kami"**, dilengkapi notice bahwa pendaftaran tidak dapat dilakukan mandiri dan kanal kontak **WhatsApp (`+62 851-0182-8797`) & Telepon** (tanpa email, tanpa blok langkah).
+- Desain mengikuti style auth yang ada: desktop **split-screen "Trading Floor"** (`auth-aside` navy + kartu di `--hp-paper`), mobile mengikuti pola `login-mob-*`. Link login tetap membawa parameter `?redirect=`.
+- **Halaman `/login` & `/register` full-bleed tanpa scroll**: body diberi class `auth-fullscreen` sehingga `main-content` (padding) dan `container` (`mt-*`/`px-*`) di-nol-kan via CSS — split-screen pas tinggi viewport. Scroll internal hanya terjadi di panel kanan (`.auth-main`) jika kartu lebih tinggi dari layar.
+- Route dinamai `guest.register`; link "Daftar sekarang" di halaman login kini tidak lagi 404.
+
+### File
+- `routes/guest.php` (route `GET /register` → `guest.auth.register-info`)
+- `resources/views/guest/auth/register-info.blade.php` (baru)
+- `resources/views/guest/layouts/app.blade.php` (class `auth-fullscreen` untuk `/login` & `/register`)
+- `resources/views/guest/auth/login.blade.php` (cache-buster `auth.css`)
+- `public/guest/css/auth.css` (full-bleed `auth-fullscreen`, section `.auth-notice/.auth-contacts` + mobile `#mobRegisterInfo`)
+- `public/guest/css/app.css` (centering tablet `#mobRegisterInfo .login-mob-inner`)
+- `docs/API_REFERENCE.md` (tambah baris `GET /register`)
+
 ## Guest UI Continuation (Frontend)
 
 ### Keputusan Desain
@@ -17,7 +35,7 @@
 - **Hero home = banner statis**: `bannerrrrr.png` (ditaruh user di root `backend/`, di-gitignore; salinan yang di-serve di `public/guest/img/bannerrrrr.png`) **menggantikan hero carousel broadcast** (element `#heroCarousel` dihapus). Frame `hero-banner-frame`/`hero-banner-media` dipertahankan; media home diberi **max-height** (`clamp(180px, 46vw, 460px)`) dengan `object-fit:cover` + `object-position:center` agar banner tidak setinggi ukuran asli (1536×1024 ~ 3:2) tapi tetap proporsional sebagai banner. Chip brand tetap overlay di kiri bawah. `loading="lazy"`, fallback `placeholder-banner.svg`.
 
 ### Catatan
-- Route `/register` **masih tidak ada** (pre-existing, bukan dari task ini) — `login.blade.php` menautkan "Daftar sekarang" ke `/register` yang 404. `register.blade.php` sudah di-redesign dan siap dipasang jika route dibuat. Buyer baru dibuat via `/register-buyer` (oleh sales).
+- Route `/register` **dulu tidak ada** (404) — kini sudah dibuat sebagai **halaman info registrasi** (lihat section "Register Info Page"), bukan form self-register. Buyer baru tetap dibuat via `/register-buyer` (oleh sales).
 
 ### File
 - `resources/views/guest/layouts/app.blade.php` (Space Grotesk global + splash markup + inline script)

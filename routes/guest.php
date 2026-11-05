@@ -364,6 +364,11 @@ Route::prefix('/')->group(function () {
     Route::get('/cart/my-customers', [CartController::class, 'myCustomers'])->middleware('guest.auth')->name('guest.cart.my-customers');
     Route::post('/cart/items/{product}/notes', [CartController::class, 'updateItemNotes'])->middleware('guest.auth')->name('guest.cart.items.notes');
 
+    // Register Info (self-register tidak tersedia - arahkan ke Sales/Admin)
+    Route::get('/register', function () {
+        return view('guest.auth.register-info');
+    })->name('guest.register');
+
     // Auth
     Route::middleware('guest:customer')->group(function () {
         Route::get('/login', [AuthController::class, 'showLogin'])->name('guest.login');

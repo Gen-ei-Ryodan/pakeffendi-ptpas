@@ -170,6 +170,7 @@ Data untuk halaman utama (categories, brands, broadcasts, featured products, abo
 |--------|---------------------------|---------------------------|---------------|
 | GET    | `/login`                  | `guest.login`             | guest:customer |
 | POST   | `/login`                  | `guest.login.store`       | guest:customer |
+| GET    | `/register`               | `guest.register`          | — (halaman info: hubungi Sales/Admin, bukan self-register) |
 | GET    | `/verify-email`           | `guest.verify-email`      | —             |
 | POST   | `/verify-email`           | `guest.verify-email.store`| —             |
 | GET    | `/verify-email/{code}`    | `guest.verify-email.direct`| —            |

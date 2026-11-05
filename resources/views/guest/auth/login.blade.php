@@ -15,7 +15,7 @@
 @endsection
 
 @push('styles')
-<link href="{{ asset('guest/css/auth.css') }}" rel="stylesheet">
+<link href="{{ asset('guest/css/auth.css') }}?v={{ filemtime(public_path('guest/css/auth.css')) }}" rel="stylesheet">
 @endpush
 
 @section('content')
