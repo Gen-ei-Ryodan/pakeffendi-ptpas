@@ -51,6 +51,8 @@
                 if (addToCartBtn) {
                     e.preventDefault();
                     e.stopPropagation();
+                    // Only handle product cards here; detail page uses its own handler
+                    if (!addToCartBtn.closest('.product-card')) return;
                     this.handleAddToCart(addToCartBtn);
                 }
             });

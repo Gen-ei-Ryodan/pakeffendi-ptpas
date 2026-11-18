@@ -170,6 +170,8 @@
             }
         },
         
+        _pendingUpdates: new Set(),
+
         async updateQuantity(productId, quantity) {
             if (!window.PAS?.auth?.loggedIn) {
                 const from = window.location.pathname + window.location.search;
@@ -181,20 +183,31 @@
 
             const qty = Number.isFinite(quantity) ? quantity : parseInt(quantity) || 0;
 
-            try {
-                const data = await API.request(`/cart/items/${productId}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': this.csrfToken(),
-                    },
-                    body: JSON.stringify({ quantity: qty }),
-                });
-                this.summary = data.summary || this.summary;
-                this.updateUI();
-            } catch (_) {
-                // Backend rejected the value → restore steppers from last known summary
-                this.updateUI();
-            }
+            const promise = (async () => {
+                try {
+                    const data = await API.request(`/cart/items/${productId}`, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': this.csrfToken(),
+                        },
+                        body: JSON.stringify({ quantity: qty }),
+                    });
+                    this.summary = data.summary || this.summary;
+                    this.updateUI();
+                } catch (_) {
+                    // Backend rejected the value → restore steppers from last known summary
+                    this.updateUI();
+                }
+            })();
+
+            this._pendingUpdates.add(promise);
+            promise.finally(() => this._pendingUpdates.delete(promise));
+            await promise;
+        },
+
+        async flushPendingUpdates() {
+            if (this._pendingUpdates.size === 0) return;
+            await Promise.allSettled(Array.from(this._pendingUpdates));
         },
         
         updateUI() {
@@ -510,6 +523,22 @@
             BackToTop.init();
             ProductCards.init();
             SmoothScroll.init();
+
+            // Flush pending cart quantity saves before navigating away
+            document.addEventListener('click', async (e) => {
+                const link = e.target.closest('a[href]');
+                if (!link) return;
+                if (link.getAttribute('target') === '_blank') return;
+                const cart = window.PAS?.Cart;
+                if (!cart || !cart._pendingUpdates || cart._pendingUpdates.size === 0) return;
+                e.preventDefault();
+                e.stopPropagation();
+                await cart.flushPendingUpdates();
+                const href = link.getAttribute('href');
+                if (href && !href.startsWith('#') && !href.startsWith('javascript:')) {
+                    window.location.href = href;
+                }
+            }, true);
             
             // Add fade-in animation to elements
             this.addFadeInAnimation();

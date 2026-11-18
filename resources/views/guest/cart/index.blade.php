@@ -989,6 +989,7 @@ function csrfToken() {
 }
 
 async function updateCartItem(productId, quantity) {
+    const promise = (async () => {
     const res = await fetch(`/cart/items/${productId}`, {
         method: 'POST',
         headers: {
@@ -1024,6 +1025,13 @@ async function updateCartItem(productId, quantity) {
 
     updateCartSummary();
     PAS.Cart.showNotification('Keranjang diperbarui', 'success');
+    })();
+
+    if (window.PAS?.Cart?._pendingUpdates) {
+        window.PAS.Cart._pendingUpdates.add(promise);
+        promise.finally(() => window.PAS.Cart._pendingUpdates.delete(promise));
+    }
+    await promise;
 }
 
 async function removeItem(productId) {
