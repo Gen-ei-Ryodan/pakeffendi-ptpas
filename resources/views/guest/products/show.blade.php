@@ -131,6 +131,7 @@
                     <div class="product-card" data-product-id="{{ $related->id }}">
                         <div class="position-relative">
                             <img src="{{ $relatedImageUrl }}" alt="{{ $related->name }}" class="product-image"
+                                 loading="lazy" decoding="async"
                                  onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
                         </div>
                         <div class="product-info">

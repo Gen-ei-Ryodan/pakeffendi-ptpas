@@ -35,12 +35,46 @@ class CartController extends Controller
     }
 
     /**
+     * Read the active selected-customer id for the logged-in sales user.
+     * Cookie first (current behavior), session as fallback when the cookie
+     * is missing or fails to decrypt — so cart mutations never silently
+     * fall back to the guest session cart while a customer is selected.
+     */
+    private function activeSalesCustomerId(Request $request): int
+    {
+        $fromCookie = $request->cookie(self::SALES_CUSTOMER_COOKIE);
+        if ($fromCookie !== null && $fromCookie !== '') {
+            return (int) $fromCookie;
+        }
+
+        return (int) $request->session()->get(self::SALES_CUSTOMER_COOKIE, 0);
+    }
+
+    /**
+     * Persist the selected customer id to both session and cookie so every
+     * subsequent request (page load and AJAX/fetch) resolves the same cart.
+     */
+    private function rememberActiveSalesCustomerId(Request $request, int $customerId): void
+    {
+        $request->session()->put(self::SALES_CUSTOMER_COOKIE, $customerId);
+    }
+
+    private function forgetActiveSalesCustomerId(Request $request): void
+    {
+        $request->session()->forget(self::SALES_CUSTOMER_COOKIE);
+    }
+
+    /**
      * Resolve the cart for the current shopper context.
-     * For sales users, checks the selected customer cookie to determine which customer's cart to use.
+     * For sales users, checks the selected customer (cookie/session) to determine which customer's cart to use.
+     *
+     * @param  bool  $requireSelectedCustomer  When true (cart mutations), sales users without a
+     *                                         resolvable selected customer get a 422 instead of
+     *                                         silently operating on the guest session cart.
      *
      * @return array{cart: Cart, cookie: mixed, customer: Customer|null, salesId: int|null}
      */
-    private function resolveCart(Request $request): array
+    private function resolveCart(Request $request, bool $requireSelectedCustomer = false): array
     {
         $shopper = $this->getShopper();
 
@@ -56,7 +90,7 @@ class CartController extends Controller
         }
 
         if ($shopper instanceof User && $shopper->isSales()) {
-            $customerId = (int) $request->cookie(self::SALES_CUSTOMER_COOKIE, '0');
+            $customerId = $this->activeSalesCustomerId($request);
             if ($customerId > 0) {
                 $customer = Customer::where('id', $customerId)
                     ->where('sales_id', $shopper->id)
@@ -72,6 +106,10 @@ class CartController extends Controller
                         'salesId' => (int) $shopper->id,
                     ];
                 }
+            }
+
+            if ($requireSelectedCustomer) {
+                abort(422, 'Silakan pilih customer terlebih dahulu di halaman Keranjang.');
             }
 
             // Sales logged in but no customer selected — use session cart (guest-like)
@@ -190,10 +228,10 @@ class CartController extends Controller
 
             // For sales: resolve cart for the selected customer
             if ($shopper instanceof User && $shopper->isSales()) {
-                // If customer_id not in body, try reading from cookie
+                // customer_id not in body → read from cookie/session (active customer)
                 if (empty($validated['customer_id'])) {
-                    $cookieCid = (int) $request->cookie(self::SALES_CUSTOMER_COOKIE, '0');
-                    $validated['customer_id'] = $cookieCid > 0 ? $cookieCid : null;
+                    $activeCustomerId = $this->activeSalesCustomerId($request);
+                    $validated['customer_id'] = $activeCustomerId > 0 ? $activeCustomerId : null;
                 }
 
                 $customer = Customer::where('id', $validated['customer_id'])
@@ -259,6 +297,7 @@ class CartController extends Controller
 
             // Set sales customer cookie so cart page auto-selects this customer
             if ($shopper instanceof User && $shopper->isSales() && isset($validated['customer_id'])) {
+                $this->rememberActiveSalesCustomerId($request, (int) $validated['customer_id']);
                 $response = $response->cookie(
                     cookie(self::SALES_CUSTOMER_COOKIE, (string) $validated['customer_id'], 60 * 24 * 30)
                 );
@@ -289,8 +328,8 @@ class CartController extends Controller
 
             if ($shopper instanceof User && $shopper->isSales()) {
                 if (empty($validated['customer_id'])) {
-                    $cookieCid = (int) $request->cookie(self::SALES_CUSTOMER_COOKIE, '0');
-                    $validated['customer_id'] = $cookieCid > 0 ? $cookieCid : null;
+                    $activeCustomerId = $this->activeSalesCustomerId($request);
+                    $validated['customer_id'] = $activeCustomerId > 0 ? $activeCustomerId : null;
                 }
 
                 $customer = Customer::where('id', $validated['customer_id'])
@@ -342,6 +381,7 @@ class CartController extends Controller
             $response = $response->cookie($resolved['cookie']);
 
             if ($shopper instanceof User && $shopper->isSales() && isset($validated['customer_id'])) {
+                $this->rememberActiveSalesCustomerId($request, (int) $validated['customer_id']);
                 $response = $response->cookie(
                     cookie(self::SALES_CUSTOMER_COOKIE, (string) $validated['customer_id'], 60 * 24 * 30)
                 );
@@ -362,7 +402,7 @@ class CartController extends Controller
 
         abort_if($product->discontinued, 404);
 
-        $resolved = $this->resolveCart($request);
+        $resolved = $this->resolveCart($request, true);
         $cart = $resolved['cart'];
 
         try {
@@ -389,7 +429,7 @@ class CartController extends Controller
     {
         abort_if($product->discontinued, 404);
 
-        $resolved = $this->resolveCart($request);
+        $resolved = $this->resolveCart($request, true);
         $cart = $resolved['cart'];
 
         $this->cartService->removeItem($cart, $product);
@@ -406,7 +446,7 @@ class CartController extends Controller
 
     public function clear(Request $request)
     {
-        $resolved = $this->resolveCart($request);
+        $resolved = $this->resolveCart($request, true);
         $cart = $resolved['cart'];
 
         $this->cartService->clear($cart);
@@ -471,6 +511,8 @@ class CartController extends Controller
         if (! $customer) {
             abort(422, 'Customer tidak ditemukan.');
         }
+
+        $this->rememberActiveSalesCustomerId($request, (int) $customer->id);
 
         // Resolve the active cart for this customer
         $resolved = $this->cartService->resolve($request, $customer, (int) $shopper->id);
@@ -656,7 +698,7 @@ class CartController extends Controller
 
         abort_if($product->discontinued, 404);
 
-        $resolved = $this->resolveCart($request);
+        $resolved = $this->resolveCart($request, true);
         $cart = $resolved['cart'];
 
         $item = $cart->items()->where('product_id', $product->id)->first();
@@ -669,7 +711,7 @@ class CartController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function setActiveCustomer(int $customerId)
+    public function setActiveCustomer(Request $request, int $customerId)
     {
         $shopper = $this->getShopper();
         abort_unless($shopper && $shopper instanceof User && $shopper->isSales(), 401);
@@ -682,15 +724,19 @@ class CartController extends Controller
             abort(422, 'Customer tidak ditemukan atau bukan milik Anda.');
         }
 
+        $this->rememberActiveSalesCustomerId($request, (int) $customer->id);
+
         return redirect()
             ->to('/cart')
             ->withCookie(cookie(self::SALES_CUSTOMER_COOKIE, (string) $customer->id, 60 * 24 * 30));
     }
 
-    public function clearActiveCustomer()
+    public function clearActiveCustomer(Request $request)
     {
         $shopper = $this->getShopper();
         abort_unless($shopper && $shopper instanceof User && $shopper->isSales(), 401);
+
+        $this->forgetActiveSalesCustomerId($request);
 
         return redirect()
             ->to('/cart')

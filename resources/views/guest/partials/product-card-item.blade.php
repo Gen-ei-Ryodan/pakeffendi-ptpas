@@ -5,7 +5,7 @@
 @endphp
 <div class="product-card" data-product-id="{{ $product->id }}">
     <div class="position-relative">
-        <img src="{{ $product->photo_url }}" alt="{{ $product->name }}" class="product-image" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
+        <img src="{{ $product->photo_url }}" alt="{{ $product->name }}" class="product-image" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
     </div>
     <div class="product-info">
         <div>

@@ -2,6 +2,32 @@
 
 > Catatan keputusan penting selama pengembangan.
 
+## Fix Cart "Item Balik Lagi" + Optimasi Gambar WebP
+
+### Keputusan Desain
+- **Konteks customer sales dibaca dari cookie DAN session** (`pas_sales_cid`): cookie tetap primer, session sebagai fallback saat cookie hilang/gagal decrypt — sehingga request AJAX/fetch DELETE tidak pernah diam-diam jatuh ke fallback guest session cart saat customer (mis. "Testing Vina") sedang dipilih.
+- **Mutasi cart (`removeItem`, `clear`, `setItemQuantity`, `updateItemNotes`) wajib konteks customer yang valid untuk sales** — jika tidak ada customer terpilih → `422 "Silakan pilih customer terlebih dahulu di halaman Keranjang."` (sama seperti `addItem`), bukan operasi senyap ke cart guest. Halaman baca (`index`, `summary`, `count`) tetap toleran.
+- **Merge guest→customer cart hanya untuk flow login buyer** (`$salesId === null`, sesuai BUSINESS_RULES.md). Saat konteks sales aktif, merge di-skip dan cookie `pas_cart_sid` di-flush ke session cart customer — mencegah merge loop yang menghidupkan item yang sudah dihapus. Item cart guest lama ditinggalkan (bukan di-merge) pada konteks sales.
+- **Client**: `mobRemoveItem` kini memeriksa `res.ok` sebelum menghapus baris dari DOM (sebelumnya error 4xx/5xx tetap dianggap sukses → item "hilang" lalu muncul lagi saat refresh). `removeItem`/`clearCart`/`mobRemoveItem` menunggu `flushPendingUpdates()` sebelum DELETE agar update qty yang sedang in-flight tidak membuat ulang item yang baru dihapus; update qty mobile ikut terdaftar di `_pendingUpdates`.
+
+### Perubahan Behavior
+- Sales tanpa customer terpilih menerima `422` pada operasi mutasi cart (hapus/ubah qty/clear/notes) — sebelumnya operasi jatuh ke cart guest tanpa pemberitahuan.
+- Cart merge tidak lagi terjadi pada konteks sales memilih customer (hanya saat buyer login).
+
+### Optimasi Gambar
+- **Command baru `php artisan optimize:images`** (`app/Console/Commands/OptimizeImages.php`): konversi rekursif gambar di `storage/app/public/products` dan `storage/app/public/product-images` (jpg/jpeg/png/gif) ke `.webp` (default kualitas 82, rentang 80-85), driver GD (fallback Imagick), aman: original tidak dihapus, file `.webp` yang sudah up-to-date di-skip, kegagalan per-file tidak menghentikan proses. Flag: `--dir=` (satu direktori, override default), `--quality=`.
+- **`Product::getPhotoUrlAttribute()`** kini memprioritaskan varian `.webp` jika file-nya ada di storage public; jika tidak ada, tetap memakai file asli.
+- **Lazy loading**: `loading="lazy" decoding="async"` dipasang pada gambar produk list (`product-card-item`), gambar cart desktop & mobile, dan related products di halaman detail — mengurangi CLS/bandwidth. Gambar hero/LCP (banner, gambar utama detail produk) sengaja tetap eager.
+
+### File
+- `app/Http/Controllers/Guest/CartController.php` (session+cookie active customer, `resolveCart($request, $requireSelectedCustomer)`)
+- `app/Services/CartService.php` (skip merge untuk konteks sales + flush cookie)
+- `resources/views/guest/cart/index.blade.php` (cek `res.ok` di `mobRemoveItem`, flush pending updates sebelum delete, registrasi update qty mobile)
+- `app/Console/Commands/OptimizeImages.php` (baru)
+- `app/Models/Product.php` (prioritas WebP di `photo_url`)
+- `resources/views/guest/partials/product-card-item.blade.php`, `resources/views/guest/cart/index.blade.php`, `resources/views/guest/products/show.blade.php` (lazy/async)
+- `tests/Feature/SalesCartRemoveTest.php` (baru: delete sales + customer, tolak fallback guest, skip merge, prioritas WebP)
+
 ## Register Info Page (Guest)
 
 ### Keputusan Desain

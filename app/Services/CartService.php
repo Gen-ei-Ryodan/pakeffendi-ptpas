@@ -47,17 +47,25 @@ class CartService
                 $cart->update(['sales_id' => $salesId]);
             }
 
-            $guestSessionId = (string) $request->cookie(self::COOKIE_NAME, '');
-            if ($guestSessionId !== '' && $guestSessionId !== $cart->session_id) {
-                $guestCart = Cart::query()
-                    ->whereNull('customer_id')
-                    ->where('session_id', $guestSessionId)
-                    ->where('status', 'active')
-                    ->latest('id')
-                    ->first();
+            // Merge the guest session cart into the customer cart only for the
+            // buyer-login flow ($salesId === null). When a sales user acts on
+            // behalf of a customer ($salesId set), never merge: the guest cart
+            // must not re-introduce items into the customer cart (merge loop).
+            // The returned cookie below still flushes pas_cart_sid to the
+            // customer cart session so the stale guest cookie stops resolving.
+            if ($salesId === null) {
+                $guestSessionId = (string) $request->cookie(self::COOKIE_NAME, '');
+                if ($guestSessionId !== '' && $guestSessionId !== $cart->session_id) {
+                    $guestCart = Cart::query()
+                        ->whereNull('customer_id')
+                        ->where('session_id', $guestSessionId)
+                        ->where('status', 'active')
+                        ->latest('id')
+                        ->first();
 
-                if ($guestCart && $guestCart->items()->exists()) {
-                    $this->merge($guestCart, $cart);
+                    if ($guestCart && $guestCart->items()->exists()) {
+                        $this->merge($guestCart, $cart);
+                    }
                 }
             }
 

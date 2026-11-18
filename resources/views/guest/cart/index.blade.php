@@ -97,7 +97,7 @@
                             <div class="cart-item border-bottom pb-3 mb-3" data-product-id="{{ $product?->id }}" data-unit="{{ $product?->unit ?: 'pcs' }}">
                                 <div class="row align-items-center">
                                     <div class="col-md-2">
-                                        <img src="{{ $imageUrl }}" alt="{{ $product?->name }}" class="img-fluid rounded" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
+                                        <img src="{{ $imageUrl }}" alt="{{ $product?->name }}" class="img-fluid rounded" loading="lazy" decoding="async" onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
                                     </div>
                                     <div class="col-md-4">
                                         <h6 class="fw-bold mb-1">{{ $product?->name }}</h6>
@@ -445,6 +445,7 @@
             </div>
             <div class="mob-cart-img">
                 <img src="{{ $imageUrl }}" alt="{{ $product?->name }}"
+                     loading="lazy" decoding="async"
                      onerror="this.onerror=null;this.src='{{ asset('guest/img/placeholder-product.svg') }}'">
             </div>
             <div class="mob-cart-body">
@@ -1037,6 +1038,9 @@ async function updateCartItem(productId, quantity) {
 async function removeItem(productId) {
     if (!confirm('Yakin ingin menghapus item ini dari keranjang?')) return;
 
+    // Wait for in-flight qty updates so a late POST cannot re-create the item
+    await window.PAS?.Cart?.flushPendingUpdates?.();
+
     const res = await fetch(`/cart/items/${productId}`, {
         method: 'DELETE',
         headers: {
@@ -1061,6 +1065,8 @@ async function removeItem(productId) {
 
 async function clearCart() {
     if (!confirm('Yakin ingin mengosongkan keranjang belanja?')) return;
+
+    await window.PAS?.Cart?.flushPendingUpdates?.();
 
     const res = await fetch(`/cart`, {
         method: 'DELETE',
@@ -1170,7 +1176,7 @@ function mobUpdateQty(productId, change) {
 
     input.value = val;
 
-    fetch('/cart/items/' + productId, {
+    const promise = fetch('/cart/items/' + productId, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1201,6 +1207,11 @@ function mobUpdateQty(productId, change) {
     .catch(function(err) {
         PAS.Cart.showNotification(err && err.message ? err.message : 'Gagal memperbarui keranjang', 'danger');
     });
+
+    if (window.PAS?.Cart?._pendingUpdates) {
+        window.PAS.Cart._pendingUpdates.add(promise);
+        promise.finally(function() { window.PAS.Cart._pendingUpdates.delete(promise); });
+    }
 }
 
 function mobSetQty(productId, newVal) {
@@ -1220,7 +1231,7 @@ function mobSetQty(productId, newVal) {
         if (mobInput) mobInput.value = val;
     }
 
-    fetch('/cart/items/' + productId, {
+    const promise = fetch('/cart/items/' + productId, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -1253,30 +1264,43 @@ function mobSetQty(productId, newVal) {
     .catch(function(err) {
         PAS.Cart.showNotification(err && err.message ? err.message : 'Gagal memperbarui keranjang', 'danger');
     });
+
+    if (window.PAS?.Cart?._pendingUpdates) {
+        window.PAS.Cart._pendingUpdates.add(promise);
+        promise.finally(function() { window.PAS.Cart._pendingUpdates.delete(promise); });
+    }
 }
 
-function mobRemoveItem(productId) {
+async function mobRemoveItem(productId) {
     if (!confirm('Yakin ingin menghapus item ini dari keranjang?')) return;
 
     const item = document.querySelector(`.mob-cart-item[data-product-id="${productId}"]`);
 
-    fetch('/cart/items/' + productId, {
-        method: 'DELETE',
-        headers: {
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrfToken()
+    try {
+        // Wait for in-flight qty updates so a late POST cannot re-create the item
+        await window.PAS?.Cart?.flushPendingUpdates?.();
+
+        const r = await fetch('/cart/items/' + productId, {
+            method: 'DELETE',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken()
+            }
+        });
+
+        // Only remove from the DOM when the server actually deleted the item
+        if (!r.ok) {
+            PAS.Cart.showNotification('Gagal menghapus item', 'danger');
+            return;
         }
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
+
         if (item) item.remove();
         updateCartSummary();
         PAS.Cart.showNotification('Item dihapus dari keranjang', 'info');
         mobCheckEmpty();
-    })
-    .catch(function() {
+    } catch (_) {
         PAS.Cart.showNotification('Gagal menghapus item', 'danger');
-    });
+    }
 }
 
 function updateMobCartSummary(summary) {

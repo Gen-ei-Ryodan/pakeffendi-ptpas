@@ -180,13 +180,22 @@ class Product extends Model
             return $this->photo_path;
         }
 
-        $path = str_replace(' ', '%20', $this->photo_path);
-
         if (! Storage::disk('public')->exists($this->photo_path)) {
             return $placeholder;
         }
 
-        return asset('storage/'.$path);
+        $path = $this->photo_path;
+
+        // Prefer the optimized WebP variant produced by `php artisan optimize:images`.
+        $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+        if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif'], true)) {
+            $webp = preg_replace('/\.[^.]+$/', '.webp', $path);
+            if ($webp !== null && $webp !== $path && Storage::disk('public')->exists($webp)) {
+                $path = $webp;
+            }
+        }
+
+        return asset('storage/'.str_replace(' ', '%20', $path));
     }
 
     /**
